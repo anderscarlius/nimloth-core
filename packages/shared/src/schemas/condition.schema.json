@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://core.nimloth.io/schemas/condition.schema.json",
+  "title": "ConditionEvent",
+  "allOf": [{ "$ref": "base-event.schema.json" }],
+  "required": ["payload"],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "required": ["diagnosis", "diagnosed_at"],
+      "properties": {
+        "diagnosis": { "$ref": "base-event.schema.json#/$defs/CodedValue" },
+        "icd_code": { "type": "string" },
+        "diagnosis_text": { "type": "string" },
+        "diagnosis_type": {
+          "type": "string",
+          "enum": ["PRIMARY", "SECONDARY", "COMPLICATION", "CHRONIC"]
+        },
+        "diagnosed_by": { "$ref": "base-event.schema.json#/$defs/Recorder" },
+        "diagnosed_at": { "type": "string", "format": "date-time" },
+        "resolved_at": { "type": "string", "format": "date-time" },
+        "encounter_id": { "type": "string" }
+      }
+    }
+  }
+}

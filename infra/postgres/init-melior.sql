@@ -1,0 +1,274 @@
+-- Melior-databas (simulerad).
+-- Oracle-liknande konventioner: versaler + understreck i DDL.
+-- PostgreSQL lagrar unquoted identifiers i lowercase — det är förväntat.
+--
+-- Instance: default 'su' (ändras via MELIOR_INSTANCE_ID env).
+-- v2-distribuerad: instance_metadata-tabell för att identifiera vilket sjukhus.
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================================
+-- INSTANCE METADATA (v2 distribuerad)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS instance_metadata (
+    instance_id     VARCHAR(20)  NOT NULL DEFAULT 'su',
+    instance_name   VARCHAR(100),
+    hospital_name   VARCHAR(200),
+    hsa_id          VARCHAR(50),
+    created_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO instance_metadata (instance_id, instance_name, hospital_name, hsa_id)
+VALUES ('su', 'Melior SU', 'Sahlgrenska Universitetssjukhuset', 'SE2321000131-E000000000001')
+ON CONFLICT DO NOTHING;
+
+-- ============================================================
+-- PATIENTS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS PATIENTS (
+    PATIENT_ID       SERIAL PRIMARY KEY,
+    PERSONNUMMER     VARCHAR(13) UNIQUE NOT NULL,
+    FORNAMN          VARCHAR(100),
+    EFTERNAMN        VARCHAR(100),
+    FODELSEDATUM     DATE,
+    KON              CHAR(1) CHECK (KON IN ('M', 'K')),
+    ADRESS           VARCHAR(200),
+    POSTNR           VARCHAR(10),
+    POSTORT          VARCHAR(100),
+    TELEFON          VARCHAR(30),
+    DECEASED_AT      TIMESTAMP NULL,
+    CREATED_AT       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_patients_personnummer ON PATIENTS(PERSONNUMMER);
+CREATE INDEX IF NOT EXISTS idx_patients_efternamn ON PATIENTS(EFTERNAMN);
+
+-- ============================================================
+-- ENCOUNTERS (vårdkontakter)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS ENCOUNTERS (
+    ENCOUNTER_ID             SERIAL PRIMARY KEY,
+    PATIENT_ID               INTEGER NOT NULL REFERENCES PATIENTS(PATIENT_ID),
+    ENCOUNTER_TYPE           VARCHAR(20) CHECK (ENCOUNTER_TYPE IN ('INPATIENT','OUTPATIENT','EMERGENCY','DAYCARE')),
+    DEPARTMENT_CODE          VARCHAR(40),
+    DEPARTMENT_NAME          VARCHAR(200),
+    ADMITTING_DOCTOR_HSA     VARCHAR(50),
+    ADMITTING_DOCTOR_NAME    VARCHAR(100),
+    ADMISSION_DATE           TIMESTAMP NOT NULL,
+    DISCHARGE_DATE           TIMESTAMP NULL,
+    DISCHARGE_DIAGNOSIS_ICD  VARCHAR(20),
+    STATUS                   VARCHAR(20) CHECK (STATUS IN ('ACTIVE','DISCHARGED','CANCELLED')) DEFAULT 'ACTIVE',
+    CREATED_AT               TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT               TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_encounters_patient ON ENCOUNTERS(PATIENT_ID);
+CREATE INDEX IF NOT EXISTS idx_encounters_admission ON ENCOUNTERS(ADMISSION_DATE);
+CREATE INDEX IF NOT EXISTS idx_encounters_department ON ENCOUNTERS(DEPARTMENT_CODE);
+
+-- ============================================================
+-- OBSERVATIONS (vitala parametrar)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS OBSERVATIONS (
+    OBSERVATION_ID   SERIAL PRIMARY KEY,
+    PATIENT_ID       INTEGER NOT NULL REFERENCES PATIENTS(PATIENT_ID),
+    ENCOUNTER_ID     INTEGER REFERENCES ENCOUNTERS(ENCOUNTER_ID),
+    OBSERVATION_TYPE VARCHAR(40) CHECK (OBSERVATION_TYPE IN (
+                        'BLOOD_PRESSURE','HEART_RATE','TEMPERATURE',
+                        'SPO2','RESPIRATORY_RATE','WEIGHT','HEIGHT')),
+    VALUE_NUMERIC    DECIMAL(10,3),
+    VALUE_NUMERIC2   DECIMAL(10,3) NULL,
+    UNIT             VARCHAR(20),
+    RECORDED_BY_HSA  VARCHAR(50),
+    RECORDED_AT      TIMESTAMP NOT NULL,
+    CREATED_AT       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_observations_patient ON OBSERVATIONS(PATIENT_ID);
+CREATE INDEX IF NOT EXISTS idx_observations_encounter ON OBSERVATIONS(ENCOUNTER_ID);
+CREATE INDEX IF NOT EXISTS idx_observations_recorded ON OBSERVATIONS(RECORDED_AT);
+
+-- ============================================================
+-- LAB_RESULTS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS LAB_RESULTS (
+    LAB_RESULT_ID        SERIAL PRIMARY KEY,
+    PATIENT_ID           INTEGER NOT NULL REFERENCES PATIENTS(PATIENT_ID),
+    ENCOUNTER_ID         INTEGER REFERENCES ENCOUNTERS(ENCOUNTER_ID),
+    ORDER_ID             VARCHAR(50),
+    ANALYSIS_CODE        VARCHAR(20),
+    ANALYSIS_NAME        VARCHAR(100),
+    VALUE_NUMERIC        DECIMAL(12,4) NULL,
+    VALUE_TEXT           TEXT NULL,
+    UNIT                 VARCHAR(30),
+    REFERENCE_LOW        DECIMAL(12,4) NULL,
+    REFERENCE_HIGH       DECIMAL(12,4) NULL,
+    FLAG                 VARCHAR(2) CHECK (FLAG IN ('H','L','HH','LL') OR FLAG IS NULL),
+    ORDERING_DOCTOR_HSA  VARCHAR(50),
+    LAB_SYSTEM_CODE      VARCHAR(30),
+    SAMPLE_COLLECTED_AT  TIMESTAMP,
+    RESULT_AVAILABLE_AT  TIMESTAMP,
+    CREATED_AT           TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_lab_patient ON LAB_RESULTS(PATIENT_ID);
+CREATE INDEX IF NOT EXISTS idx_lab_analysis ON LAB_RESULTS(ANALYSIS_CODE);
+CREATE INDEX IF NOT EXISTS idx_lab_available ON LAB_RESULTS(RESULT_AVAILABLE_AT);
+
+-- ============================================================
+-- PRESCRIPTIONS (läkemedelsordinationer)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS PRESCRIPTIONS (
+    PRESCRIPTION_ID        SERIAL PRIMARY KEY,
+    PATIENT_ID             INTEGER NOT NULL REFERENCES PATIENTS(PATIENT_ID),
+    ENCOUNTER_ID           INTEGER REFERENCES ENCOUNTERS(ENCOUNTER_ID),
+    DRUG_NAME              VARCHAR(200),
+    ATC_CODE               VARCHAR(20),
+    STRENGTH               VARCHAR(50),
+    DOSAGE                 VARCHAR(50),
+    ROUTE                  VARCHAR(10) CHECK (ROUTE IN ('PO','IV','SC','IM','TOP','INH','SL','REC','OPH')),
+    FREQUENCY              VARCHAR(20) CHECK (FREQUENCY IN ('DAILY','BID','TID','QID','PRN','WEEKLY','MONTHLY')),
+    START_DATE             DATE,
+    END_DATE               DATE NULL,
+    PRESCRIBING_DOCTOR_HSA VARCHAR(50),
+    STATUS                 VARCHAR(20) CHECK (STATUS IN ('ACTIVE','COMPLETED','CANCELLED','SUSPENDED')) DEFAULT 'ACTIVE',
+    CREATED_AT             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT             TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_presc_patient ON PRESCRIPTIONS(PATIENT_ID);
+CREATE INDEX IF NOT EXISTS idx_presc_atc ON PRESCRIPTIONS(ATC_CODE);
+CREATE INDEX IF NOT EXISTS idx_presc_status ON PRESCRIPTIONS(STATUS);
+
+-- ============================================================
+-- PROCEDURES (operationer/ingrepp)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS PROCEDURES (
+    PROCEDURE_ID            SERIAL PRIMARY KEY,
+    PATIENT_ID              INTEGER NOT NULL REFERENCES PATIENTS(PATIENT_ID),
+    ENCOUNTER_ID            INTEGER REFERENCES ENCOUNTERS(ENCOUNTER_ID),
+    PROCEDURE_CODE_KVA      VARCHAR(20),
+    PROCEDURE_NAME          VARCHAR(200),
+    LATERALITY              VARCHAR(10) CHECK (LATERALITY IN ('LEFT','RIGHT','BILATERAL') OR LATERALITY IS NULL),
+    IMPLANT_TYPE            VARCHAR(30) NULL,
+    IMPLANT_MANUFACTURER    VARCHAR(100) NULL,
+    IMPLANT_MODEL           VARCHAR(100) NULL,
+    IMPLANT_SIZE            VARCHAR(30) NULL,
+    PERFORMING_SURGEON_HSA  VARCHAR(50),
+    PERFORMING_SURGEON_NAME VARCHAR(100),
+    PROCEDURE_DATE          TIMESTAMP NOT NULL,
+    DURATION_MINUTES        INTEGER NULL,
+    ANESTHESIA_TYPE         VARCHAR(20) CHECK (ANESTHESIA_TYPE IN ('GENERAL','SPINAL','EPIDURAL','LOCAL') OR ANESTHESIA_TYPE IS NULL),
+    COMPLICATIONS           TEXT NULL,
+    CREATED_AT              TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_procedures_patient ON PROCEDURES(PATIENT_ID);
+CREATE INDEX IF NOT EXISTS idx_procedures_kva ON PROCEDURES(PROCEDURE_CODE_KVA);
+CREATE INDEX IF NOT EXISTS idx_procedures_date ON PROCEDURES(PROCEDURE_DATE);
+
+-- ============================================================
+-- CLINICAL_NOTES (journalanteckningar)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS CLINICAL_NOTES (
+    NOTE_ID          SERIAL PRIMARY KEY,
+    PATIENT_ID       INTEGER NOT NULL REFERENCES PATIENTS(PATIENT_ID),
+    ENCOUNTER_ID     INTEGER REFERENCES ENCOUNTERS(ENCOUNTER_ID),
+    NOTE_TYPE        VARCHAR(30) CHECK (NOTE_TYPE IN (
+                        'ADMISSION_NOTE','PROGRESS_NOTE','DISCHARGE_SUMMARY',
+                        'OP_REPORT','CONSULTATION','PHYSIOTHERAPY')),
+    DEPARTMENT_CODE  VARCHAR(40),
+    AUTHOR_HSA       VARCHAR(50),
+    AUTHOR_NAME      VARCHAR(100),
+    AUTHOR_ROLE      VARCHAR(30) CHECK (AUTHOR_ROLE IN ('PHYSICIAN','NURSE','PHYSIOTHERAPIST','PSYCHOLOGIST','DIETITIAN')),
+    CONTENT          TEXT,
+    SIGNED           BOOLEAN DEFAULT FALSE,
+    SIGNED_AT        TIMESTAMP NULL,
+    COSIGNED_BY_HSA  VARCHAR(50) NULL,
+    CREATED_AT       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_notes_patient ON CLINICAL_NOTES(PATIENT_ID);
+CREATE INDEX IF NOT EXISTS idx_notes_encounter ON CLINICAL_NOTES(ENCOUNTER_ID);
+CREATE INDEX IF NOT EXISTS idx_notes_signed ON CLINICAL_NOTES(SIGNED);
+
+-- ============================================================
+-- DIAGNOSES
+-- ============================================================
+CREATE TABLE IF NOT EXISTS DIAGNOSES (
+    DIAGNOSIS_ID      SERIAL PRIMARY KEY,
+    PATIENT_ID        INTEGER NOT NULL REFERENCES PATIENTS(PATIENT_ID),
+    ENCOUNTER_ID      INTEGER REFERENCES ENCOUNTERS(ENCOUNTER_ID),
+    ICD_CODE          VARCHAR(20),
+    DIAGNOSIS_TEXT    VARCHAR(500),
+    DIAGNOSIS_TYPE    VARCHAR(20) CHECK (DIAGNOSIS_TYPE IN ('PRIMARY','SECONDARY','COMPLICATION')),
+    DIAGNOSED_BY_HSA  VARCHAR(50),
+    DIAGNOSED_AT      TIMESTAMP NOT NULL,
+    RESOLVED_AT       TIMESTAMP NULL,
+    CREATED_AT        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_diagnoses_patient ON DIAGNOSES(PATIENT_ID);
+CREATE INDEX IF NOT EXISTS idx_diagnoses_icd ON DIAGNOSES(ICD_CODE);
+
+-- ============================================================
+-- ALLERGIES
+-- ============================================================
+CREATE TABLE IF NOT EXISTS ALLERGIES (
+    ALLERGY_ID        SERIAL PRIMARY KEY,
+    PATIENT_ID        INTEGER NOT NULL REFERENCES PATIENTS(PATIENT_ID),
+    ALLERGEN          VARCHAR(200),
+    REACTION          VARCHAR(200),
+    SEVERITY          VARCHAR(20) CHECK (SEVERITY IN ('MILD','MODERATE','SEVERE')),
+    VERIFIED          BOOLEAN DEFAULT FALSE,
+    REPORTED_BY_HSA   VARCHAR(50),
+    REPORTED_AT       TIMESTAMP,
+    CREATED_AT        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_allergies_patient ON ALLERGIES(PATIENT_ID);
+
+-- ============================================================
+-- REFERRALS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS REFERRALS (
+    REFERRAL_ID           SERIAL PRIMARY KEY,
+    PATIENT_ID            INTEGER NOT NULL REFERENCES PATIENTS(PATIENT_ID),
+    FROM_DEPARTMENT       VARCHAR(100),
+    TO_DEPARTMENT         VARCHAR(100),
+    REFERRAL_REASON       TEXT,
+    PRIORITY              VARCHAR(20) CHECK (PRIORITY IN ('ROUTINE','URGENT','EMERGENCY')),
+    STATUS                VARCHAR(20) CHECK (STATUS IN ('SENT','RECEIVED','ACCEPTED','COMPLETED','REJECTED')),
+    REFERRING_DOCTOR_HSA  VARCHAR(50),
+    SENT_AT               TIMESTAMP,
+    CREATED_AT            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT            TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_referrals_patient ON REFERRALS(PATIENT_ID);
+CREATE INDEX IF NOT EXISTS idx_referrals_status ON REFERRALS(STATUS);
+
+-- ============================================================
+-- DEBEZIUM — logical replication setup
+-- wal_level=logical sätts via docker-compose command-flagga.
+-- ============================================================
+
+-- Publication för Debezium (alla tabeller)
+DROP PUBLICATION IF EXISTS melior_pub;
+CREATE PUBLICATION melior_pub FOR ALL TABLES;
+
+-- Dedikerad read-replica user för Debezium
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'debezium_reader') THEN
+        CREATE ROLE debezium_reader WITH LOGIN REPLICATION PASSWORD 'debezium';
+    END IF;
+END $$;
+
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO debezium_reader;
+GRANT USAGE ON SCHEMA public TO debezium_reader;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO debezium_reader;
+
+-- REPLICA IDENTITY FULL behövs för UPDATE-events med alla gamla värden
+ALTER TABLE PATIENTS       REPLICA IDENTITY FULL;
+ALTER TABLE ENCOUNTERS     REPLICA IDENTITY FULL;
+ALTER TABLE OBSERVATIONS   REPLICA IDENTITY FULL;
+ALTER TABLE LAB_RESULTS    REPLICA IDENTITY FULL;
+ALTER TABLE PRESCRIPTIONS  REPLICA IDENTITY FULL;
+ALTER TABLE PROCEDURES     REPLICA IDENTITY FULL;
+ALTER TABLE CLINICAL_NOTES REPLICA IDENTITY FULL;
+ALTER TABLE DIAGNOSES      REPLICA IDENTITY FULL;
+ALTER TABLE ALLERGIES      REPLICA IDENTITY FULL;
+ALTER TABLE REFERRALS      REPLICA IDENTITY FULL;

@@ -1,0 +1,53 @@
+# Dev-overrides. Aktiveras via: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Syfte: hot-reload av TypeScript-tjänster genom volym-mount och tsx watch.
+
+name: nimloth-core
+
+services:
+  ingest:
+    command: ["pnpm", "dev"]
+    volumes:
+      - ./services/ingest/src:/app/services/ingest/src:ro
+      - ./packages/shared/src:/app/packages/shared/src:ro
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+
+  transform:
+    command: ["pnpm", "dev"]
+    volumes:
+      - ./services/transform/src:/app/services/transform/src:ro
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+
+  fhir-facade:
+    command: ["pnpm", "dev"]
+    volumes:
+      - ./services/fhir-facade/src:/app/services/fhir-facade/src:ro
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+
+  cds-hooks:
+    command: ["pnpm", "dev"]
+    volumes:
+      - ./services/cds-hooks/src:/app/services/cds-hooks/src:ro
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+
+  audit:
+    command: ["pnpm", "dev"]
+    volumes:
+      - ./services/audit/src:/app/services/audit/src:ro
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+
+  dashboard:
+    command: ["pnpm", "dev"]
+    volumes:
+      - ./services/dashboard/src:/app/services/dashboard/src:ro
+    environment:
+      NODE_ENV: development

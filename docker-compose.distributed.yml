@@ -1,0 +1,171 @@
+# Nimloth Core — distribuerat läge (override).
+#
+# Aktiveras via:
+#   docker compose -f docker-compose.yml -f docker-compose.distributed.yml --profile edge-su up -d
+#
+# Varje edge-nod har:
+#   - En lokal Kafka (obegränsad retention i offline-läge)
+#   - En edge-runtime-container (@nimloth-core/edge): lokal FHIR-replica-server + CDS + sync-manager
+#
+# OBS: Ingen `platforms:`-nyckel i build — default docker-driver stödjer inte multi-arch
+# på compose up. Multi-arch push görs via scripts/build.sh (buildx).
+
+name: nimloth-core
+
+services:
+  # ============================================================
+  # Edge: SU (Sahlgrenska Universitetssjukhuset)
+  # ============================================================
+  edge-kafka-su:
+    # Confluent cp-kafka 7.6 (Java 17) — apache/kafka:3.7 kraschar SIGILL på M-Mac.
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: edge-kafka-su
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:29092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://edge-kafka-su:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@edge-kafka-su:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      # Obegränsad retention — buffrar events medan offline
+      KAFKA_LOG_RETENTION_MS: "-1"
+      # KRaft CLUSTER_ID måste vara 22-char base64url (genererad från UUID4)
+      CLUSTER_ID: "lV6rRFBLRVi2zgWQ7wQBBQ"
+    volumes:
+      - edge-su-kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:29092 --list >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+    profiles: ["edge-su"]
+    networks:
+      # Edge-kafka lever på ETT separat lokalt nätverk tillsammans med edge-su.
+      # "Nätavbrott" mot central simuleras genom att koppla bort edge-su från
+      # core-nätverket — då tappar den kontakt med central Kafka/FHIR men
+      # edge-kafka-su och host-port-mappning förblir intakta.
+      - edge-su-local
+
+  edge-su:
+    build:
+      context: .
+      dockerfile: services/edge/Dockerfile
+    container_name: edge-su
+    environment:
+      EDGE_INSTANCE_ID: su
+      EDGE_INSTANCE_NAME: "Melior SU"
+      EDGE_HOSPITAL_NAME: "Sahlgrenska Universitetssjukhuset"
+      EDGE_HSA_ID: "SE2321000131-E000000000001"
+      LOCAL_KAFKA_BROKERS: edge-kafka-su:29092
+      CENTRAL_KAFKA_BROKERS: kafka:29092
+      CENTRAL_FHIR_URL: http://fhir-facade:3003
+      CENTRAL_HEALTH_URL: http://fhir-facade:3003/health
+      FHIR_CACHE_DB: /data/fhir-cache.db
+      EDGE_FHIR_PORT: "3003"
+      EDGE_CDS_PORT: "3004"
+      EDGE_STATUS_PORT: "3006"
+      # Offline-detektor
+      EDGE_PING_INTERVAL_MS: "5000"
+      EDGE_PING_TIMEOUT_MS: "3000"
+      EDGE_PING_MAX_RETRIES: "3"
+      # Hydrering (Kafka-snapshot + HTTP-fallback)
+      EDGE_HYDRATION_KAFKA_TIMEOUT_MS: "15000"
+      EDGE_HYDRATION_HTTP_FALLBACK: "true"
+      LOG_LEVEL: info
+    depends_on:
+      edge-kafka-su:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      fhir-facade:
+        condition: service_started
+    volumes:
+      - edge-su-data:/data
+    ports:
+      - "4003:3003"  # Lokal FHIR (offset port för att inte krocka med central 3003)
+      - "4004:3004"  # Lokal CDS
+      - "4006:3006"  # Edge status + metrics + /health
+    profiles: ["edge-su"]
+    networks:
+      # edge-su lever på BÅDA nätverken. ORDNING SPELAR ROLL:
+      # Docker port-forwarding följer det FÖRSTA nätverket som ansluts.
+      # Ställer därför edge-su-local FÖRST så att host-port-mappning
+      # (4003/4004/4006) behålls även när vi gör
+      # `docker network disconnect nimloth-core edge-su` för att simulera
+      # nätavbrott mot central hub.
+      - edge-su-local
+      - core
+
+  # ============================================================
+  # Edge: SkaS (fylls i Del 14 när replication-tjänsten aggregerar ≥2 edges)
+  # Skelett kvar som mall.
+  # ============================================================
+  # edge-kafka-skas:
+  #   image: confluentinc/cp-kafka:7.6.0
+  #   ...
+  #   profiles: ["edge-skas"]
+  #
+  # edge-skas:
+  #   build: { context: ., dockerfile: services/edge/Dockerfile }
+  #   environment:
+  #     EDGE_INSTANCE_ID: skas
+  #     EDGE_INSTANCE_NAME: "Melior SkaS"
+  #     EDGE_HOSPITAL_NAME: "Skaraborgs Sjukhus"
+  #     LOCAL_KAFKA_BROKERS: edge-kafka-skas:29092
+  #     ...
+  #   profiles: ["edge-skas"]
+
+  # ============================================================
+  # Replication — central aggregator (edge → central topics) +
+  # shared-data-distributor (patient-index, spar-register, cds-rules,
+  # terminology). Motsvarar Kafka MirrorMaker 2 i produktion.
+  # Aktiveras med profile "replication" (startas separat ELLER tillsammans
+  # med en edge-profil).
+  # ============================================================
+  replication:
+    build:
+      context: .
+      dockerfile: services/replication/Dockerfile
+    container_name: replication
+    environment:
+      REPLICATION_PORT: "3007"
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: core-replication
+      CORE_DB_HOST: core-db
+      CORE_DB_PORT: "5432"
+      CORE_DB_NAME: core
+      CORE_DB_USER: core
+      CORE_DB_PASSWORD: core
+      EDGE_INSTANCES: su
+      PATIENT_INDEX_SYNC_INTERVAL_MS: "300000"
+      PATIENT_INDEX_BATCH_SIZE: "500"
+      LOG_LEVEL: info
+    depends_on:
+      kafka:
+        condition: service_healthy
+      core-db:
+        condition: service_healthy
+    ports:
+      - "3007:3007"
+    profiles: ["replication", "edge-su"]
+    networks:
+      - core
+
+volumes:
+  edge-su-kafka-data:
+  edge-su-data:
+
+networks:
+  core:
+    name: nimloth-core
+    driver: bridge
+  edge-su-local:
+    name: edge-su-local
+    driver: bridge

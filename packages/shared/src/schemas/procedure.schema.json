@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://core.nimloth.io/schemas/procedure.schema.json",
+  "title": "ProcedureEvent",
+  "allOf": [{ "$ref": "base-event.schema.json" }],
+  "required": ["payload"],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "required": ["procedure", "procedure_date"],
+      "properties": {
+        "procedure": { "$ref": "base-event.schema.json#/$defs/CodedValue" },
+        "procedure_code_kva": { "type": "string" },
+        "procedure_name": { "type": "string" },
+        "laterality": {
+          "type": "string",
+          "enum": ["LEFT", "RIGHT", "BILATERAL"]
+        },
+        "implant": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "manufacturer": { "type": "string" },
+            "model": { "type": "string" },
+            "size": { "type": "string" }
+          }
+        },
+        "performer": { "$ref": "base-event.schema.json#/$defs/Recorder" },
+        "procedure_date": { "type": "string", "format": "date-time" },
+        "duration_minutes": { "type": "integer", "minimum": 0 },
+        "anesthesia_type": {
+          "type": "string",
+          "enum": ["GENERAL", "SPINAL", "EPIDURAL", "LOCAL"]
+        },
+        "complications": { "type": "string" },
+        "encounter_id": { "type": "string" }
+      }
+    }
+  }
+}

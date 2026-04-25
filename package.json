@@ -1,0 +1,32 @@
+{
+  "name": "nimloth-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Nimloth Core — modulär journal- och vårdplattform (Sprint 0: Flow-arv, Sprint 1–5: openEHR + Inera + lakehouse)",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "clean": "pnpm -r clean",
+    "seed:all": "pnpm --filter @nimloth-core/test-data seed:all",
+    "test:e2e": "pnpm --filter @nimloth-core/e2e test",
+    "test:e2e:distributed": "pnpm --filter @nimloth-core/e2e test:distributed",
+    "start": "./scripts/start.sh",
+    "start:distributed": "./scripts/start-distributed.sh",
+    "stop": "./scripts/stop.sh",
+    "reset": "./scripts/reset.sh"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.7",
+    "tsx": "^4.9.0",
+    "vitest": "^1.5.0",
+    "prettier": "^3.2.5"
+  }
+}

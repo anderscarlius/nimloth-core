@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://core.nimloth.io/schemas/allergy.schema.json",
+  "title": "AllergyEvent",
+  "allOf": [{ "$ref": "base-event.schema.json" }],
+  "required": ["payload"],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "required": ["allergen", "severity", "reported_at"],
+      "properties": {
+        "allergen": { "type": "string" },
+        "allergen_coded": { "$ref": "base-event.schema.json#/$defs/CodedValue" },
+        "reaction": { "type": "string" },
+        "severity": {
+          "type": "string",
+          "enum": ["MILD", "MODERATE", "SEVERE"]
+        },
+        "verified": { "type": "boolean" },
+        "reported_by": { "$ref": "base-event.schema.json#/$defs/Recorder" },
+        "reported_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

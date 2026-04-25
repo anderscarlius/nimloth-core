@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://core.nimloth.io/schemas/audit.schema.json",
+  "title": "AuditEvent",
+  "description": "PDL-kompatibel åtkomstlogg. Separat från BaseEvent (kan sakna source_system).",
+  "type": "object",
+  "required": ["event_id", "timestamp", "actor", "action", "resource_type", "patient_id", "outcome"],
+  "properties": {
+    "event_id": { "type": "string", "format": "uuid" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "actor": {
+      "type": "object",
+      "required": ["hsa_id"],
+      "properties": {
+        "hsa_id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" }
+      }
+    },
+    "action": {
+      "type": "string",
+      "enum": ["READ", "SEARCH", "CREATE", "UPDATE", "DELETE", "EXPORT"]
+    },
+    "resource_type": {
+      "type": "string",
+      "description": "FHIR-resursnamn, t.ex. 'Patient', 'Observation', 'MedicationStatement'"
+    },
+    "resource_id": { "type": "string" },
+    "patient_id": { "type": "string" },
+    "pdl_context": {
+      "type": "object",
+      "properties": {
+        "care_unit": { "type": "string" },
+        "purpose": { "type": "string" },
+        "legal_basis": { "type": "string" }
+      }
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["SUCCESS", "DENIED_NO_CARE_RELATION", "DENIED_BLOCKED", "EMERGENCY_ACCESS", "ERROR"]
+    },
+    "source_ip": { "type": "string" },
+    "user_agent": { "type": "string" },
+    "request_id": { "type": "string" }
+  }
+}

@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Nimloth Core</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script src="data.js"></script>
+<script>
+window.SYSTEM_STATUS = {
+  summary: {
+    eventsPerMin: 847,
+    eventsDelta: 12,
+    cdcLagSec: 2.3,
+    fhirP95ms: 142,
+    errorRatePct: 1.8,
+    errorDelta: -0.3
+  },
+  topics: [
+    { name: 'core.clinical.lab.result',            msgs: 4212847, lag: 0,   tps: 12, status: 'ok' },
+    { name: 'core.clinical.medication.prescribed', msgs: 1102445, lag: 3,   tps: 4,  status: 'ok' },
+    { name: 'core.clinical.procedure',             msgs: 423819,  lag: 0,   tps: 2,  status: 'ok' },
+    { name: 'core.clinical.diagnosis',             msgs: 876112,  lag: 1,   tps: 3,  status: 'ok' },
+    { name: 'core.clinical.encounter',             msgs: 2287221, lag: 0,   tps: 8,  status: 'ok' },
+    { name: 'vgr.cdc.melior.su.raw',              msgs: 8847221, lag: 142, tps: 28, status: 'warn' },
+    { name: 'vgr.cdc.asynja.raw',                 msgs: 3412887, lag: 6,   tps: 14, status: 'ok' },
+    { name: 'core.system.errors',                  msgs: 12847,   lag: 0,   tps: 0,  status: 'ok' }
+  ],
+  connectors: [
+    { name: 'melior-su-connector',   status: 'RUNNING', source: 'Melior SU (Oracle)',        tasks: '1/1', latency: '1.8s', lastEvent: '3s sedan' },
+    { name: 'melior-skas-connector', status: 'RUNNING', source: 'Melior SkaS (Oracle)',      tasks: '1/1', latency: '2.1s', lastEvent: '4s sedan' },
+    { name: 'melior-nu-connector',   status: 'DEGRADED', source: 'Melior NU (Oracle)',       tasks: '0/1', latency: '—',    lastEvent: '142 event backlog' },
+    { name: 'asynja-connector',      status: 'RUNNING', source: 'AsynjaVisph (PostgreSQL)',  tasks: '1/1', latency: '0.9s', lastEvent: '5s sedan' },
+    { name: 'flexlab-connector',     status: 'RUNNING', source: 'FlexLab (MSSQL)',           tasks: '2/2', latency: '1.2s', lastEvent: '2s sedan' },
+    { name: 'pascal-connector',      status: 'RUNNING', source: 'Pascal NLL (REST)',         tasks: '1/1', latency: '3.4s', lastEvent: '11s sedan' }
+  ],
+  errors: [
+    { ts: '2026-04-22 14:31:02', source: 'melior-nu', level: 'ERROR',   msg: 'Oracle LogMiner session terminated unexpectedly' },
+    { ts: '2026-04-22 14:28:41', source: 'fhir-facade', level: 'WARN',  msg: 'Slow query: Observation?patient=19500315-2384 took 2843ms' },
+    { ts: '2026-04-22 14:21:17', source: 'cds-hooks', level: 'WARN',    msg: 'External KB call timeout (Waran rules), fallback to cache' },
+    { ts: '2026-04-22 14:02:55', source: 'kafka-connect', level: 'ERROR', msg: 'Task restart: melior-nu-connector-0 (retry 3/5)' },
+    { ts: '2026-04-22 13:47:22', source: 'edge-su', level: 'INFO',      msg: 'Snapshot rotated, 142 MB compacted' }
+  ]
+};
+
+window.TOPOLOGY = {
+  hub: { name: 'Central Hub', location: 'VGR Datacenter, Göteborg', x: 430, y: 280, status: 'online', lag: 0 },
+  nodes: [
+    { id: 'su',      name: 'SU',       hospital: 'Sahlgrenska Universitetssjukhuset',      x: 310, y: 160, status: 'online',  lag: 2.1, events: 847221, cache: { patients: 12847, sizeMb: 142 }, buffered: 0,   uptime: '14d 7h 23m' },
+    { id: 'skas',    name: 'SkaS',     hospital: 'Skaraborgs Sjukhus, Skövde/Lidköping',   x: 640, y: 150, status: 'online',  lag: 3.2, events: 412883, cache: { patients: 6421,  sizeMb: 78  }, buffered: 0,   uptime: '21d 3h 11m' },
+    { id: 'nu',      name: 'NU',       hospital: 'NU-sjukvården, Trollhättan',             x: 180, y: 320, status: 'replaying', lag: 24.8, events: 287119, cache: { patients: 4918, sizeMb: 52 }, buffered: 142, uptime: '4h 12m' },
+    { id: 'sas',     name: 'SÄS',      hospital: 'Södra Älvsborgs Sjukhus, Borås',         x: 560, y: 420, status: 'online',  lag: 1.4, events: 298410, cache: { patients: 5214,  sizeMb: 61  }, buffered: 0,   uptime: '9d 22h 4m' },
+    { id: 'kungalv', name: 'Kungälv',  hospital: 'Kungälvs Sjukhus',                       x: 200, y: 440, status: 'online',  lag: 4.1, events: 128847, cache: { patients: 2847,  sizeMb: 28  }, buffered: 0,   uptime: '31d 1h 18m' },
+    { id: 'frolunda',name: 'Frölunda', hospital: 'Frölunda Specialistsjukhus',             x: 700, y: 310, status: 'offline', lag: null, events: 0,      cache: null,                             buffered: null, uptime: '—' }
+  ]
+};
+
+window.QUALITY = {
+  kpis: [
+    { name: 'Strukturella fel', value: 1.8, unit: '%', target: '<2%', ok: true, delta: -0.3 },
+    { name: 'Narrativa fel',    value: 4.2, unit: '%', target: '<5%', ok: true, delta: +0.5 },
+    { name: 'Dubbletter',        value: 6.1, unit: '%', target: '<5%', ok: false, delta: -1.2 },
+    { name: 'Terminologitäckning',value: 96.3, unit: '%', target: '>95%', ok: true, delta: 0.0 }
+  ],
+  byType: [
+    { type: 'MISSING_FIELD',        count: 2841, pct: 1.2, ok: true },
+    { type: 'INVALID_CODE',         count: 1847, pct: 0.8, ok: true },
+    { type: 'OUT_OF_RANGE',         count: 4212, pct: 1.8, ok: true },
+    { type: 'DUPLICATE_MERGED',     count: 14211, pct: 6.1, ok: false },
+    { type: 'UNIT_CONVERTED',       count: 872, pct: 0.4, ok: true },
+    { type: 'DRUG_NAME_MISMATCH',   count: 1247, pct: 0.5, ok: true },
+    { type: 'DATE_INCONSISTENCY',   count: 421, pct: 0.2, ok: true },
+    { type: 'UNSTRUCTURED_DIAGNOSIS', count: 9847, pct: 4.2, ok: true }
+  ],
+  bySource: [
+    { source: 'melior-su',   pct: 1.4, trend: [1.8, 1.7, 1.6, 1.5, 1.5, 1.4, 1.4] },
+    { source: 'melior-skas', pct: 2.1, trend: [2.4, 2.3, 2.2, 2.1, 2.0, 2.1, 2.1] },
+    { source: 'melior-nu',   pct: 3.8, trend: [2.2, 2.4, 2.8, 3.2, 3.6, 3.7, 3.8] },
+    { source: 'asynja',      pct: 1.9, trend: [2.0, 1.9, 1.9, 1.8, 1.9, 1.8, 1.9] },
+    { source: 'flexlab',     pct: 0.7, trend: [0.9, 0.8, 0.8, 0.7, 0.7, 0.7, 0.7] },
+    { source: 'pascal',      pct: 2.4, trend: [2.6, 2.5, 2.4, 2.3, 2.4, 2.4, 2.4] }
+  ]
+};
+
+window.AUDIT = [
+  { ts: '2026-04-22 14:32:18', user: 'Erik Lindqvist', hsa: 'SE2321000131-A5B7', role: 'Läkare',      action: 'READ',   resource: 'Patient/$everything', patient: 'XXXXXX-2384', unit: 'SU Ortopedi', purpose: 'VÅRD', outcome: 'emergency', reason: 'Medvetslös patient vid inskrivning, behov av komplett läkemedelsavstämning' },
+  { ts: '2026-04-22 14:29:03', user: 'Maria Berg',    hsa: 'SE2321000131-B2C4', role: 'Läkare',      action: 'READ',   resource: 'Patient',             patient: 'XXXXXX-2384', unit: 'Närhälsan VC Centrum', purpose: 'VÅRD', outcome: 'success' },
+  { ts: '2026-04-22 14:27:55', user: 'Karin Olsson',  hsa: 'SE2321000131-C9A1', role: 'Sjuksköterska',action: 'SEARCH', resource: 'Patient',             patient: 'XXXXXX-1234', unit: 'SkaS Medicin', purpose: 'VÅRD', outcome: 'success' },
+  { ts: '2026-04-22 14:18:41', user: 'Anna Holm',     hsa: 'SE2321000131-D4F2', role: 'Läkare',      action: 'READ',   resource: 'MedicationStatement', patient: 'XXXXXX-5678', unit: 'Närhälsan Linné', purpose: 'VÅRD', outcome: 'success' },
+  { ts: '2026-04-22 14:02:11', user: 'Lars Nyström',  hsa: 'SE2321000131-E7B8', role: 'Läkare',      action: 'READ',   resource: 'Patient',             patient: 'XXXXXX-9921', unit: 'SU Akutmottagning', purpose: 'VÅRD', outcome: 'denied', reason: 'Patienten har spärrat sin journal för denna vårdgivare' },
+  { ts: '2026-04-22 13:54:02', user: 'Erik Lindqvist',hsa: 'SE2321000131-A5B7', role: 'Läkare',      action: 'READ',   resource: 'Procedure',           patient: 'XXXXXX-2384', unit: 'SU Ortopedi', purpose: 'VÅRD', outcome: 'success' },
+  { ts: '2026-04-22 13:42:18', user: 'Sara Wik',      hsa: 'SE2321000131-F1A3', role: 'Admin',       action: 'READ',   resource: 'Observation',         patient: 'XXXXXX-4412', unit: 'VGR Kvalitetsregister', purpose: 'KVALITETSREGISTER', outcome: 'success' },
+  { ts: '2026-04-22 13:21:47', user: 'Jens Ek',       hsa: 'SE2321000131-G8C2', role: 'Läkare',      action: 'READ',   resource: 'Patient',             patient: 'XXXXXX-7733', unit: 'SU Akutmottagning', purpose: 'VÅRD', outcome: 'denied', reason: 'Vårdrelation saknas i HSA-katalogen' },
+  { ts: '2026-04-22 12:58:22', user: 'Maria Berg',    hsa: 'SE2321000131-B2C4', role: 'Läkare',      action: 'SEARCH', resource: 'Condition',           patient: 'XXXXXX-2384', unit: 'Närhälsan VC Centrum', purpose: 'VÅRD', outcome: 'success' },
+  { ts: '2026-04-22 12:41:09', user: 'Anna Holm',     hsa: 'SE2321000131-D4F2', role: 'Läkare',      action: 'READ',   resource: 'AllergyIntolerance',  patient: 'XXXXXX-5678', unit: 'Närhälsan Linné', purpose: 'VÅRD', outcome: 'success' },
+  { ts: '2026-04-22 12:21:45', user: 'Jenny Holm',    hsa: 'SE2321000131-H3K9', role: 'Läkare',      action: 'READ',   resource: 'Patient',             patient: 'XXXXXX-1184', unit: 'SU Akutmottagning', purpose: 'VÅRD', outcome: 'emergency', reason: 'Trauma, oförmåga att kommunicera, behov av allergiinformation' }
+];
+</script>
+
+  <script type="text/babel" data-presets="env,react">
+// Shared small components — icons, badges, sparklines
+const { useState, useEffect, useMemo, useRef } = React;
+
+// --- Icons (inline SVG, 1.75 stroke) ---
+function Icon({ name, size = 16, className }) {
+  const paths = {
+    search: <><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></>,
+    user: <><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></>,
+    activity: <path d="M3 12h4l2-7 4 14 2-7h6"/>,
+    globe: <><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></>,
+    chart: <path d="M3 20V10M9 20V4M15 20v-8M21 20V14"/>,
+    shield: <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>,
+    settings: <><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.3l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2.2-1.3l-.4-2.5h-4l-.4 2.5a7 7 0 0 0-2.2 1.3l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12a7 7 0 0 0 .1 1.3l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2.2 1.3l.4 2.5h4l.4-2.5a7 7 0 0 0 2.2-1.3l2.3 1 2-3.4-2-1.5c.1-.4.1-.9.1-1.3z"/></>,
+    arrowLeft: <path d="M19 12H5M12 19l-7-7 7-7"/>,
+    alert: <><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.3 2 18.5c-.6 1 .1 2.3 1.3 2.3h17.4c1.2 0 2-1.3 1.3-2.3L13.7 3.3a1.5 1.5 0 0 0-2.6 0z"/></>,
+    pill: <><rect x="3" y="9" width="18" height="6" rx="3"/><path d="M12 9v6"/></>,
+    droplet: <path d="M12 3s6 6 6 11a6 6 0 0 1-12 0c0-5 6-11 6-11z"/>,
+    bone: <path d="M6 5a3 3 0 0 1 5 1l7 7a3 3 0 1 1-3 3l-7-7a3 3 0 0 1-2-4zM18 18a3 3 0 0 1 1-1M6 6a3 3 0 0 1-1 1"/>,
+    heart: <path d="M20 8.5a5.5 5.5 0 0 0-9.5-3.8 5.5 5.5 0 0 0-9.5 3.8c0 5.5 9.5 11 9.5 11s9.5-5.5 9.5-11z" transform="scale(0.83) translate(2 2)"/>,
+    clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,
+    stethoscope: <path d="M6 3v7a4 4 0 0 0 8 0V3M10 21a4 4 0 0 0 4-4v-3"/>,
+    chevronRight: <path d="m9 6 6 6-6 6"/>,
+    chevronDown: <path d="m6 9 6 6 6-6"/>,
+    plus: <path d="M12 5v14M5 12h14"/>,
+    check: <path d="M5 12l5 5L20 7"/>,
+    x: <path d="M6 6l12 12M18 6 6 18"/>,
+    dot: <circle cx="12" cy="12" r="3"/>,
+    emergency: <path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>,
+    inbox: <path d="M22 12h-6l-2 3h-4l-2-3H2M5.5 5h13l3.5 7v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z"/>,
+    file: <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6"/>,
+    wifi: <path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01"/>,
+    wifiOff: <path d="M2 8.5a15 15 0 0 1 5-3.2M19 13a10 10 0 0 0-8-4M15.5 18.5M2 2l20 20M12 19h.01"/>
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      {paths[name]}
+    </svg>
+  );
+}
+
+// --- Source Badge ---
+function SourceBadge({ source, size }) {
+  const s = window.SOURCE_LABELS[source];
+  if (!s) return null;
+  return (
+    <span className={`badge ${s.cls}`}>
+      <span className="swatch"></span>
+      {s.label}
+    </span>
+  );
+}
+
+// --- Sparkline ---
+function Sparkline({ data, width = 54, height = 18, color = '#0D7377' }) {
+  if (!data || data.length < 2) return null;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const span = max - min || 1;
+  const step = width / (data.length - 1);
+  const points = data.map((v, i) => `${(i * step).toFixed(1)},${(height - ((v - min) / span) * (height - 2) - 1).toFixed(1)}`).join(' ');
+  return (
+    <svg width={width} height={height} className="spark" style={{ overflow: 'visible' }}>
+      <polyline fill="none" stroke={color} strokeWidth="1.25" points={points} strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx={(data.length - 1) * step} cy={height - ((data[data.length-1] - min) / span) * (height - 2) - 1}
+              r="1.8" fill={color}/>
+    </svg>
+  );
+}
+
+// --- Quality flag ---
+function QualityFlag({ flags }) {
+  if (!flags || !flags.length) return null;
+  return (
+    <span className="qflag" title={flags.join(', ')}>
+      <Icon name="alert" size={14}/>
+    </span>
+  );
+}
+
+// --- Switch ---
+function Switch({ on, onChange, label }) {
+  return (
+    <div className={`switch ${on ? 'on' : ''}`} onClick={() => onChange(!on)}>
+      <span>{label}</span>
+      <span className="sw-track"><span className="sw-thumb"/></span>
+    </div>
+  );
+}
+
+// Expose globally
+Object.assign(window, { Icon, SourceBadge, Sparkline, QualityFlag, Switch });
+
+// Patient page — banner, allergies, CDS, tabs
+const { useState: useStateP } = React;
+
+function PatientBanner({ patient, offline }) {
+  const initials = patient.firstName[0] + patient.lastName[0];
+  return (
+    <div className="patient-banner">
+      <div className="avatar-big">{initials}</div>
+      <h2 className="name-big">{patient.name}</h2>
+      <div className="pnr-big mono">{patient.pnr}</div>
+      <div className="bio">{patient.age} år · {patient.sex}</div>
+      <div className="patient-detail-row">
+        <span className="k">Adress</span>
+        <span className="v">{patient.address}</span>
+      </div>
+      <div className="patient-detail-row">
+        <span className="k">Telefon</span>
+        <span className="v mono">{patient.phone}</span>
+      </div>
+      <div className="patient-detail-row">
+        <span className="k">Datakällor</span>
+        <span className="v" style={{display:'flex',flexWrap:'wrap',gap:4}}>
+          {patient.sources.map(s => <SourceBadge key={s} source={s}/>)}
+        </span>
+      </div>
+      <div className="edge-indicator">
+        <span className="dot"/>
+        {offline ? (
+          <span>Cachedata · Edge {patient.servingEdge}</span>
+        ) : (
+          <span>Serverad från Edge {patient.servingEdge} · lag 2.1s</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AllergyCard({ allergies }) {
+  if (!allergies || allergies.length === 0) {
+    return (
+      <div className="card" style={{borderLeft:'3px solid var(--green)'}}>
+        <div className="card-body" style={{padding:'10px 14px',display:'flex',alignItems:'center',gap:8}}>
+          <Icon name="check" size={14}/>
+          <div>
+            <div style={{fontWeight:500, fontSize:13}}>Inga kända allergier</div>
+            <div style={{fontSize:11,color:'var(--ink-3)'}}>Kontrollerat i Melior, AsynjaVisph</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="allergy-card">
+      <h3 className="h3" style={{color:'var(--red)'}}>
+        <Icon name="alert" size={13}/> Allergier
+      </h3>
+      {allergies.map((a, i) => (
+        <div key={i} className="allergy-item">
+          <div className="drug">{a.drug}</div>
+          <div className="reaction">{a.reaction} · {a.severity}</div>
+          <div style={{display:'flex',gap:6,alignItems:'center'}}>
+            <SourceBadge source={a.source}/>
+            {a.verified > 1 && <span className="badge badge-teal">Verifierad i {a.verified} system</span>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CdsCard({ card }) {
+  const label = card.indicator === 'critical' ? 'Kritisk' : card.indicator === 'warning' ? 'Varning' : 'Info';
+  return (
+    <div className={`cds-card ${card.indicator}`}>
+      <div className="indicator-row">
+        <span className="indicator">{label}</span>
+        {card.indicator === 'critical' && <span className="pulse"/>}
+      </div>
+      <div className="summary">{card.summary}</div>
+      {card.detail && <div className="detail">{card.detail}</div>}
+      <div className="source">{card.source}</div>
+      {card.suggestions && (
+        <div className="suggestions">
+          {card.suggestions.map((s, i) => (
+            <button key={i} className={`btn btn-sm ${i === 0 && card.indicator === 'critical' ? 'btn-red' : ''}`}>
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CdsStack({ cards }) {
+  const sorted = [...cards].sort((a, b) => {
+    const order = { critical: 0, warning: 1, info: 2 };
+    return order[a.indicator] - order[b.indicator];
+  });
+  return (
+    <div>
+      <div className="section-head">
+        <h3 className="h3">CDS-varningar</h3>
+        <span className="meta">{cards.length} aktiva</span>
+      </div>
+      <div className="cds-stack">
+        {sorted.map((c, i) => <CdsCard key={i} card={c}/>)}
+      </div>
+    </div>
+  );
+}
+
+// ---- Tabs ----
+
+function TimelineTab({ patient }) {
+  const [filter, setFilter] = useStateP('all');
+  const filtered = filter === 'all' ? patient.timeline : patient.timeline.filter(e => e.type === filter);
+  const typeLabels = {
+    all: 'Alla',
+    encounter: 'Vårdkontakter',
+    procedure: 'Ingrepp',
+    critical: 'Kritiska',
+    diagnosis: 'Diagnoser',
+    medication: 'Läkemedel',
+    lab: 'Lab'
+  };
+  return (
+    <div>
+      <div className="filter-bar">
+        {Object.entries(typeLabels).map(([k, v]) => (
+          <button key={k} className={`filter-chip ${filter === k ? 'active' : ''}`} onClick={() => setFilter(k)}>
+            {v}
+          </button>
+        ))}
+      </div>
+      <div className="timeline">
+        {filtered.map((e, i) => (
+          <div key={i} className={`tl-item type-${e.type}`}>
+            <div className="date mono">{e.date}</div>
+            <div className="node"/>
+            <div className="body">
+              <div className="title">{e.title}</div>
+              <div className="sub">{e.sub}</div>
+              {e.note && <div style={{fontSize:12,color:'var(--ink-2)',marginTop:4,lineHeight:1.5}}>{e.note}</div>}
+              <div className="extras">
+                <SourceBadge source={e.source}/>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MedicationsTab({ patient }) {
+  const active = patient.medications;
+  return (
+    <div>
+      <div className="filter-bar">
+        <button className="filter-chip active">Aktiva ({active.length})</button>
+        <button className="filter-chip">Avslutade</button>
+        <button className="filter-chip">Alla</button>
+        <div style={{flex:1}}/>
+        <span className="meta">Sorterat på startdatum (nyast)</span>
+      </div>
+      <div className="card" style={{overflow:'hidden'}}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Läkemedel</th>
+              <th>Styrka</th>
+              <th>Dosering</th>
+              <th>Adm.</th>
+              <th>Startdatum</th>
+              <th>Förskrivare</th>
+              <th>Källa</th>
+            </tr>
+          </thead>
+          <tbody>
+            {active.map((m, i) => (
+              <React.Fragment key={i}>
+                <tr className={m.anticoag ? 'anticoag' : ''}>
+                  <td>
+                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                      {m.anticoag && <Icon name="alert" size={13} className="qflag" />}
+                      <span style={{fontWeight:500}}>{m.name}</span>
+                      {m.dup && <span className="badge badge-plain" style={{marginLeft:4}}>2 källor</span>}
+                    </div>
+                    <div className="mono" style={{fontSize:11,color:'var(--ink-3)'}}>{m.atc}</div>
+                  </td>
+                  <td>{m.strength}</td>
+                  <td>{m.dose}</td>
+                  <td>{m.route}</td>
+                  <td className="mono">{m.start}</td>
+                  <td>{m.prescriber}</td>
+                  <td><SourceBadge source={m.source}/></td>
+                </tr>
+                {m.anticoag && (
+                  <tr className="subrow">
+                    <td colSpan={7}>
+                      <div style={{display:'flex',alignItems:'center',gap:16}}>
+                        <span style={{color:'var(--red)',fontWeight:500}}>Antikoagulantia</span>
+                        <span>Senaste INR: <strong>{m.inr}</strong> ({m.inrDate})</span>
+                        <span className="meta">Målområde 2.0 – 3.0</span>
+                        <span style={{flex:1}}/>
+                        <button className="btn btn-sm">Visa INR-trend</button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function LabsTab({ patient }) {
+  const srcColorMap = { flexlab: '#0D7377', 'melior-su': '#2E5090', asynja: '#2F7D4E' };
+  return (
+    <div>
+      <div className="filter-bar">
+        <button className="filter-chip active">Alla</button>
+        <button className="filter-chip">Endast flaggade</button>
+        <button className="filter-chip">Senaste månaden</button>
+        <div style={{flex:1}}/>
+        <span className="meta">{patient.labs.length} analyser</span>
+      </div>
+      <div className="card" style={{overflow:'hidden'}}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Analys</th>
+              <th style={{textAlign:'right'}}>Värde</th>
+              <th>Enhet</th>
+              <th>Referens</th>
+              <th>Flagga</th>
+              <th>Trend</th>
+              <th>Datum</th>
+              <th>Beställare</th>
+              <th>Källa</th>
+            </tr>
+          </thead>
+          <tbody>
+            {patient.labs.map((l, i) => (
+              <tr key={i}>
+                <td>
+                  <div style={{fontWeight:500,display:'flex',alignItems:'center',gap:6}}>
+                    {l.name}
+                    {l.anticoagTarget && <span className="badge badge-red" style={{fontSize:10}}>Waran-mål</span>}
+                  </div>
+                  <div className="mono" style={{fontSize:11,color:'var(--ink-3)'}}>LOINC {l.loinc}</div>
+                </td>
+                <td className="num" style={{textAlign:'right',fontWeight: l.flag ? 600 : 400}}>{l.value}</td>
+                <td className="meta">{l.unit}</td>
+                <td className="mono" style={{fontSize:12}}>{l.refLow}–{l.refHigh}</td>
+                <td>{l.flag && <span className={`flag flag-${l.flag}`}>{l.flag}</span>}</td>
+                <td><Sparkline data={l.trend} color={srcColorMap[l.source] || '#0D7377'}/></td>
+                <td className="mono" style={{fontSize:12}}>{l.date}</td>
+                <td className="meta">{l.orderer}</td>
+                <td><SourceBadge source={l.source}/></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function ProceduresTab({ patient }) {
+  if (patient.procedures.length === 0) {
+    return <div className="meta" style={{padding:20}}>Inga registrerade ingrepp.</div>;
+  }
+  return (
+    <div>
+      <div className="filter-bar">
+        <span className="meta">{patient.procedures.length} ingrepp · sorterat kronologiskt (nyast)</span>
+      </div>
+      {patient.procedures.map((p, i) => (
+        <div key={i} className="proc-card">
+          <div className="header-row">
+            <div style={{flex:1}}>
+              <div className="title">{p.name}</div>
+              <div className="sub">
+                <span>KVÅ <strong className="mono">{p.kva}</strong></span>
+                <span>SNOMED <strong className="mono">{p.snomed}</strong></span>
+                <span className="mono">{p.date}</span>
+                {p.duration && <span>{p.duration} min</span>}
+              </div>
+            </div>
+            <SourceBadge source={p.source}/>
+          </div>
+          <div className="body">
+            <div className="proc-details">
+              <dl className="dl">
+                <dt>Kirurg</dt>
+                <dd>{p.surgeon}{p.surgeonId && <span className="mono" style={{color:'var(--ink-3)',marginLeft:6,fontSize:11}}>({p.surgeonId})</span>}</dd>
+                <dt>Anestesi</dt>
+                <dd>{p.anesthesia}</dd>
+                {p.side && <><dt>Sida</dt><dd>{p.side}</dd></>}
+                {p.complications && <><dt style={{color:'var(--red)'}}>Komplikationer</dt><dd style={{color:'var(--red)'}}>{p.complications}</dd></>}
+                {p.note && <><dt>Anteckning</dt><dd>{p.note}</dd></>}
+              </dl>
+            </div>
+            {p.implant ? (
+              <div className="proc-implant">
+                <h4><Icon name="bone" size={11}/> Implantat</h4>
+                <dl className="dl">
+                  <dt>Typ</dt><dd>{p.implant.type}</dd>
+                  <dt>Tillverkare</dt><dd>{p.implant.manufacturer}</dd>
+                  <dt>Modell</dt><dd>{p.implant.model}</dd>
+                  <dt>Storlek</dt><dd className="mono" style={{fontSize:12}}>{p.implant.size}</dd>
+                </dl>
+              </div>
+            ) : (
+              <div className="proc-implant" style={{background:'var(--surface-alt)',borderLeftColor:'var(--line-2)'}}>
+                <h4 style={{color:'var(--ink-3)'}}>Inget implantat registrerat</h4>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PatientPage({ patient, offline, onBack }) {
+  const [tab, setTab] = useStateP('timeline');
+  const tabs = [
+    { id: 'timeline', label: 'Tidslinje', count: patient.timeline.length },
+    { id: 'medications', label: 'Läkemedel', count: patient.medications.length },
+    { id: 'labs', label: 'Labb', count: patient.labs.length },
+    { id: 'procedures', label: 'Ingrepp', count: patient.procedures.length },
+    { id: 'diagnoses', label: 'Diagnoser', count: (patient.diagnoses||[]).filter(d => d.status==='Aktiv').length },
+    { id: 'vitals', label: 'Vitala' },
+    { id: 'encounters', label: 'Kontakter', count: (patient.encounters||[]).length }
+  ];
+  return (
+    <div className="patient-page">
+      <div className="left-col">
+        <button className="back-link" onClick={onBack}>
+          <Icon name="arrowLeft" size={14}/> Tillbaka till sökning
+        </button>
+        <PatientBanner patient={patient} offline={offline}/>
+        <AllergyCard allergies={patient.allergies}/>
+        <CdsStack cards={patient.cdsAlerts}/>
+      </div>
+      <div className="right-col">
+        <div className="tabs">
+          {tabs.map(t => (
+            <div key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
+              {t.label}
+              {t.count !== undefined && <span className="count">{t.count}</span>}
+            </div>
+          ))}
+        </div>
+        {tab === 'timeline' && <TimelineTab patient={patient}/>}
+        {tab === 'medications' && <MedicationsTab patient={patient}/>}
+        {tab === 'labs' && <LabsTab patient={patient}/>}
+        {tab === 'procedures' && <ProceduresTab patient={patient}/>}
+        {tab === 'diagnoses' && <DiagnosesTab patient={patient}/>}
+        {tab === 'vitals' && <VitalsTab patient={patient}/>}
+        {tab === 'encounters' && <EncountersTab patient={patient}/>}
+      </div>
+    </div>
+  );
+}
+
+function EmptyTab({ name }) {
+  return (
+    <div style={{padding:'60px 20px',textAlign:'center',color:'var(--ink-3)'}}>
+      <div style={{fontSize:13,marginBottom:6}}>{name}</div>
+      <div style={{fontSize:12}}>Vy ej implementerad i denna demo.</div>
+    </div>
+  );
+}
+
+// ---- Diagnoser ----
+function DiagnosesTab({ patient }) {
+  const active = (patient.diagnoses || []).filter(d => d.status === 'Aktiv');
+  const done = (patient.diagnoses || []).filter(d => d.status !== 'Aktiv');
+  const typeColors = { PRIMARY: 'badge-teal', SECONDARY: 'badge-plain', COMPLICATION: 'badge-red' };
+  const typeLabels = { PRIMARY: 'Primär', SECONDARY: 'Bidiagnos', COMPLICATION: 'Komplikation' };
+  return (
+    <div>
+      <div className="filter-bar">
+        <span className="meta">{active.length} aktiva · {done.length} avslutade</span>
+        <div style={{flex:1}}/>
+        <span className="meta">Kodverk: ICD-10-SE</span>
+      </div>
+      <div className="card" style={{overflow:'hidden',marginBottom:16}}>
+        <div className="card-header"><h3 className="h3">Aktiva diagnoser</h3></div>
+        <table className="table">
+          <thead>
+            <tr>
+              <th style={{width:90}}>ICD-10</th>
+              <th>Diagnos</th>
+              <th>Typ</th>
+              <th>Diagnostiserad</th>
+              <th>Av</th>
+              <th>Källa</th>
+            </tr>
+          </thead>
+          <tbody>
+            {active.map((d, i) => (
+              <React.Fragment key={i}>
+                <tr>
+                  <td className="mono" style={{fontWeight:500}}>{d.code}</td>
+                  <td>
+                    {d.text}
+                    {d.verifiedIn > 1 && <span className="badge badge-teal" style={{marginLeft:6}}>Registrerad i {d.verifiedIn} system</span>}
+                  </td>
+                  <td><span className={`badge ${typeColors[d.type]}`}>{typeLabels[d.type]}</span></td>
+                  <td className="mono" style={{fontSize:12}}>{d.date}</td>
+                  <td>{d.by}</td>
+                  <td><SourceBadge source={d.source}/></td>
+                </tr>
+                {d.relatedTo && (
+                  <tr className="subrow"><td colSpan={6}>
+                    <span style={{color:'var(--red)'}}>↳ Komplikation till</span> <span className="mono">{d.relatedTo}</span>
+                  </td></tr>
+                )}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {done.length > 0 && (
+        <div className="card" style={{overflow:'hidden',opacity:0.75}}>
+          <div className="card-header"><h3 className="h3" style={{color:'var(--ink-3)'}}>Avslutade diagnoser</h3></div>
+          <table className="table">
+            <tbody>
+              {done.map((d, i) => (
+                <tr key={i}>
+                  <td className="mono" style={{width:90}}>{d.code}</td>
+                  <td>{d.text}</td>
+                  <td className="mono" style={{fontSize:12}}>{d.date}</td>
+                  <td><SourceBadge source={d.source}/></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- Vitala ----
+function TrendChart({ series, dates }) {
+  const W = 720, H = 220, pad = { l: 40, r: 20, t: 20, b: 30 };
+  const allVals = [...series.bp_sys, ...series.bp_dia, ...series.pulse];
+  const min = Math.min(...allVals) - 10;
+  const max = Math.max(...allVals) + 10;
+  const xStep = (W - pad.l - pad.r) / (dates.length - 1);
+  const y = v => pad.t + (1 - (v - min) / (max - min)) * (H - pad.t - pad.b);
+  const path = arr => arr.map((v, i) => `${i===0?'M':'L'} ${pad.l + i * xStep} ${y(v)}`).join(' ');
+  const yTicks = [min, Math.round((min+max)/2), max];
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{background:'var(--surface)'}}>
+      {/* Reference band 120/80 */}
+      <rect x={pad.l} y={y(140)} width={W-pad.l-pad.r} height={y(90)-y(140)} fill="rgba(47,125,78,0.06)"/>
+      <line x1={pad.l} x2={W-pad.r} y1={y(140)} y2={y(140)} stroke="var(--line-2)" strokeDasharray="3,3"/>
+      <line x1={pad.l} x2={W-pad.r} y1={y(90)} y2={y(90)} stroke="var(--line-2)" strokeDasharray="3,3"/>
+      {yTicks.map(t => (
+        <g key={t}>
+          <line x1={pad.l} x2={W-pad.r} y1={y(t)} y2={y(t)} stroke="var(--line)"/>
+          <text x={pad.l-6} y={y(t)+3} textAnchor="end" fontSize="10" fill="var(--ink-3)">{t}</text>
+        </g>
+      ))}
+      {dates.map((d, i) => (
+        <text key={i} x={pad.l + i*xStep} y={H-10} textAnchor="middle" fontSize="9" fill="var(--ink-3)">
+          {d.split(' ')[0].slice(5)}
+        </text>
+      ))}
+      <path d={path(series.bp_sys)} fill="none" stroke="#B8322C" strokeWidth="1.75"/>
+      <path d={path(series.bp_dia)} fill="none" stroke="#2E5090" strokeWidth="1.75"/>
+      <path d={path(series.pulse)} fill="none" stroke="#0D7377" strokeWidth="1.75"/>
+      {series.bp_sys.map((v, i) => <circle key={'s'+i} cx={pad.l+i*xStep} cy={y(v)} r="2.5" fill="#B8322C"/>)}
+      {series.bp_dia.map((v, i) => <circle key={'d'+i} cx={pad.l+i*xStep} cy={y(v)} r="2.5" fill="#2E5090"/>)}
+      {series.pulse.map((v, i) => <circle key={'p'+i} cx={pad.l+i*xStep} cy={y(v)} r="2.5" fill="#0D7377"/>)}
+    </svg>
+  );
+}
+
+function VitalsTab({ patient }) {
+  if (!patient.vitals) return <EmptyTab name="Vitala parametrar"/>;
+  const statusCol = { normal: 'var(--green)', warning: 'var(--amber)', critical: 'var(--red)' };
+  return (
+    <div>
+      <h3 className="h3" style={{marginBottom:10}}>Senaste värden</h3>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',gap:10,marginBottom:24}}>
+        {patient.vitals.latest.map((v, i) => (
+          <div key={i} className="vital-card" style={{borderLeft:`3px solid ${statusCol[v.status]}`}}>
+            <div className="name">{v.name}</div>
+            <div>
+              <span className="val tnum">{v.value}</span>
+              <span className="unit">{v.unit}</span>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:4}}>
+              <span className="meta mono" style={{fontSize:10}}>{v.date}</span>
+              <SourceBadge source={v.source}/>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="section-head">
+        <h3 className="h3">Trend</h3>
+        <div style={{display:'flex',gap:14,fontSize:11,color:'var(--ink-3)'}}>
+          <span><span style={{display:'inline-block',width:10,height:2,background:'#B8322C',verticalAlign:'middle',marginRight:4}}/>Systoliskt</span>
+          <span><span style={{display:'inline-block',width:10,height:2,background:'#2E5090',verticalAlign:'middle',marginRight:4}}/>Diastoliskt</span>
+          <span><span style={{display:'inline-block',width:10,height:2,background:'#0D7377',verticalAlign:'middle',marginRight:4}}/>Puls</span>
+        </div>
+      </div>
+      <div className="card">
+        <div className="card-body">
+          <TrendChart series={patient.vitals.series} dates={patient.vitals.series.dates}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- Encounters ----
+function EncountersTab({ patient }) {
+  if (!patient.encounters) return <EmptyTab name="Vårdkontakter"/>;
+  const typeStyles = {
+    INPATIENT:  { cls: 'badge-red', label: 'Slutenvård' },
+    OUTPATIENT: { cls: 'badge-teal', label: 'Öppenvård' },
+    EMERGENCY:  { cls: 'badge-red', label: 'Akut' },
+    DAYCARE:    { cls: 'badge-amber', label: 'Dagsjukvård' }
+  };
+  return (
+    <div>
+      <div className="filter-bar">
+        <button className="filter-chip active">Alla</button>
+        <button className="filter-chip">Slutenvård</button>
+        <button className="filter-chip">Öppenvård</button>
+        <button className="filter-chip">Akut</button>
+        <div style={{flex:1}}/>
+        <span className="meta">{patient.encounters.length} vårdkontakter</span>
+      </div>
+      <div className="card" style={{overflow:'hidden'}}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Typ</th>
+              <th>Avdelning</th>
+              <th>Inskrivning</th>
+              <th>Utskrivning</th>
+              <th>Ansvarig läkare</th>
+              <th>Utskrivningsdiagnos</th>
+              <th>Källa</th>
+            </tr>
+          </thead>
+          <tbody>
+            {patient.encounters.map((e, i) => {
+              const ts = typeStyles[e.type];
+              return (
+                <tr key={i}>
+                  <td><span className={`badge ${ts.cls}`}>{ts.label}</span></td>
+                  <td>{e.unit}</td>
+                  <td className="mono" style={{fontSize:12}}>{e.admit}</td>
+                  <td className="mono" style={{fontSize:12}}>{e.discharge === e.admit ? '—' : e.discharge}</td>
+                  <td>{e.physician}</td>
+                  <td className="mono" style={{fontSize:12}}>{e.dischargeDx}</td>
+                  <td><SourceBadge source={e.source}/></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { PatientPage });
+
+// Admin pages: Systemstatus, Topologi, Datakvalitet, Åtkomstlogg, Inställningar
+const { useState: useStateA } = React;
+
+// ================== SYSTEMSTATUS ==================
+function SystemPage() {
+  const d = window.SYSTEM_STATUS;
+  return (
+    <div className="admin-page">
+      <h1>Systemstatus</h1>
+      <p className="page-sub">Kafka, CDC-connectors och datapipelines · uppdateras var 5:e sekund</p>
+
+      <div className="kpi-grid">
+        <div className="kpi-card ok">
+          <div className="kpi-label">Events/min</div>
+          <div className="kpi-val tnum">{d.summary.eventsPerMin}</div>
+          <div className="kpi-foot"><span className="delta-up">▲ {d.summary.eventsDelta}%</span> jmf förra timmen</div>
+        </div>
+        <div className="kpi-card ok">
+          <div className="kpi-label">CDC lag</div>
+          <div className="kpi-val tnum">{d.summary.cdcLagSec}<span className="suffix">s</span></div>
+          <div className="kpi-foot"><span className="dot dot-green" style={{width:6,height:6,borderRadius:'50%',background:'var(--green)',display:'inline-block'}}/> Mål &lt;5s</div>
+        </div>
+        <div className="kpi-card ok">
+          <div className="kpi-label">FHIR p95</div>
+          <div className="kpi-val tnum">{d.summary.fhirP95ms}<span className="suffix">ms</span></div>
+          <div className="kpi-foot"><span style={{width:6,height:6,borderRadius:'50%',background:'var(--green)',display:'inline-block'}}/> Mål &lt;250ms</div>
+        </div>
+        <div className="kpi-card ok">
+          <div className="kpi-label">Felfrekvens</div>
+          <div className="kpi-val tnum">{d.summary.errorRatePct}<span className="suffix">%</span></div>
+          <div className="kpi-foot"><span className="delta-down">▼ {Math.abs(d.summary.errorDelta)}%</span> v/v</div>
+        </div>
+      </div>
+
+      <div className="admin-section">
+        <h2>Kafka Topics</h2>
+        <div className="card" style={{overflow:'hidden'}}>
+          <table className="table">
+            <thead><tr><th>Topic</th><th style={{textAlign:'right'}}>Meddelanden</th><th style={{textAlign:'right'}}>Consumer lag</th><th style={{textAlign:'right'}}>Throughput</th><th>Status</th></tr></thead>
+            <tbody>
+              {d.topics.map(t => (
+                <tr key={t.name}>
+                  <td className="mono" style={{fontSize:12}}>{t.name}</td>
+                  <td className="tnum" style={{textAlign:'right'}}>{t.msgs.toLocaleString('sv-SE')}</td>
+                  <td className="tnum" style={{textAlign:'right', color: t.lag>50?'var(--amber)':'var(--ink)'}}>{t.lag}</td>
+                  <td className="tnum" style={{textAlign:'right'}}>{t.tps}/s</td>
+                  <td><span style={{width:8,height:8,borderRadius:'50%',display:'inline-block',background: t.status==='ok'?'var(--green)':t.status==='warn'?'var(--amber)':'var(--red)'}}/></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="admin-section">
+        <h2>CDC-connectors</h2>
+        <div className="card" style={{overflow:'hidden'}}>
+          <table className="table">
+            <thead><tr><th>Connector</th><th>Status</th><th>Källa</th><th>Tasks</th><th>Latens</th><th>Senaste event</th></tr></thead>
+            <tbody>
+              {d.connectors.map(c => {
+                const ok = c.status === 'RUNNING';
+                return (
+                  <tr key={c.name}>
+                    <td className="mono" style={{fontSize:12}}>{c.name}</td>
+                    <td><span className={`badge ${ok?'badge-green':'badge-red'}`}>{c.status}</span></td>
+                    <td>{c.source}</td>
+                    <td className="mono" style={{fontSize:12}}>{c.tasks}</td>
+                    <td className="mono" style={{fontSize:12}}>{c.latency}</td>
+                    <td className="meta">{c.lastEvent}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="admin-section">
+        <h2>Senaste fel</h2>
+        <div className="card" style={{overflow:'hidden'}}>
+          <table className="table">
+            <thead><tr><th style={{width:150}}>Tidpunkt</th><th>Källa</th><th>Nivå</th><th>Meddelande</th></tr></thead>
+            <tbody>
+              {d.errors.map((e,i) => (
+                <tr key={i}>
+                  <td className="mono" style={{fontSize:12}}>{e.ts}</td>
+                  <td className="mono" style={{fontSize:12}}>{e.source}</td>
+                  <td><span className={`badge ${e.level==='ERROR'?'badge-red':e.level==='WARN'?'badge-amber':'badge-plain'}`}>{e.level}</span></td>
+                  <td style={{fontSize:12,color:'var(--ink-2)'}}>{e.msg}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================== TOPOLOGI ==================
+function TopologyPage() {
+  const d = window.TOPOLOGY;
+  const [selected, setSelected] = useStateA('su');
+  const sel = d.nodes.find(n => n.id === selected);
+  const statusCol = { online: 'var(--green)', replaying: 'var(--amber)', offline: 'var(--red)' };
+  const statusLabel = { online: 'Online', replaying: 'Replaying', offline: 'Offline' };
+
+  return (
+    <div className="admin-page">
+      <h1>Nätverkstopologi</h1>
+      <p className="page-sub">Central hub + {d.nodes.length} edge-noder · Västra Götalandsregionen</p>
+
+      <div className="topo-wrap">
+        <div className="topo-map">
+          <svg viewBox="0 0 860 560" style={{width:'100%',height:'auto'}}>
+            {/* VGR map outline — stylized */}
+            <defs>
+              <pattern id="sea" patternUnits="userSpaceOnUse" width="6" height="6">
+                <path d="M0,3 Q1.5,2 3,3 T6,3" stroke="#C8D5E2" fill="none" strokeWidth="0.4"/>
+              </pattern>
+            </defs>
+            <rect x="0" y="0" width="860" height="560" fill="url(#sea)" opacity="0.3"/>
+            {/* Simplified VGR shape */}
+            <path d="M 120 80 Q 200 60 280 80 L 380 70 Q 480 80 540 120 L 620 140 Q 700 180 740 240 L 780 320 Q 760 400 720 460 L 640 500 Q 540 530 440 510 L 340 500 Q 240 490 180 450 L 120 380 Q 80 280 100 180 Z"
+                  fill="#F0EBDD" stroke="#D8D0BE" strokeWidth="1.5"/>
+
+            {/* Edge labels — cities */}
+            <text x="310" y="138" className="node-sub" textAnchor="middle">Göteborg</text>
+            <text x="640" y="128" className="node-sub" textAnchor="middle">Skövde</text>
+            <text x="180" y="300" className="node-sub" textAnchor="middle">Trollhättan</text>
+            <text x="560" y="400" className="node-sub" textAnchor="middle">Borås</text>
+            <text x="200" y="420" className="node-sub" textAnchor="middle">Kungälv</text>
+            <text x="700" y="290" className="node-sub" textAnchor="middle">Västra Frölunda</text>
+
+            {/* Lines hub ↔ nodes */}
+            {d.nodes.map(n => {
+              const ok = n.status === 'online';
+              const warn = n.status === 'replaying';
+              const off = n.status === 'offline';
+              return (
+                <g key={'l'+n.id}>
+                  <line x1={d.hub.x} y1={d.hub.y} x2={n.x} y2={n.y}
+                        stroke={off?'rgba(184,50,44,0.35)':warn?'rgba(184,134,11,0.45)':'rgba(13,115,119,0.4)'}
+                        strokeWidth={off?1.2:1.8} strokeDasharray={off?'3,4':undefined}/>
+                  {!off && (
+                    <line x1={d.hub.x} y1={d.hub.y} x2={n.x} y2={n.y}
+                          stroke={warn?'var(--amber)':'var(--teal)'} strokeWidth="2"
+                          strokeDasharray="4,8" style={{animation:'flow 1.6s linear infinite'}} opacity="0.7"/>
+                  )}
+                </g>
+              );
+            })}
+
+            {/* Central hub */}
+            <g transform={`translate(${d.hub.x},${d.hub.y})`} style={{cursor:'pointer'}}>
+              <circle r="28" fill="var(--navy)"/>
+              <circle r="22" fill="none" stroke="var(--teal)" strokeWidth="2"/>
+              <text y="3" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="600">HUB</text>
+              <text y="50" textAnchor="middle" className="node-label">Central Hub</text>
+              <text y="63" textAnchor="middle" className="node-sub">Göteborg DC</text>
+            </g>
+
+            {/* Nodes */}
+            {d.nodes.map(n => {
+              const ok = n.status === 'online';
+              const off = n.status === 'offline';
+              const warn = n.status === 'replaying';
+              return (
+                <g key={n.id} transform={`translate(${n.x},${n.y})`} style={{cursor:'pointer'}}
+                   onClick={() => setSelected(n.id)}>
+                  {off && <circle r="22" fill="var(--red)" opacity="0.2" style={{animation:'pulseRing 1.8s infinite',transformOrigin:'0 0'}}/>}
+                  <circle r="18" fill="var(--surface)" stroke={statusCol[n.status]}
+                          strokeWidth={selected===n.id?3:2}/>
+                  <text y="3" textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--ink)">{n.name}</text>
+                  <text y="36" textAnchor="middle" className="node-label">{n.name}</text>
+                  <text y="48" textAnchor="middle" className="node-sub">
+                    {ok && `lag ${n.lag}s`}
+                    {warn && `replaying ${n.buffered}`}
+                    {off && 'offline'}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+
+        <div className="topo-side">
+          <div style={{marginBottom:14}}>
+            <div className="label" style={{marginBottom:6}}>Vald nod</div>
+            <div style={{fontSize:16,fontWeight:600}}>{sel.hospital}</div>
+            <div className="meta" style={{marginTop:2}}>Edge {sel.name}</div>
+          </div>
+
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16}}>
+            <span style={{width:10,height:10,borderRadius:'50%',background:statusCol[sel.status]}}/>
+            <strong style={{color:statusCol[sel.status],fontSize:13}}>{statusLabel[sel.status]}</strong>
+          </div>
+
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:16}}>
+            <div>
+              <div className="label" style={{fontSize:10,marginBottom:3}}>Lag</div>
+              <div className="mono" style={{fontSize:14,fontWeight:500}}>{sel.lag!==null ? sel.lag+'s' : '—'}</div>
+            </div>
+            <div>
+              <div className="label" style={{fontSize:10,marginBottom:3}}>Uptime</div>
+              <div className="mono" style={{fontSize:12,fontWeight:500}}>{sel.uptime}</div>
+            </div>
+            <div>
+              <div className="label" style={{fontSize:10,marginBottom:3}}>CDC events</div>
+              <div className="mono" style={{fontSize:13}}>{sel.events.toLocaleString('sv-SE')}</div>
+            </div>
+            <div>
+              <div className="label" style={{fontSize:10,marginBottom:3}}>Buffrade</div>
+              <div className="mono" style={{fontSize:13,color:sel.buffered?'var(--amber)':'var(--ink)'}}>
+                {sel.buffered || '—'}
+              </div>
+            </div>
+          </div>
+
+          {sel.cache && (
+            <div style={{padding:12,background:'var(--surface)',border:'1px solid var(--line)',borderRadius:3,marginBottom:14}}>
+              <div className="label" style={{marginBottom:6}}>FHIR-cache</div>
+              <div style={{fontSize:12,display:'flex',justifyContent:'space-between'}}>
+                <span>Patienter</span><span className="mono">{sel.cache.patients.toLocaleString('sv-SE')}</span>
+              </div>
+              <div style={{fontSize:12,display:'flex',justifyContent:'space-between',marginTop:3}}>
+                <span>Storlek</span><span className="mono">{sel.cache.sizeMb} MB</span>
+              </div>
+            </div>
+          )}
+
+          <div style={{fontSize:12,color:'var(--ink-3)',lineHeight:1.6}}>
+            <div style={{display:'flex',justifyContent:'space-between',padding:'4px 0',borderTop:'1px solid var(--line)'}}>
+              <span>Källsystem ansluten</span>
+              <span>{sel.status!=='offline' ? '✓' : '✕'}</span>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',padding:'4px 0',borderTop:'1px solid var(--line)'}}>
+              <span>Central hub ansluten</span>
+              <span>{sel.status!=='offline' ? '✓' : '✕'}</span>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',padding:'4px 0',borderTop:'1px solid var(--line)'}}>
+              <span>Senaste heartbeat</span>
+              <span className="mono">{sel.status==='offline' ? '8 min sedan' : '4s sedan'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================== DATAKVALITET ==================
+function QualityPage() {
+  const d = window.QUALITY;
+  const maxBar = Math.max(...d.byType.map(x => x.count));
+  const maxTrend = Math.max(...d.bySource.flatMap(s => s.trend));
+  return (
+    <div className="admin-page">
+      <h1>Datakvalitet</h1>
+      <p className="page-sub">Data Quality Dashboard · felfrekvenser, terminologi, dubbletter</p>
+
+      <div className="kpi-grid">
+        {d.kpis.map(k => (
+          <div key={k.name} className={`kpi-card ${k.ok?'ok':'warn'}`}>
+            <div className="kpi-label">{k.name}</div>
+            <div className="kpi-val tnum">{k.value}<span className="suffix">{k.unit}</span></div>
+            <div className="kpi-foot">
+              Mål {k.target} ·{' '}
+              {k.delta > 0 && <span className="delta-up">▲ {k.delta}%</span>}
+              {k.delta < 0 && <span className="delta-down">▼ {Math.abs(k.delta)}%</span>}
+              {k.delta === 0 && <span>● stabil</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="admin-section">
+        <h2>Felfrekvens per typ</h2>
+        <div className="card"><div className="card-body">
+          {d.byType.map(b => (
+            <div key={b.type} className="bar-row">
+              <span className="mono" style={{fontSize:11}}>{b.type}</span>
+              <div className="bar-track">
+                <div className="bar-fill" style={{width:`${(b.count/maxBar)*100}%`, background: b.ok?'var(--teal)':'var(--red)'}}/>
+              </div>
+              <span className="tnum" style={{textAlign:'right'}}>{b.count.toLocaleString('sv-SE')}</span>
+            </div>
+          ))}
+        </div></div>
+      </div>
+
+      <div className="admin-section">
+        <h2>Felfrekvens per källsystem · senaste 7 dagar</h2>
+        <div className="card"><div className="card-body">
+          {d.bySource.map(s => {
+            const W = 300, H = 28;
+            const step = W / (s.trend.length - 1);
+            const y = v => H - (v / maxTrend) * (H - 4) - 2;
+            const path = s.trend.map((v,i) => `${i===0?'M':'L'} ${i*step} ${y(v)}`).join(' ');
+            return (
+              <div key={s.source} className="qtrend">
+                <div><SourceBadge source={s.source}/></div>
+                <svg width={W} height={H}>
+                  <path d={path} fill="none" stroke="var(--teal)" strokeWidth="1.5"/>
+                  {s.trend.map((v,i) => <circle key={i} cx={i*step} cy={y(v)} r="2" fill="var(--teal)"/>)}
+                </svg>
+                <span className="tnum mono" style={{textAlign:'right',fontWeight:500}}>{s.pct}%</span>
+              </div>
+            );
+          })}
+        </div></div>
+      </div>
+    </div>
+  );
+}
+
+// ================== ÅTKOMSTLOGG ==================
+function AuditPage() {
+  const [filter, setFilter] = useStateA('all');
+  const rows = window.AUDIT.filter(r => filter === 'all' || r.outcome === filter);
+  const outcomeStyle = {
+    success:   { cls:'badge-green', label:'✓ Success' },
+    denied:    { cls:'badge-red',   label:'✕ Nekad' },
+    emergency: { cls:'badge-amber', label:'⚠ Nödöppning' }
+  };
+  return (
+    <div className="admin-page">
+      <h1>Åtkomstlogg</h1>
+      <p className="page-sub">PDL-compliance · sökbar, filtrerbar, exporterbar</p>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 140px 140px auto',gap:8,marginBottom:16}}>
+        <input className="input" placeholder="Personnummer"/>
+        <input className="input" placeholder="Användare (HSA-ID)"/>
+        <input className="input" placeholder="Från datum"/>
+        <input className="input" placeholder="Till datum"/>
+        <button className="btn btn-primary">Sök</button>
+      </div>
+
+      <div className="filter-bar">
+        {[
+          { id:'all', label:'Alla ('+window.AUDIT.length+')' },
+          { id:'success', label:'✓ Success' },
+          { id:'denied', label:'✕ Nekade' },
+          { id:'emergency', label:'⚠ Nödöppningar' }
+        ].map(o => (
+          <button key={o.id} className={`filter-chip ${filter===o.id?'active':''}`} onClick={()=>setFilter(o.id)}>{o.label}</button>
+        ))}
+        <div style={{flex:1}}/>
+        <button className="btn btn-sm">Exportera CSV</button>
+      </div>
+
+      <div className="card" style={{overflow:'hidden'}}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th style={{width:150}}>Tidpunkt</th>
+              <th>Användare</th>
+              <th>Roll</th>
+              <th>Åtgärd</th>
+              <th>Resurs</th>
+              <th>Patient</th>
+              <th>Vårdenhet</th>
+              <th>Ändamål</th>
+              <th>Utfall</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r,i) => {
+              const o = outcomeStyle[r.outcome];
+              const rowBg = r.outcome==='emergency' ? 'rgba(184,134,11,0.06)' : r.outcome==='denied' ? 'rgba(184,50,44,0.05)' : undefined;
+              return (
+                <React.Fragment key={i}>
+                  <tr style={{background: rowBg}}>
+                    <td className="mono" style={{fontSize:12}}>{r.ts}</td>
+                    <td>
+                      <div style={{fontSize:13}}>{r.user}</div>
+                      <div className="mono" style={{fontSize:10,color:'var(--ink-3)'}}>{r.hsa}</div>
+                    </td>
+                    <td className="meta">{r.role}</td>
+                    <td><span className="badge badge-plain">{r.action}</span></td>
+                    <td className="mono" style={{fontSize:12}}>{r.resource}</td>
+                    <td className="mono" style={{fontSize:12}}>{r.patient}</td>
+                    <td className="meta">{r.unit}</td>
+                    <td className="meta">{r.purpose}</td>
+                    <td><span className={`badge ${o.cls}`}>{o.label}</span></td>
+                  </tr>
+                  {r.reason && (
+                    <tr className="subrow" style={{background: rowBg}}>
+                      <td colSpan={9} style={{fontSize:12,color:r.outcome==='denied'?'var(--red)':'var(--amber)'}}>
+                        {r.outcome==='emergency' ? '⚠ Motivering: ' : '↳ Anledning: '}
+                        <em>"{r.reason}"</em>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ================== INSTÄLLNINGAR ==================
+function SettingsPage({ tweaks, setTweak, PDL_CONTEXTS }) {
+  return (
+    <div className="admin-page" style={{maxWidth: 820}}>
+      <h1>Inställningar</h1>
+      <p className="page-sub">PDL-kontext, visning, edge-konfiguration</p>
+
+      <div className="admin-section">
+        <h2>PDL-kontext</h2>
+        <div className="card"><div className="card-body">
+          <div style={{display:'grid',gridTemplateColumns:'160px 1fr',gap:'12px 16px',alignItems:'center',fontSize:13}}>
+            <label className="label" style={{margin:0}}>Vårdenhet</label>
+            <select className="input" value={tweaks.pdlContext} onChange={e=>setTweak('pdlContext', e.target.value)}>
+              {Object.entries(PDL_CONTEXTS).map(([k,v]) => <option key={k} value={k}>{v.unit}</option>)}
+            </select>
+            <label className="label" style={{margin:0}}>Vårdgivare</label>
+            <div>{PDL_CONTEXTS[tweaks.pdlContext].provider}</div>
+            <label className="label" style={{margin:0}}>Ändamål</label>
+            <div><span className="badge badge-teal">{PDL_CONTEXTS[tweaks.pdlContext].purpose}</span></div>
+            <label className="label" style={{margin:0}}>Laglig grund</label>
+            <div className="mono" style={{fontSize:12}}>{PDL_CONTEXTS[tweaks.pdlContext].legalBasis}</div>
+          </div>
+        </div></div>
+      </div>
+
+      <div className="admin-section">
+        <h2>Visning</h2>
+        <div className="card"><div className="card-body" style={{display:'flex',flexDirection:'column',gap:10}}>
+          <div style={{display:'grid',gridTemplateColumns:'160px 1fr',alignItems:'center',gap:12}}>
+            <label className="label" style={{margin:0}}>Tema</label>
+            <div style={{display:'flex',gap:6}}>
+              <button className="filter-chip active">Ljust</button>
+              <button className="filter-chip">Mörkt</button>
+              <button className="filter-chip">Auto</button>
+            </div>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'160px 1fr',alignItems:'center',gap:12}}>
+            <label className="label" style={{margin:0}}>Tabellrader/sida</label>
+            <div style={{display:'flex',gap:6}}>
+              <button className="filter-chip">25</button>
+              <button className="filter-chip active">50</button>
+              <button className="filter-chip">100</button>
+            </div>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'160px 1fr',alignItems:'center',gap:12}}>
+            <label className="label" style={{margin:0}}>Standardflik</label>
+            <div style={{display:'flex',gap:6}}>
+              <button className="filter-chip active">Tidslinje</button>
+              <button className="filter-chip">Läkemedel</button>
+              <button className="filter-chip">Labb</button>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <div className="admin-section">
+        <h2>Edge-konfiguration</h2>
+        <div className="card"><div className="card-body" style={{fontSize:13}}>
+          <div style={{display:'flex',justifyContent:'space-between',padding:'6px 0'}}>
+            <span>Aktiv edge-nod</span><span className="mono"><strong>Edge SU</strong> (auto-detekterad)</span>
+          </div>
+          <div style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderTop:'1px solid var(--line)'}}>
+            <span>Tvinga datakälla</span>
+            <div style={{display:'flex',gap:6}}>
+              <button className="filter-chip active">Auto</button>
+              <button className="filter-chip">Central</button>
+              <button className="filter-chip">Lokal</button>
+            </div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { SystemPage, TopologyPage, QualityPage, AuditPage, SettingsPage });
+
+</script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect, useMemo } = React;
+
+const TWEAKS_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "emergencyMode": false,
+  "offlineMode": false,
+  "pdlContext": "su-akut"
+}/*EDITMODE-END*/;
+
+const PDL_CONTEXTS = {
+  'su-akut':     { unit: 'SU Akutmottagningen',  provider: 'Sahlgrenska Universitetssjukhuset', purpose: 'VÅRD', legalBasis: 'PDL §2:4' },
+  'su-ortoped':  { unit: 'SU Ortopedklinik',     provider: 'Sahlgrenska Universitetssjukhuset', purpose: 'VÅRD', legalBasis: 'PDL §2:4' },
+  'nh-centrum':  { unit: 'Närhälsan VC Centrum', provider: 'Närhälsan',                          purpose: 'VÅRD', legalBasis: 'PDL §2:4' },
+  'skas-kir':    { unit: 'SkaS Kirurgklinik',    provider: 'Skaraborgs Sjukhus',                 purpose: 'VÅRD', legalBasis: 'PDL §2:4' },
+  'kvalitet':    { unit: 'VGR Kvalitetsregister', provider: 'VGR Regionkontor',                  purpose: 'KVALITETSREGISTER', legalBasis: 'PDL §7:1' }
+};
+
+function Topbar({ tweaks, onOpenEmergency }) {
+  const pdl = PDL_CONTEXTS[tweaks.pdlContext] || PDL_CONTEXTS['su-akut'];
+  return (
+    <header className="topbar">
+      <div className="logo">
+        <span className="logo-mark">V</span>
+        <span>Nimloth Core</span>
+      </div>
+      <div className="pdl-badge">
+        <span className="dot"/>
+        <span className="meta" style={{color:'rgba(255,255,255,0.55)'}}>Vårdenhet</span>
+        <strong>{pdl.unit}</strong>
+        <span className="sep">·</span>
+        <span className="meta" style={{color:'rgba(255,255,255,0.55)'}}>Ändamål</span>
+        <strong>{pdl.purpose}</strong>
+        <span className="sep">·</span>
+        <span className="mono" style={{fontSize:11,color:'rgba(255,255,255,0.55)'}}>{pdl.legalBasis}</span>
+      </div>
+      <div className="spacer"/>
+      {!tweaks.emergencyMode && (
+        <button className="emergency-btn" onClick={onOpenEmergency}>
+          Nödöppning
+        </button>
+      )}
+      {tweaks.emergencyMode && (
+        <button className="emergency-btn">
+          Nödöppning aktiv · Ingrid A.
+        </button>
+      )}
+      <div className="user-menu">
+        <div className="avatar">EL</div>
+        <div>
+          <div className="name">Erik Lindqvist</div>
+          <div className="role">Läkare · SU Ortopedi</div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function Sidebar({ activeView, setView, patientName }) {
+  const items = [
+    { id: 'search', icon: 'search', label: 'Patientsök' },
+    { id: 'patient', icon: 'user', label: 'Patientöversikt', badge: patientName },
+    { id: '_sep1', separator: true },
+    { id: 'system', icon: 'activity', label: 'Systemstatus' },
+    { id: 'topology', icon: 'globe', label: 'Topologi', badge: '5/6' },
+    { id: 'quality', icon: 'chart', label: 'Datakvalitet', badge: '1.8%' },
+    { id: 'audit', icon: 'shield', label: 'Åtkomstlogg' },
+    { id: '_sep2', separator: true },
+    { id: 'settings', icon: 'settings', label: 'Inställningar' }
+  ];
+  return (
+    <aside className="sidebar">
+      {items.map((item, i) => {
+        if (item.separator) return <div key={i} style={{height:1,background:'rgba(255,255,255,0.08)',margin:'10px 6px'}}/>;
+        const disabled = false;
+        return (
+          <div
+            key={item.id}
+            className={`nav-item ${activeView === item.id ? 'active' : ''}`}
+            onClick={() => !disabled && setView(item.id)}
+            style={disabled ? { opacity: 0.45, cursor: 'not-allowed' } : {}}
+            title={disabled ? 'Ej i denna demo' : ''}
+          >
+            <Icon name={item.icon} className="icon" size={16}/>
+            <span>{item.label}</span>
+            {item.badge && <span className="badge">{item.badge}</span>}
+          </div>
+        );
+      })}
+    </aside>
+  );
+}
+
+function Statusbar({ tweaks }) {
+  if (tweaks.offlineMode) {
+    return (
+      <div className="statusbar">
+        <div className="item"><span className="dot dot-red"/>Central hub: offline</div>
+        <div className="sep"/>
+        <div className="item"><span className="dot dot-amber"/>Edge SU: lokal drift (4213 buffrade events)</div>
+        <div className="sep"/>
+        <div className="item">Senaste synk: för 8 min sedan</div>
+        <div style={{flex:1}}/>
+        <div className="item meta">Offline-läge aktivt — visar cachedata</div>
+      </div>
+    );
+  }
+  return (
+    <div className="statusbar">
+      <div className="item"><span className="dot dot-green"/>Central hub: online</div>
+      <div className="sep"/>
+      <div className="item"><span className="dot dot-green"/>Edge SU: lag 2.1s</div>
+      <div className="item"><span className="dot dot-green"/>Edge SkaS: lag 3.2s</div>
+      <div className="item"><span className="dot dot-amber"/>Edge NU: replaying 142 events</div>
+      <div className="item"><span className="dot dot-green"/>Edge SÄS: lag 1.4s</div>
+      <div className="sep"/>
+      <div className="item">Senaste synk: 3s sedan</div>
+      <div style={{flex:1}}/>
+      <div className="item meta mono">v1.4.2 · 847 events/min</div>
+    </div>
+  );
+}
+
+function SearchPage({ onSelect, recent }) {
+  const [query, setQuery] = useState('');
+  const results = useMemo(() => {
+    if (!query) return window.PATIENTS;
+    const q = query.toLowerCase();
+    return window.PATIENTS.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.pnr.replace('-','').includes(q.replace('-',''))
+    );
+  }, [query]);
+  return (
+    <div className="search-page">
+      <div className="search-hero">
+        <h1>Patientsökning</h1>
+        <p>Sök på personnummer eller namn i samtliga källsystem.</p>
+      </div>
+      <div className="search-bar">
+        <input
+          className="input"
+          placeholder="Personnummer (ÅÅÅÅMMDD-XXXX) eller namn"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          autoFocus
+        />
+        <button className="btn btn-primary">Sök</button>
+      </div>
+      <div className="label" style={{marginBottom:10}}>
+        {results.length} träffar {query && `för "${query}"`}
+      </div>
+      <div className="result-list">
+        {results.map(p => (
+          <div key={p.id} className="result-row" onClick={() => onSelect(p.id)}>
+            <div>
+              <div className="primary">
+                <span className="name">{p.name}</span>
+                <span className="pnr mono">{p.pnr}</span>
+              </div>
+              <div className="sub">
+                <span className="age">{p.age} år · {p.sex}</span>
+                <span className="meta">·</span>
+                <div className="sources">
+                  {p.sources.map(s => <SourceBadge key={s} source={s}/>)}
+                </div>
+                {p.cdsAlerts.some(a => a.indicator === 'critical') && (
+                  <span className="badge badge-red"><span className="pulse" style={{width:5,height:5}}/> Kritisk CDS</span>
+                )}
+              </div>
+            </div>
+            <Icon name="chevronRight" size={18} className="meta"/>
+          </div>
+        ))}
+        {results.length === 0 && (
+          <div style={{padding:'40px 20px',textAlign:'center',color:'var(--ink-3)',fontSize:13}}>
+            Ingen patient hittades med detta personnummer.
+          </div>
+        )}
+      </div>
+      {recent.length > 0 && (
+        <div className="recent-section">
+          <div className="label">Senast visade</div>
+          {recent.map(id => {
+            const p = window.PATIENTS.find(x => x.id === id);
+            if (!p) return null;
+            return (
+              <span key={id} className="recent-chip" onClick={() => onSelect(id)}>
+                <Icon name="clock" size={12}/>
+                {p.name}
+                <span className="mono meta">{p.pnr.slice(-4)}</span>
+              </span>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EmergencyModal({ onClose, onConfirm }) {
+  const [reason, setReason] = useState('');
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-body">
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+            <Icon name="alert" size={20} className="qflag" style={{color:'var(--red)'}}/>
+            <h2 style={{color:'var(--red)'}}>Nödöppning</h2>
+          </div>
+          <p>
+            Du är på väg att aktivera nödöppning enligt <strong>PDL §4:1</strong>. Detta ger åtkomst till patientdata även utan dokumenterad vårdrelation.
+            <strong style={{display:'block',marginTop:8}}>Händelsen loggas och granskas.</strong>
+          </p>
+          <div className="label" style={{marginBottom:6}}>Motivering (obligatorisk)</div>
+          <textarea
+            value={reason}
+            onChange={e => setReason(e.target.value)}
+            placeholder="Beskriv varför nödöppning behövs. T.ex. medvetslös patient, akut livshotande tillstånd, behov av läkemedelsavstämning."
+          />
+        </div>
+        <div className="modal-actions">
+          <button className="btn" onClick={onClose}>Avbryt</button>
+          <button
+            className="btn btn-red"
+            disabled={reason.trim().length < 10}
+            onClick={() => onConfirm(reason)}
+            style={{opacity: reason.trim().length < 10 ? 0.5 : 1}}
+          >
+            Aktivera nödöppning
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TweaksPanel({ tweaks, setTweak, visible, onClose }) {
+  if (!visible) return null;
+  return (
+    <div className="tweaks">
+      <div className="tweaks-header">
+        <span>Tweaks</span>
+        <button onClick={onClose} style={{color:'rgba(255,255,255,0.7)'}}><Icon name="x" size={12}/></button>
+      </div>
+      <div className="tweaks-body">
+        <Switch
+          on={tweaks.emergencyMode}
+          onChange={v => setTweak('emergencyMode', v)}
+          label="Nödöppningsläge (PDL §4:1)"
+        />
+        <Switch
+          on={tweaks.offlineMode}
+          onChange={v => setTweak('offlineMode', v)}
+          label="Offline-läge (simulerat)"
+        />
+        <div className="tweak-row">
+          <label>PDL-kontext</label>
+          <select
+            value={tweaks.pdlContext}
+            onChange={e => setTweak('pdlContext', e.target.value)}
+          >
+            {Object.entries(PDL_CONTEXTS).map(([k, v]) => (
+              <option key={k} value={k}>{v.unit}</option>
+            ))}
+          </select>
+        </div>
+        <div style={{borderTop:'1px solid var(--line)',paddingTop:10,fontSize:11,color:'var(--ink-3)',lineHeight:1.5}}>
+          Aktiva lägen visualiseras i topbar, statusbar och patientöversikt.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [view, setView] = useState('search');
+  const [patientId, setPatientId] = useState(null);
+  const [recent, setRecent] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('vgr.recent')) || []; } catch { return []; }
+  });
+  const [tweaks, setTweaks] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('vgr.tweaks'));
+      return { ...TWEAKS_DEFAULTS, ...saved };
+    } catch { return TWEAKS_DEFAULTS; }
+  });
+  const [tweaksVisible, setTweaksVisible] = useState(false);
+  const [emergencyOpen, setEmergencyOpen] = useState(false);
+
+  // Persist
+  useEffect(() => { localStorage.setItem('vgr.recent', JSON.stringify(recent)); }, [recent]);
+  useEffect(() => { localStorage.setItem('vgr.tweaks', JSON.stringify(tweaks)); }, [tweaks]);
+
+  // Body class for mode
+  useEffect(() => {
+    document.body.classList.toggle('emergency-mode', tweaks.emergencyMode);
+    document.body.classList.toggle('offline-mode', tweaks.offlineMode);
+  }, [tweaks.emergencyMode, tweaks.offlineMode]);
+
+  // Edit mode protocol
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data?.type === '__activate_edit_mode') setTweaksVisible(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweaksVisible(false);
+    };
+    window.addEventListener('message', handler);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  const setTweak = (k, v) => {
+    const next = { ...tweaks, [k]: v };
+    setTweaks(next);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [k]: v } }, '*');
+  };
+
+  const selectPatient = (id) => {
+    setPatientId(id);
+    setView('patient');
+    setRecent(prev => [id, ...prev.filter(x => x !== id)].slice(0, 5));
+  };
+
+  const patient = patientId ? window.PATIENTS.find(p => p.id === patientId) : null;
+  const activeView = view === 'patient' && patient ? 'patient' : view;
+
+  return (
+    <div className="app">
+      <Topbar tweaks={tweaks} onOpenEmergency={() => setEmergencyOpen(true)}/>
+      <Sidebar
+        activeView={activeView}
+        setView={setView}
+        patientName={patient?.firstName}
+      />
+      <main className="main" data-screen-label={view === 'search' ? 'Sökning' : `Patient: ${patient?.name || ''}`}>
+        {tweaks.emergencyMode && (
+          <div className="emergency-banner">
+            <Icon name="alert" size={14}/>
+            <strong>NÖDÖPPNING AKTIV</strong>
+            <span>Motivering: "Medvetslös patient vid inskrivning, behov av komplett läkemedelsavstämning." · Loggat kl 14:32 · Granskas av DSO.</span>
+          </div>
+        )}
+        {tweaks.offlineMode && (
+          <div className="offline-banner">
+            <Icon name="wifiOff" size={14}/>
+            <strong>Offline-läge</strong>
+            <span>Central hub onåbar. Visar cachedata från Edge SU. Skrivoperationer buffras lokalt.</span>
+          </div>
+        )}
+        {view === 'search' && <SearchPage onSelect={selectPatient} recent={recent}/>}
+        {view === 'patient' && patient && (
+          <PatientPage
+            patient={patient}
+            offline={tweaks.offlineMode}
+            onBack={() => setView('search')}
+          />
+        )}
+        {view === 'system' && <SystemPage/>}
+        {view === 'topology' && <TopologyPage/>}
+        {view === 'quality' && <QualityPage/>}
+        {view === 'audit' && <AuditPage/>}
+        {view === 'settings' && <SettingsPage tweaks={tweaks} setTweak={setTweak} PDL_CONTEXTS={PDL_CONTEXTS}/>}
+      </main>
+      <Statusbar tweaks={tweaks}/>
+      <TweaksPanel
+        tweaks={tweaks}
+        setTweak={setTweak}
+        visible={tweaksVisible}
+        onClose={() => setTweaksVisible(false)}
+      />
+      {emergencyOpen && (
+        <EmergencyModal
+          onClose={() => setEmergencyOpen(false)}
+          onConfirm={(reason) => {
+            setTweak('emergencyMode', true);
+            setEmergencyOpen(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

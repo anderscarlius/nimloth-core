@@ -1,0 +1,392 @@
+# Nimloth Core — central single-node topologi.
+# För distribuerat läge, se docker-compose.distributed.yml.
+#
+# Alla build:ar är multi-arch-förberedda (linux/amd64 + linux/arm64).
+# Lokal `docker compose build` bygger native arch (M4 = arm64).
+# För multi-arch push: kör scripts/build.sh (skapas i Prompt 11).
+
+name: nimloth-core
+
+x-common-build-platforms: &common-platforms
+  - linux/amd64
+  - linux/arm64
+
+services:
+  # --- Simulerade källsystem ---
+  melior-db:
+    image: postgres:16-alpine
+    container_name: melior-db
+    # wal_level=logical krävs för Debezium (Prompt 5).
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_wal_senders=10"
+      - "-c"
+      - "max_replication_slots=10"
+    environment:
+      POSTGRES_DB: melior
+      POSTGRES_USER: melior
+      POSTGRES_PASSWORD: melior
+    ports:
+      - "5433:5432"
+    volumes:
+      - melior-data:/var/lib/postgresql/data
+      - ./infra/postgres/init-melior.sql:/docker-entrypoint-initdb.d/init-melior.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U melior -d melior"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - core
+
+  asynja-db:
+    image: postgres:16-alpine
+    container_name: asynja-db
+    # wal_level=logical krävs för Debezium (Prompt 5).
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_wal_senders=10"
+      - "-c"
+      - "max_replication_slots=10"
+    environment:
+      POSTGRES_DB: asynja
+      POSTGRES_USER: asynja
+      POSTGRES_PASSWORD: asynja
+    ports:
+      - "5434:5432"
+    volumes:
+      - asynja-data:/var/lib/postgresql/data
+      - ./infra/postgres/init-asynja.sql:/docker-entrypoint-initdb.d/init-asynja.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U asynja -d asynja"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - core
+
+  core-db:
+    image: postgres:16-alpine
+    container_name: core-db
+    environment:
+      POSTGRES_DB: core
+      POSTGRES_USER: core
+      POSTGRES_PASSWORD: core
+    ports:
+      - "5435:5432"
+    volumes:
+      - core-data:/var/lib/postgresql/data
+      - ./infra/postgres/init-core.sql:/docker-entrypoint-initdb.d/init-core.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U core -d core"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - core
+
+  # --- Kafka (KRaft mode) ---
+  # confluentinc/cp-kafka 7.6 (Kafka 3.6 + JDK 17) — stabil på Apple Silicon.
+  # apache/kafka:3.7.0 (JDK 21) kraschar med SIGILL på M-serien via Docker Desktop.
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:29092,CONTROLLER://:9093,PLAINTEXT_HOST://:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # Tillåt auto-skapande av topics — Debezium skapar sina per-tabell-topics
+      # automatiskt. Alla domän-topics finns också pre-skapade via create-topics.sh
+      # men Kafka Connect behöver kunna skapa _connect_configs/_offsets/_statuses.
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      # KRaft CLUSTER_ID måste vara en base64-URL-safe UUID (22 tecken).
+      # Genererad en gång — används för hela projektet.
+      CLUSTER_ID: "NimlothCoreKr4FtClustr"
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+      - ./infra/kafka/create-topics.sh:/opt/kafka/create-topics.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:29092 --list >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+    networks:
+      - core
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.6.0
+    container_name: schema-registry
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:29092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    ports:
+      - "8081:8081"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/subjects >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - core
+
+  kafka-connect:
+    image: debezium/connect:2.6
+    # debezium/connect:2.6 JDK 21 kraschar SIGILL på Apple Silicon.
+    # Kör via Rosetta-emulering (linux/amd64) tills debezium publicerar en
+    # native arm64-image med kompatibel JVM.
+    platform: linux/amd64
+    container_name: kafka-connect
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: core-connect
+      CONFIG_STORAGE_TOPIC: _connect_configs
+      OFFSET_STORAGE_TOPIC: _connect_offsets
+      STATUS_STORAGE_TOPIC: _connect_statuses
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+    ports:
+      - "8083:8083"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      melior-db:
+        condition: service_healthy
+      asynja-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8083/connectors >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - core
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    environment:
+      KAFKA_CLUSTERS_0_NAME: nimloth-core
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: debezium
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-connect:8083
+    ports:
+      - "8080:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - core
+
+  # --- Keycloak (identity provider) ---
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: keycloak
+    command: ["start-dev"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8180:8080"
+    networks:
+      - core
+
+  # --- Applikationstjänster ---
+  ingest:
+    build:
+      context: .
+      dockerfile: services/ingest/Dockerfile
+    container_name: ingest
+    environment:
+      NODE_ENV: production
+      INGEST_PORT: "3001"
+      MELIOR_INSTANCE_ID: ${MELIOR_INSTANCE_ID:-su}
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: core-ingest
+      KAFKA_GROUP_ID: core-ingest-group
+      CONNECT_URL: http://kafka-connect:8083
+      LOG_LEVEL: info
+    ports:
+      - "3001:3001"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - core
+
+  transform:
+    build:
+      context: .
+      dockerfile: services/transform/Dockerfile
+    container_name: transform
+    environment:
+      NODE_ENV: production
+      TRANSFORM_PORT: "3002"
+      MELIOR_INSTANCE_ID: ${MELIOR_INSTANCE_ID:-su}
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: core-transform
+      KAFKA_GROUP_ID: core-transform-group
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      # Direktaccess för pre-population av patient-cache (undviker race där
+      # Debezium snapshot skickar patients-events senare än andra tabeller).
+      MELIOR_DB_HOST: melior-db
+      MELIOR_DB_PORT: "5432"
+      MELIOR_DB_NAME: melior
+      MELIOR_DB_USER: melior
+      MELIOR_DB_PASSWORD: melior
+      ASYNJA_DB_HOST: asynja-db
+      ASYNJA_DB_PORT: "5432"
+      ASYNJA_DB_NAME: asynja
+      ASYNJA_DB_USER: asynja
+      ASYNJA_DB_PASSWORD: asynja
+      LOG_LEVEL: info
+    ports:
+      - "3002:3002"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      melior-db:
+        condition: service_healthy
+      asynja-db:
+        condition: service_healthy
+    networks:
+      - core
+
+  fhir-facade:
+    build:
+      context: .
+      dockerfile: services/fhir-facade/Dockerfile
+    container_name: fhir-facade
+    environment:
+      NODE_ENV: production
+      FHIR_FACADE_PORT: "3003"
+      FHIR_MODE: ${FHIR_MODE:-primary}
+      MELIOR_INSTANCE_ID: ${MELIOR_INSTANCE_ID:-su}
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: core-fhir-facade
+      KAFKA_GROUP_ID: core-fhir-materializer
+      CORE_DB_HOST: core-db
+      CORE_DB_PORT: "5432"
+      CORE_DB_NAME: core
+      CORE_DB_USER: core
+      CORE_DB_PASSWORD: core
+      LOG_LEVEL: info
+    ports:
+      - "3003:3003"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      core-db:
+        condition: service_healthy
+    networks:
+      - core
+
+  cds-hooks:
+    build:
+      context: .
+      dockerfile: services/cds-hooks/Dockerfile
+    container_name: cds-hooks
+    environment:
+      NODE_ENV: production
+      CDS_HOOKS_PORT: "3004"
+      FHIR_BASE_URL: http://fhir-facade:3003/fhir/r4
+    ports:
+      - "3004:3004"
+    depends_on:
+      - fhir-facade
+    networks:
+      - core
+
+  audit:
+    build:
+      context: .
+      dockerfile: services/audit/Dockerfile
+    container_name: audit
+    environment:
+      NODE_ENV: production
+      AUDIT_PORT: "3005"
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: core-audit
+      KAFKA_GROUP_ID: core-audit-group
+      AUDIT_TOPIC: core.audit.access
+      AUDIT_BATCH_SIZE: "100"
+      AUDIT_BATCH_LATENCY_MS: "1000"
+      ENFORCE_ADMIN: "false"
+      CORE_DB_HOST: core-db
+      CORE_DB_PORT: "5432"
+      CORE_DB_NAME: core
+      CORE_DB_USER: core
+      CORE_DB_PASSWORD: core
+      LOG_LEVEL: info
+    ports:
+      - "3005:3005"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      core-db:
+        condition: service_healthy
+    networks:
+      - core
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: services/dashboard/Dockerfile
+    container_name: dashboard
+    environment:
+      NODE_ENV: development
+      DASHBOARD_PORT: "3000"
+      FHIR_BASE_URL: http://fhir-facade:3003
+      CDS_BASE_URL: http://cds-hooks:3004
+      AUDIT_BASE_URL: http://audit:3005
+      REPLICATION_BASE_URL: http://replication:3007
+      EDGE_FHIR_BASE_URL: http://edge-su:3003
+    # Host-port 3010 för att undvika kollision med andra lokala dev-servrar på 3000.
+    ports:
+      - "3010:3000"
+    depends_on:
+      - fhir-facade
+      - cds-hooks
+      - audit
+    networks:
+      - core
+
+volumes:
+  melior-data:
+  asynja-data:
+  core-data:
+  kafka-data:
+
+networks:
+  core:
+    name: nimloth-core
+    driver: bridge

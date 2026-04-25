@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://core.nimloth.io/schemas/lab-result.schema.json",
+  "title": "LabResultEvent",
+  "allOf": [{ "$ref": "base-event.schema.json" }],
+  "required": ["payload"],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "required": ["analysis", "result"],
+      "properties": {
+        "order_id": { "type": "string" },
+        "analysis": { "$ref": "base-event.schema.json#/$defs/CodedValue" },
+        "result": {
+          "type": "object",
+          "properties": {
+            "value_numeric": { "type": "number" },
+            "value_text": { "type": "string" },
+            "unit": { "type": "string" },
+            "reference_low": { "type": "number" },
+            "reference_high": { "type": "number" },
+            "flag": {
+              "type": "string",
+              "enum": ["H", "L", "HH", "LL"]
+            }
+          }
+        },
+        "ordering_doctor": { "$ref": "base-event.schema.json#/$defs/Recorder" },
+        "lab_system_code": { "type": "string" },
+        "sample_collected_at": { "type": "string", "format": "date-time" },
+        "result_available_at": { "type": "string", "format": "date-time" },
+        "encounter_id": { "type": "string" }
+      }
+    }
+  }
+}

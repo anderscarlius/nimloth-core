@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://core.nimloth.io/schemas/medication.schema.json",
+  "title": "MedicationEvent",
+  "description": "Använd för både medication.prescribed och medication.dispensed",
+  "allOf": [{ "$ref": "base-event.schema.json" }],
+  "required": ["payload"],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "required": ["action", "medication", "prescribed_by", "start_date"],
+      "properties": {
+        "action": { "type": "string", "enum": ["PRESCRIBED", "DISPENSED", "ADMINISTERED", "CANCELLED"] },
+        "medication": { "$ref": "base-event.schema.json#/$defs/CodedValue" },
+        "drug_name": { "type": "string" },
+        "atc_code": { "type": "string" },
+        "strength": { "type": "string" },
+        "dosage": { "type": "string" },
+        "route": {
+          "type": "string",
+          "enum": ["PO", "IV", "SC", "IM", "TOP", "INH", "SL", "REC", "OPH"]
+        },
+        "frequency": {
+          "type": "string",
+          "enum": ["DAILY", "BID", "TID", "QID", "PRN", "WEEKLY", "MONTHLY"]
+        },
+        "start_date": { "type": "string", "format": "date" },
+        "end_date": { "type": "string", "format": "date" },
+        "prescribed_by": { "$ref": "base-event.schema.json#/$defs/Recorder" },
+        "status": {
+          "type": "string",
+          "enum": ["ACTIVE", "COMPLETED", "CANCELLED", "SUSPENDED"]
+        },
+        "encounter_id": { "type": "string" }
+      }
+    }
+  }
+}

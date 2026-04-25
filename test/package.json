@@ -1,0 +1,16 @@
+{
+  "name": "@nimloth-core/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run e2e.test.ts",
+    "test:distributed": "vitest run e2e-distributed.test.ts",
+    "test:all": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  }
+}

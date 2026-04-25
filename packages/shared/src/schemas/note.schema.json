@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://core.nimloth.io/schemas/note.schema.json",
+  "title": "NoteEvent",
+  "allOf": [{ "$ref": "base-event.schema.json" }],
+  "required": ["payload"],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "required": ["note_type", "author", "content"],
+      "properties": {
+        "note_type": {
+          "type": "string",
+          "enum": ["ADMISSION_NOTE", "PROGRESS_NOTE", "DISCHARGE_SUMMARY", "OP_REPORT", "CONSULTATION", "PHYSIOTHERAPY"]
+        },
+        "department_code": { "type": "string" },
+        "author": { "$ref": "base-event.schema.json#/$defs/Recorder" },
+        "content": { "type": "string" },
+        "signed": { "type": "boolean" },
+        "signed_at": { "type": "string", "format": "date-time" },
+        "cosigned_by_hsa": { "type": "string" },
+        "encounter_id": { "type": "string" }
+      }
+    }
+  }
+}

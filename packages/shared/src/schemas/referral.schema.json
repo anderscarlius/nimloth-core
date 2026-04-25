@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://core.nimloth.io/schemas/referral.schema.json",
+  "title": "ReferralEvent",
+  "allOf": [{ "$ref": "base-event.schema.json" }],
+  "required": ["payload"],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "required": ["from_department", "to_department", "priority", "status", "sent_at"],
+      "properties": {
+        "from_department": { "type": "string" },
+        "to_department": { "type": "string" },
+        "referral_reason": { "type": "string" },
+        "priority": {
+          "type": "string",
+          "enum": ["ROUTINE", "URGENT", "EMERGENCY"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["SENT", "RECEIVED", "ACCEPTED", "COMPLETED", "REJECTED"]
+        },
+        "referring_doctor": { "$ref": "base-event.schema.json#/$defs/Recorder" },
+        "sent_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

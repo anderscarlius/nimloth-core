@@ -1,0 +1,25 @@
+{
+  "name": "@nimloth-core/test-data",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "seed:melior": "tsx src/seed-melior.ts",
+    "seed:asynja": "tsx src/seed-asynja.ts",
+    "seed:all": "pnpm run seed:melior && pnpm run seed:asynja"
+  },
+  "dependencies": {
+    "@nimloth-core/shared": "workspace:*",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "@types/pg": "^8.11.6",
+    "tsx": "^4.9.0"
+  }
+}

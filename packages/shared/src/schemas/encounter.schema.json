@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://core.nimloth.io/schemas/encounter.schema.json",
+  "title": "EncounterEvent",
+  "description": "Används för encounter.started och encounter.ended.",
+  "allOf": [{ "$ref": "base-event.schema.json" }],
+  "required": ["payload"],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "required": ["action", "encounter_type", "department_code", "admission_date"],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": ["STARTED", "ENDED"]
+        },
+        "encounter_id": { "type": "string" },
+        "encounter_type": {
+          "type": "string",
+          "enum": ["INPATIENT", "OUTPATIENT", "EMERGENCY", "DAYCARE"]
+        },
+        "department_code": { "type": "string" },
+        "department_name": { "type": "string" },
+        "admitting_doctor": { "$ref": "base-event.schema.json#/$defs/Recorder" },
+        "admission_date": { "type": "string", "format": "date-time" },
+        "discharge_date": { "type": "string", "format": "date-time" },
+        "discharge_diagnosis_icd": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["ACTIVE", "DISCHARGED", "CANCELLED"]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://core.nimloth.io/schemas/base-event.schema.json",
+  "title": "BaseEvent",
+  "description": "Alla events ärver denna bas. Används som $ref i domain event-scheman.",
+  "type": "object",
+  "required": ["event_id", "event_type", "event_version", "timestamp", "source_system", "patient_id"],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unik event-identifierare"
+    },
+    "event_type": {
+      "type": "string",
+      "description": "Topic-namn, t.ex. 'core.clinical.observation.vitals'"
+    },
+    "event_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semver, t.ex. '1.0.0'"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_system": {
+      "type": "string",
+      "enum": ["melior", "asynja", "core", "edge"]
+    },
+    "source_instance": {
+      "type": "string",
+      "description": "T.ex. 'melior-su', 'asynja-narhalsan'"
+    },
+    "patient_id": {
+      "type": "string",
+      "description": "Personnummer (cleartext i kliniska topics)"
+    },
+    "producer_id": {
+      "type": "string",
+      "description": "HSA-ID för producenten"
+    },
+    "pdl_context": {
+      "$ref": "#/$defs/PdlContext"
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid"
+    }
+  },
+  "$defs": {
+    "PdlContext": {
+      "type": "object",
+      "properties": {
+        "care_unit": { "type": "string", "description": "HSA-ID för vårdenhet" },
+        "care_provider": { "type": "string", "description": "HSA-ID för vårdgivare" },
+        "purpose": {
+          "type": "string",
+          "enum": ["CARE", "QUALITY_REGISTRY", "RESEARCH", "ADMINISTRATION"]
+        },
+        "legal_basis": {
+          "type": "string",
+          "description": "T.ex. 'PDL_2_4' (vårdrelation) eller 'PDL_4_1' (nödöppning)"
+        }
+      }
+    },
+    "Recorder": {
+      "type": "object",
+      "required": ["hsa_id"],
+      "properties": {
+        "hsa_id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" }
+      }
+    },
+    "CodedValue": {
+      "type": "object",
+      "required": ["code", "display"],
+      "properties": {
+        "system": { "type": "string", "description": "Kodsystem-URI (Snomed CT, ATC, ICD-10, NPU)" },
+        "code": { "type": "string" },
+        "display": { "type": "string" }
+      }
+    }
+  }
+}
