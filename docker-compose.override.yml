@@ -1,0 +1,88 @@
+# Lokal dev-override för parallell drift med nimloth-flow.
+#
+# Aktiveras automatiskt av docker compose (default override-fil).
+# Lägger till "-core"-suffix på containernamn och offsetar host-portar
+# så att Flow (3000-serien) och Core (8000-serien) kan köras samtidigt
+# på samma utvecklingsmaskin.
+#
+# Internt i compose-nätverket används service-namnen (kafka, fhir-facade
+# osv.) — dessa är oförändrade, så ingen konfig i source-koden behöver
+# ändras. Bara container_name + host-side portmappningar skiftar.
+#
+# `!reset` på ports-listorna behövs eftersom docker compose annars
+# appendar override-listor till basfilen (Compose v2.24+).
+#
+# Inaktivera vid produktionsdeploy: kör med
+# `docker compose -f docker-compose.yml up -d` (utan override).
+
+services:
+  melior-db:
+    container_name: melior-db-core
+    ports: !override
+      - "10433:5432"
+
+  asynja-db:
+    container_name: asynja-db-core
+    ports: !override
+      - "10434:5432"
+
+  core-db:
+    container_name: core-db
+    ports: !override
+      - "10435:5432"
+
+  kafka:
+    container_name: kafka-core
+    ports: !override
+      - "14092:9092"
+      - "34092:29092"
+
+  schema-registry:
+    container_name: schema-registry-core
+    ports: !override
+      - "13081:8081"
+
+  kafka-connect:
+    container_name: kafka-connect-core
+    ports: !override
+      - "13083:8083"
+
+  kafka-ui:
+    container_name: kafka-ui-core
+    ports: !override
+      - "13080:8080"
+
+  keycloak:
+    container_name: keycloak-core
+    ports: !override
+      - "13180:8080"
+
+  ingest:
+    container_name: ingest-core
+    ports: !override
+      - "8001:3001"
+
+  transform:
+    container_name: transform-core
+    ports: !override
+      - "8002:3002"
+
+  fhir-facade:
+    container_name: fhir-facade-core
+    ports: !override
+      - "8003:3003"
+
+  cds-hooks:
+    container_name: cds-hooks-core
+    ports: !override
+      - "8004:3004"
+
+  audit:
+    container_name: audit-core
+    ports: !override
+      - "8005:3005"
+
+  dashboard:
+    container_name: dashboard-core
+    ports: !override
+      - "8010:3000"
