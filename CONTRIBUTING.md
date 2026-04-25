@@ -1,30 +1,21 @@
 # Bidra till Nimloth Core
 
-Nimloth Core är en stabiliserad integrationsmotor. Scopet är medvetet begränsat.
+Nimloth Core är under aktiv arkitekturell utveckling. Vi följer en sprint-baserad utvecklingsplan.
 
-## Välkomna bidrag
+## Aktuell utveckling
 
-- Bug-fixar
-- Säkerhetspatchar
-- Stabilitetsförbättringar
-- Dokumentationsförbättringar
-- Nya källsystem-anslutningar (följ `docs/EXTENDING.md`)
-- Minor UX-förbättringar i dashboard
-
-## Avvisade bidrag (gå till Nimloth Core istället)
-
-- openEHR-integration eller annan kanonisk klinisk modell
-- Lakehouse- eller analytiska arkitekturlager
-- Modulär Inera-stack (SITHS, HSA, Sambi-federation)
-- AI-assisterad mappning
-- CQL- eller annan regelbaserad CDS-motor
-- Ny clinical data lifecycle-funktionalitet
-
-För plattforms-arkitektur, se systerprodukten [Nimloth Core](https://github.com/anderscarlius/nimloth-core).
+Se `docs/ROADMAP.md` för Sprint 1–5 och `docs/prompts/` för den aktuella arbetsstacken.
 
 ## Process
 
-1. Öppna en issue innan du kodar en större ändring
-2. Följ existerande kodstil (ESLint-config i repot)
+1. Öppna en issue innan du kodar större ändringar
+2. PRs märks med sprint-label (`sprint-1`, `sprint-2` osv)
 3. Alla PRs måste hålla `./scripts/demo-fru-andersson.sh` grön
 4. Uppdatera relevant dokumentation i samma PR
+5. Följ existerande kodstil (ESLint-config i repot)
+
+## Om du letar efter en integrationsmotor
+
+Denna repo är en full vårdplattform. Om du bara behöver integrera existerande källsystem till en FHIR-vy — använd systerprodukten [Nimloth Flow](https://github.com/anderscarlius/nimloth-flow) istället.
+
+Se `docs/POSITIONING.md` för mer om val mellan produkterna.

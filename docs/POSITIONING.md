@@ -1,6 +1,6 @@
 # Nimloth-familjen — positionering
 
-**Detta dokument är identiskt i repositorys `nimloth-core` och `nimloth-core`.**
+**Detta dokument är identiskt i repositorys `nimloth-core` och `nimloth-flow`.**
 Ändringar ska synkroniseras mellan bägge repon.
 
 ---
@@ -20,7 +20,7 @@ Konceptet växer ur artikelserien *Nästa generations journalsystem* och dess ar
 Inom Nimloth-familjen finns idag två aktivt utvecklade produkter:
 
 - **Nimloth Core** — full journal- och vårdplattform
-- **Nimloth Core** — integrationsmotor för befintliga källsystem
+- **Nimloth Flow** — integrationsmotor för befintliga källsystem
 
 ---
 
@@ -51,9 +51,9 @@ Under aktiv arkitekturell uppbyggnad. Sprint 1–5 (14 veckor) bygger ut från F
 
 ---
 
-## 3. Nimloth Core
+## 3. Nimloth Flow
 
-Nimloth Core är en **integrationsmotor**. Den lyfter data från befintliga källsystem till en FHIR-baserad läsvy utan att ändra källorna.
+Nimloth Flow är en **integrationsmotor**. Den lyfter data från befintliga källsystem till en FHIR-baserad läsvy utan att ändra källorna.
 
 ### Kärnkaraktär
 
@@ -82,7 +82,7 @@ Stabiliserad. Skop-fryst på integrationsfunktionalitet. Vidareutveckling sker i
 
 ### Gemensamt ursprung
 
-Bägge produkter härstammar från VGR Datahub-PoC:n, byggd våren 2026 som demonstration av moderna integrations- och arkitektur­mönster för Västra Götalandsregionen. Vid tag `v0.1-pre-fork` döptes produkten om till Nimloth Core, och en parallell fork skapades som Nimloth Core.
+Bägge produkter härstammar från VGR Datahub-PoC:n, byggd våren 2026 som demonstration av moderna integrations- och arkitektur­mönster för Västra Götalandsregionen. Vid tag `v0.1-pre-fork` döptes produkten om till Nimloth Flow, och en parallell fork skapades som Nimloth Core.
 
 ### Parallell utveckling
 
@@ -92,7 +92,7 @@ Portering av fixar sker manuellt när samma bugg hittas i bägge. Över tid dive
 
 ### Arkitekturell relation
 
-Nimloth Core *skulle kunna* använda Nimloth Core som data-ingest-lager i framtida integrationer. Men det är ingen nuvarande plan — det är en möjlighet som arkitekturen håller öppen. Tills en sådan integration är medvetet beslutad är de två produkterna fullt separerade.
+Nimloth Core *skulle kunna* använda Nimloth Flow som data-ingest-lager i framtida integrationer. Men det är ingen nuvarande plan — det är en möjlighet som arkitekturen håller öppen. Tills en sådan integration är medvetet beslutad är de två produkterna fullt separerade.
 
 ### Filosofisk relation
 
@@ -163,6 +163,6 @@ Produkterna delar ingen run-time; du kan ha Flow installerad för befintlig inte
 
 För fullständig historik se:
 
-- `v0.1-pre-fork`-tag i Nimloth Core-repot — state vid fork-tillfället
+- `v0.1-pre-fork`-tag i Nimloth Flow-repot — state vid fork-tillfället
 - Artikelserien *Nästa generations journalsystem* (18+1 artiklar) — det arkitektoniska fundamentet
 - Ursprungliga VGR Datahub-dokumentationen som arkiverad referens i Flow-repot
