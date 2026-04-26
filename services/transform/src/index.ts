@@ -4,6 +4,7 @@ import express from 'express';
 import { loadConfig } from './config.js';
 import { createLogger } from './logger.js';
 import { Enricher } from './enricher.js';
+import { clientStatus, warmFromService } from './terminology-client.js';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -14,9 +15,21 @@ async function main(): Promise<void> {
       instance_id: config.instanceId,
       kafka_brokers: config.kafka.brokers,
       raw_topics: config.rawTopics,
+      terminology_url: config.terminologyUrl,
     },
     'Starting transform service',
   );
+
+  // Sprint 1 (P1): warma terminology-cachen från terminology-tjänsten.
+  // Vid fel: fortsätt med inbyggda fallback-konstanter (samma data som
+  // pre-Sprint-1) — ingen funktionell skillnad mot tidigare beteende.
+  if (config.terminologyUrl) {
+    await warmFromService(config.terminologyUrl, {
+      timeoutMs: 3_000,
+      logger: (msg, meta) => logger.info({ ...(meta as Record<string, unknown>) }, msg),
+    });
+  }
+  logger.info(clientStatus(), 'terminology-client ready');
 
   const enricher = new Enricher(config, logger);
 

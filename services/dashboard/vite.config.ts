@@ -8,6 +8,7 @@ const CDS = process.env.CDS_BASE_URL ?? 'http://cds-hooks:3004';
 const AUDIT = process.env.AUDIT_BASE_URL ?? 'http://audit:3005';
 const REPLICATION = process.env.REPLICATION_BASE_URL ?? 'http://replication:3007';
 const EDGE_FHIR = process.env.EDGE_FHIR_BASE_URL ?? 'http://edge-su:3003';
+const TERMINOLOGY = process.env.TERMINOLOGY_BASE_URL ?? 'http://terminology:3008';
 
 export default defineConfig({
   plugins: [react()],
@@ -27,6 +28,11 @@ export default defineConfig({
         target: EDGE_FHIR,
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api\/edge-fhir/, '/fhir/r4'),
+      },
+      '/api/terminology': {
+        target: TERMINOLOGY,
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/terminology/, ''),
       },
     },
   },

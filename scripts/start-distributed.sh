@@ -57,7 +57,7 @@ pnpm --filter @nimloth-core/test-data seed:all 2>&1 | tail -4
 
 # 5. Centrala applikationstjänster
 echo -e "${GREEN}🚀 [5/7]${NC} Startar centrala applikationstjänster..."
-docker compose up -d ingest transform fhir-facade cds-hooks audit dashboard >/dev/null
+docker compose up -d terminology ingest transform fhir-facade cds-hooks audit dashboard >/dev/null
 
 # 6. Edge-nod SU + replication-tjänst (profil edge-su startar båda)
 echo -e "${GREEN}🏥 [6/7]${NC} Startar edge-nod SU + replikeringstjänst..."

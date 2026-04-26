@@ -21,6 +21,8 @@ export interface TransformConfig {
   /** Direktaccess mot källsystem för pre-population av patient-cache. */
   meliorDb: DbCfg | null;
   asynjaDb: DbCfg | null;
+  /** Terminology-service URL för warm-up vid startup. Tom = endast lokal fallback. */
+  terminologyUrl: string;
   logLevel: string;
 }
 
@@ -55,6 +57,7 @@ export function loadConfig(): TransformConfig {
           password: process.env.ASYNJA_DB_PASSWORD ?? 'asynja',
         }
       : null,
+    terminologyUrl: process.env.TERMINOLOGY_URL ?? 'http://terminology:3008',
     logLevel: process.env.LOG_LEVEL ?? 'info',
   };
 }

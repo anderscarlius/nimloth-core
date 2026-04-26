@@ -62,7 +62,7 @@ pnpm --filter @nimloth-core/test-data seed:all 2>&1 | tail -6
 
 # 5. Applikationstjänster
 echo -e "${GREEN}🚀 [5/6]${NC} Startar applikationstjänster..."
-docker compose up -d ingest transform fhir-facade cds-hooks audit dashboard >/dev/null
+docker compose up -d terminology ingest transform fhir-facade cds-hooks audit dashboard >/dev/null
 
 # 6. Distribuerade edge-noder (om aktiverat)
 if [ "$DISTRIBUTED" = true ]; then

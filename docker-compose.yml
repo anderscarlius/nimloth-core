@@ -370,6 +370,7 @@ services:
       AUDIT_BASE_URL: http://audit:3005
       REPLICATION_BASE_URL: http://replication:3007
       EDGE_FHIR_BASE_URL: http://edge-su:3003
+      TERMINOLOGY_BASE_URL: http://terminology:3008
     # Host-port 3010 för att undvika kollision med andra lokala dev-servrar på 3000.
     ports:
       - "3010:3000"
@@ -377,6 +378,61 @@ services:
       - fhir-facade
       - cds-hooks
       - audit
+    networks:
+      - core
+
+  # --- Terminologitjänst (Sprint 1, P1) ---
+  # Tunn proxy framför Snowstorm/HAPI med fallback-data inbakad. Startar
+  # alltid i fallback-mode; upstream aktiveras genom att sätta
+  # SNOWSTORM_URL och HAPI_TERMINOLOGY_URL (se profilen "terminology-full"
+  # nedan för en exempelkonfiguration med Snowstorm-lite).
+  terminology:
+    build:
+      context: .
+      dockerfile: services/terminology/Dockerfile
+    container_name: terminology
+    environment:
+      NODE_ENV: production
+      TERMINOLOGY_PORT: "3008"
+      LOG_LEVEL: info
+      # Lämna SNOWSTORM_URL/HAPI_TERMINOLOGY_URL tomma för fallback-only läge.
+      # Aktivera genom att starta med profilen "terminology-full" och
+      # sätt URL:erna nedan.
+      SNOWSTORM_URL: ${SNOWSTORM_URL:-}
+      HAPI_TERMINOLOGY_URL: ${HAPI_TERMINOLOGY_URL:-}
+    ports:
+      - "3008:3008"
+    networks:
+      - core
+
+  # --- Snowstorm-lite (SNOMED CT, valfri) ---
+  # Aktiveras med profilen "terminology-full":
+  #   docker compose --profile terminology-full up -d
+  # Image: ~100 MB, kräver SNOMED-licens-validerad subset.
+  # Sätt SNOWSTORM_URL=http://snowstorm:8080/fhir på terminology-tjänsten.
+  snowstorm:
+    image: snomedinternational/snowstorm-lite:latest
+    container_name: snowstorm
+    environment:
+      JAVA_OPTS: "-Xms512m -Xmx1g"
+    ports:
+      - "8090:8080"
+    profiles: ["terminology-full"]
+    networks:
+      - core
+
+  # --- HAPI FHIR Terminology (LOINC + ICD-10-SE, valfri) ---
+  # Aktiveras med profilen "terminology-full".
+  # Bootstrap av LOINC + ICD-10-SE måste göras separat efter första start.
+  hapi-fhir-terminology:
+    image: hapiproject/hapi:latest
+    container_name: hapi-fhir-terminology
+    environment:
+      hapi.fhir.fhir_version: R4
+      hapi.fhir.allow_external_references: "true"
+    ports:
+      - "8091:8080"
+    profiles: ["terminology-full"]
     networks:
       - core
 

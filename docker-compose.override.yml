@@ -86,3 +86,8 @@ services:
     container_name: dashboard-core
     ports: !override
       - "8010:3000"
+
+  terminology:
+    container_name: terminology-core
+    ports: !override
+      - "8008:3008"

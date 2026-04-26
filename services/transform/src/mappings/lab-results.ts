@@ -1,6 +1,6 @@
 import type { Mapper } from '../types.js';
 import { tsToIso, toNumberOrNull, toStringOrUndef } from '../types.js';
-import { SYS, npuToLoinc, toUcum } from '../terminology.js';
+import { SYS, npuToLoinc, toUcum } from '../terminology-client.js';
 import type { QualityFlag } from '../quality.js';
 import { baseEvent } from './helpers.js';
 

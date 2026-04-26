@@ -1,6 +1,6 @@
 import type { Mapper } from '../types.js';
 import { tsToIso, toStringOrUndef, toNumberOrNull } from '../types.js';
-import { SYS, kvaToSnomed } from '../terminology.js';
+import { SYS, kvaToSnomed } from '../terminology-client.js';
 import { baseEvent } from './helpers.js';
 
 export const mapProcedure: Mapper = (raw, ctx) => {

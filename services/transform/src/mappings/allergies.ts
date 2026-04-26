@@ -1,6 +1,6 @@
 import type { Mapper } from '../types.js';
 import { tsToIso, toStringOrUndef } from '../types.js';
-import { SYS, allergenToSnomed } from '../terminology.js';
+import { SYS, allergenToSnomed } from '../terminology-client.js';
 import { baseEvent } from './helpers.js';
 
 export const mapAllergy: Mapper = (raw, ctx) => {

@@ -1,6 +1,6 @@
 import type { Mapper } from '../types.js';
 import { dateToIso, toStringOrUndef } from '../types.js';
-import { SYS } from '../terminology.js';
+import { SYS } from '../terminology-client.js';
 import { baseEvent } from './helpers.js';
 
 export const mapMedication: Mapper = (raw, ctx) => {

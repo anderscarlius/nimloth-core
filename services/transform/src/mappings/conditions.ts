@@ -1,6 +1,6 @@
 import type { Mapper } from '../types.js';
 import { tsToIso, toStringOrUndef } from '../types.js';
-import { SYS, DIAGNOSIS_TYPE_SNOMED } from '../terminology.js';
+import { SYS, DIAGNOSIS_TYPE_SNOMED } from '../terminology-client.js';
 import { baseEvent } from './helpers.js';
 
 export const mapCondition: Mapper = (raw, ctx) => {
