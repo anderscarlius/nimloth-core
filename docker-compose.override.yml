@@ -91,3 +91,8 @@ services:
     container_name: terminology-core
     ports: !override
       - "8008:3008"
+
+  mapping-assistant:
+    container_name: mapping-assistant-core
+    ports: !override
+      - "8009:3009"

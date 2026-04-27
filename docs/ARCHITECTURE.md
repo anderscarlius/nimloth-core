@@ -462,6 +462,14 @@ Bakgrundstjänst som läser `core.system.quality.metrics` och letar efter okänd
 
 Allt loggas till `core.audit.mapping` (modellversion, prompt-hash, granskare). Mapping-assistant **publicerar aldrig direkt till canonical store** — alla förslag måste godkännas av människa via dashboardens `/mappings`-vy. Detta är en tidsbesparing, inte en risk-amplifier.
 
+### 10.5 Plattformskärnor
+
+Mapping-assistant står på två generella plattformskomponenter införda i Sprint 2 — båda är tänkta att tjäna även Sprint 3+ (Sambi/PDL, CDS-text-generering):
+
+- **`packages/model-router/`** — delad lib som dirigerar LLM-anrop. Tjänsten ber routern utföra en logisk task (t.ex. `mapping.propose`) med en deklarerad känslighetsnivå (`schema-only`, `pii`, `phi`); routern väljer rätt provider+modell baserat på YAML-config. PHI-tasks tvingas till on-premise (Ollama). Cloud (Anthropic) tillåts bara för schema-only och public. Se [docs/architecture/model-routing.md](architecture/model-routing.md).
+
+- **Signed prompt-manifest** — varje prompt-template har en SHA256 i `prompts/manifest.json` som verifieras vid service-startup. Service vägrar starta vid mismatch. Per förslag persisteras `template_sha + prompt_hash` så proveniens är spårbar även om manifest senare ändras. Se [docs/architecture/prompt-signing.md](architecture/prompt-signing.md).
+
 ---
 
 ## 11. Säkerhetsmodell

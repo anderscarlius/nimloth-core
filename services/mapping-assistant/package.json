@@ -1,0 +1,32 @@
+{
+  "name": "@nimloth-core/mapping-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && pnpm run copy-assets",
+    "copy-assets": "mkdir -p dist/migrations dist/prompts && cp migrations/*.sql dist/migrations/ && cp prompts/*.md dist/prompts/ && cp prompts/manifest.json dist/prompts/",
+    "clean": "rm -rf dist",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@nimloth-core/model-router": "workspace:*",
+    "@nimloth-core/shared": "workspace:*",
+    "better-sqlite3": "^11.0.0",
+    "express": "^4.19.2",
+    "kafkajs": "^2.2.4",
+    "pino": "^9.0.0",
+    "yaml": "^2.5.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.10",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.7",
+    "tsx": "^4.9.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  }
+}

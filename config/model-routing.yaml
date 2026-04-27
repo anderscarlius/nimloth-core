@@ -1,0 +1,65 @@
+# Aktiv model-routing-config för lokal utveckling.
+# I produktion: kopiera från model-routing.yaml.example och anpassa.
+#
+# OBS: denna fil committas i Sprint 2 för enkel onboarding. När produktion
+# närmar sig (Sprint 5) bör den flyttas till en hemlighetshanterare och
+# .gitignore:as.
+
+providers:
+  - id: anthropic-cloud
+    type: anthropic
+    enabled: true
+    models:
+      - claude-opus-4-7
+      - claude-sonnet-4-6
+      - claude-haiku-4-5-20251001
+    dataResidency: us-cloud
+    requiresInternet: true
+    config:
+      apiKeyEnv: ANTHROPIC_API_KEY
+
+  - id: local-ollama
+    type: ollama
+    enabled: false
+    models:
+      - llama3.3:70b
+      - qwen2.5-coder:32b
+    dataResidency: on-premise
+    requiresInternet: false
+    config:
+      endpoint: http://host.docker.internal:11434
+      timeoutMs: 60000
+
+  - id: mock
+    type: mock
+    enabled: true
+    models:
+      - mock-default
+    dataResidency: on-premise
+    requiresInternet: false
+    config: {}
+
+routing:
+  - task: mapping.propose
+    sensitivity: schema-only
+    prefer:
+      - { providerId: anthropic-cloud, model: claude-opus-4-7 }
+    fallback:
+      - { providerId: local-ollama, model: qwen2.5-coder:32b }
+      - { providerId: mock, model: mock-default }
+
+  - task: mapping.observe
+    sensitivity: schema-only
+    prefer:
+      - { providerId: anthropic-cloud, model: claude-sonnet-4-6 }
+    fallback:
+      - { providerId: local-ollama, model: qwen2.5-coder:32b }
+      - { providerId: mock, model: mock-default }
+
+  - task: mapping.ask
+    sensitivity: phi
+    require: on-premise
+    prefer:
+      - { providerId: local-ollama, model: llama3.3:70b }
+    fallback:
+      - { providerId: mock, model: mock-default }

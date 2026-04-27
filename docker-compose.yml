@@ -405,6 +405,43 @@ services:
     networks:
       - core
 
+  # --- Mapping-assistant (Sprint 2, P4) ---
+  # AI-assisterad mapping: föreslår TS-mappers från databas-schema, observerar
+  # kvalitetsmetrics, frågar vid låg confidence. Skriver bara till proposed/-
+  # mappen — manuell granskning enda vägen till produktion. Använder
+  # @nimloth-core/model-router för att routa LLM-anrop med data-residency-policy.
+  mapping-assistant:
+    build:
+      context: .
+      dockerfile: services/mapping-assistant/Dockerfile
+    container_name: mapping-assistant
+    environment:
+      NODE_ENV: production
+      MAPPING_ASSISTANT_PORT: "3009"
+      LOG_LEVEL: info
+      # Audit till Kafka
+      KAFKA_BROKERS: kafka:29092
+      MAPPING_AUDIT_TOPIC: core.audit.mapping
+      # Model-router-config (mountad från ./config nedan)
+      MODEL_ROUTING_CONFIG: /app/config/model-routing.yaml
+      # Anthropic-key — läses lazy. Saknas key = providern är "unhealthy" och
+      # routern faller tillbaka till mock-providern. Tjänsten startar ändå.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Vägrar starta vid manipulerade prompts
+      REQUIRE_VALID_PROMPTS: "true"
+    volumes:
+      # Persistent SQLite för förslag + audit-outbox
+      - mapping-assistant-data:/data
+      # Skriv föreslagna mappers till repots transform-mapp så de kan granskas
+      - ./services/transform/src/mappings/proposed:/app/services/transform/src/mappings/proposed
+    ports:
+      - "3009:3009"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - core
+
   # --- Snowstorm-lite (SNOMED CT, valfri) ---
   # Aktiveras med profilen "terminology-full":
   #   docker compose --profile terminology-full up -d
@@ -441,6 +478,7 @@ volumes:
   asynja-data:
   core-data:
   kafka-data:
+  mapping-assistant-data:
 
 networks:
   core:

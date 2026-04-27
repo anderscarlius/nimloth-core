@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0",
+  "approver": "anders.carlius@northfactor.com",
+  "approvedAt": "2026-04-27T00:00:00Z",
+  "templates": [
+    {
+      "name": "propose-mapping",
+      "file": "propose-mapping.md",
+      "sha256": "7d9a20fc2e9e983355b9bb39f7d564471420c99c8ec02cb8463d6cade72d662c",
+      "task": "mapping.propose",
+      "sensitivity": "schema-only"
+    },
+    {
+      "name": "explain-skip",
+      "file": "explain-skip.md",
+      "sha256": "ed9ff08f1ab04b3de5097850cbaaabc85b3ade76f2a9cd59a5ae4761bc88af77",
+      "task": "mapping.observe",
+      "sensitivity": "schema-only"
+    },
+    {
+      "name": "identify-pattern",
+      "file": "identify-pattern.md",
+      "sha256": "fa688e986e6606d1d3457ba8a98093e93c0160e010a0f09aa84ec155c8c45529",
+      "task": "mapping.ask",
+      "sensitivity": "phi"
+    }
+  ]
+}

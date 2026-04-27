@@ -62,7 +62,7 @@ pnpm --filter @nimloth-core/test-data seed:all 2>&1 | tail -6
 
 # 5. Applikationstjänster
 echo -e "${GREEN}🚀 [5/6]${NC} Startar applikationstjänster..."
-docker compose up -d terminology ingest transform fhir-facade cds-hooks audit dashboard >/dev/null
+docker compose up -d terminology ingest transform fhir-facade cds-hooks audit dashboard mapping-assistant >/dev/null
 
 # 6. Distribuerade edge-noder (om aktiverat)
 if [ "$DISTRIBUTED" = true ]; then
@@ -81,6 +81,7 @@ echo -e "  🌐 Dashboard:         http://localhost:3010"
 echo -e "  🔥 FHIR Facade:       http://localhost:3003/fhir/r4"
 echo -e "  🧠 CDS Hooks:         http://localhost:3004/cds-services"
 echo -e "  🔒 Audit API:         http://localhost:3005/audit/stats"
+echo -e "  🤖 Mapping Assistant: http://localhost:3009/system-status"
 echo -e "  📊 Kafka UI:          http://localhost:8080"
 echo -e "  🔑 Keycloak:          http://localhost:8180"
 echo ""

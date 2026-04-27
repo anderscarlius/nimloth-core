@@ -103,7 +103,8 @@ create_topic "core.admin.patient.discharged"   3 "${RET_30D}"
 # ============================================================
 echo ""
 echo "== Audit =="
-create_topic "core.audit.access" 6 "${RET_UNLIMITED}" "compact,delete"
+create_topic "core.audit.access"  6 "${RET_UNLIMITED}" "compact,delete"
+create_topic "core.audit.mapping" 3 "${RET_UNLIMITED}" "compact,delete"
 
 # ============================================================
 # System (retention 7 dagar)

@@ -1,0 +1,84 @@
+# Nimloth Core — model-routing config (Sprint 2, P4).
+#
+# Beskriver vilka LLM-providers som finns tillgängliga i deployment och hur
+# olika tasks ska routas. Designen tål distribuerad drift: tjänster med strikt
+# data-residency (PHI) kan tvingas till on-premise-providers (Ollama på
+# egen hårdvara), medan schema-only och publika tasks får använda cloud.
+#
+# Sensitivity-nivåer:
+#   public      — ingen restriktion (publika referenser, dokumentation)
+#   schema-only — tabellnamn, kolumnnamn, syntetiska samples
+#   pii         — personidentifierare utan vårdsammanhang
+#   phi         — vårddata kopplad till individ (TVINGAS on-premise)
+#
+# För att aktivera Anthropic: sätt ANTHROPIC_API_KEY i .env.
+# För att aktivera Ollama: starta Ollama lokalt och sätt enabled: true nedan.
+# För tester eller demo utan API-credit: routningen faller tillbaka till mock.
+
+providers:
+  - id: anthropic-cloud
+    type: anthropic
+    enabled: true
+    models:
+      - claude-opus-4-7
+      - claude-sonnet-4-6
+      - claude-haiku-4-5-20251001
+    dataResidency: us-cloud
+    requiresInternet: true
+    config:
+      apiKeyEnv: ANTHROPIC_API_KEY
+
+  - id: local-ollama
+    type: ollama
+    # Sätt till true när Ollama körs lokalt. Default false så att inte
+    # PHI-tasks aktiveras innan operatören har en lokal modell igång.
+    enabled: false
+    models:
+      - llama3.3:70b
+      - qwen2.5-coder:32b
+    dataResidency: on-premise
+    requiresInternet: false
+    config:
+      endpoint: http://host.docker.internal:11434
+      timeoutMs: 60000
+
+  - id: mock
+    type: mock
+    enabled: true
+    models:
+      - mock-default
+    dataResidency: on-premise
+    requiresInternet: false
+    config: {}
+
+routing:
+  # Föreslå nya mappers från databas-schema. Skickar bara kolumnnamn och
+  # syntetiska samples — schema-only räcker. Cloud OK.
+  - task: mapping.propose
+    sensitivity: schema-only
+    prefer:
+      - { providerId: anthropic-cloud, model: claude-opus-4-7 }
+    fallback:
+      - { providerId: local-ollama, model: qwen2.5-coder:32b }
+      - { providerId: mock, model: mock-default }
+
+  # Observera kvalitetsmetrics och föreslå förbättringar. Bara aggregat,
+  # ingen patient-data. Sonnet räcker.
+  - task: mapping.observe
+    sensitivity: schema-only
+    prefer:
+      - { providerId: anthropic-cloud, model: claude-sonnet-4-6 }
+    fallback:
+      - { providerId: local-ollama, model: qwen2.5-coder:32b }
+      - { providerId: mock, model: mock-default }
+
+  # När transform träffar ett event den inte kan mappa: fråga om hjälp.
+  # Eventet kan innehålla riktig PHI → måste stanna on-premise.
+  # Om Ollama inte är konfigurerad faller anropet till mock (=ingen hjälp).
+  - task: mapping.ask
+    sensitivity: phi
+    require: on-premise
+    prefer:
+      - { providerId: local-ollama, model: llama3.3:70b }
+    fallback:
+      - { providerId: mock, model: mock-default }
