@@ -18,3 +18,10 @@ pnpm-debug.log*
 data/
 postgres-data/
 kafka-data/
+
+# Genereras av scripts/start.sh — innehåller host-portar för demo-skripten
+.start-env
+
+# AI-genererade mapper-utkast skrivs hit av mapping-assistant via volume-mount.
+# Granskade och godkända mappers flyttas manuellt till mappings/ av människa.
+services/transform/src/mappings/proposed/

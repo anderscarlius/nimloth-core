@@ -12,10 +12,18 @@ RED='\033[0;31m'
 BOLD='\033[1m'
 NC='\033[0m'
 
+# Läs portar som start.sh skrev när override.yml var aktiv (default: ren stack
+# på 3003/3004/3005/3009; med override: 8003/8004/8005/8009).
+if [ -f .start-env ]; then
+  # shellcheck disable=SC1091
+  source .start-env
+fi
+
 FHIR="${FHIR_BASE:-http://localhost:3003/fhir/r4}"
 CDS="${CDS_BASE:-http://localhost:3004}"
 AUDIT="${AUDIT_BASE:-http://localhost:3005}"
 MAPPING="${MAPPING_BASE:-http://localhost:3009}"
+DASHBOARD="${DASHBOARD_URL:-http://localhost:3010}"
 PNR="19500315-2384"
 
 if ! command -v jq >/dev/null 2>&1; then
@@ -147,6 +155,6 @@ echo ""
 
 echo -e "${CYAN}=====================================${NC}"
 echo -e "${GREEN}${BOLD}✅ Demo slutförd${NC}"
-echo -e "   Öppna dashboarden: ${YELLOW}http://localhost:3010${NC}"
-echo -e "   Mappings-vy:       ${YELLOW}http://localhost:3010/mappings${NC}"
+echo -e "   Öppna dashboarden: ${YELLOW}${DASHBOARD}${NC}"
+echo -e "   Mappings-vy:       ${YELLOW}${DASHBOARD}/mappings${NC}"
 echo ""
