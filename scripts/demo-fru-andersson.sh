@@ -15,6 +15,7 @@ NC='\033[0m'
 FHIR="${FHIR_BASE:-http://localhost:3003/fhir/r4}"
 CDS="${CDS_BASE:-http://localhost:3004}"
 AUDIT="${AUDIT_BASE:-http://localhost:3005}"
+MAPPING="${MAPPING_BASE:-http://localhost:3009}"
 PNR="19500315-2384"
 
 if ! command -v jq >/dev/null 2>&1; then
@@ -98,7 +99,54 @@ echo "$AUDIT_RESP" | jq -r '.results[] |
   "    \(.timestamp[0:19])  \(.action)  \(.resource_type)  [\(.outcome)]"'
 echo ""
 
+# ------------------------------------------------------------
+echo -e "${GREEN}▶ Steg 7: Mapping-assistant (AI-assisterad integration)${NC}"
+if curl -sS -f "${MAPPING}/health" >/dev/null 2>&1; then
+  STATUS=$(curl -sS "${MAPPING}/system-status")
+  PROMPTS_PASSED=$(echo "$STATUS" | jq -r '.prompts.passed')
+  PROMPTS_FAILED=$(echo "$STATUS" | jq -r '.prompts.failed')
+  PROVIDERS=$(echo "$STATUS" | jq -r '[.router.providers[] | select(.enabled) | .id] | join(", ")')
+  echo -e "  ✓ Prompt-manifest verifierat (${PROMPTS_PASSED} pass, ${PROMPTS_FAILED} fail)"
+  echo -e "  ✓ Aktiva LLM-providers: ${BOLD}${PROVIDERS}${NC}"
+
+  echo -e "  ${YELLOW}→${NC} POST /propose (mock-LLM föreslår mapper för ny tabell)"
+  PROPOSE_BODY=$(jq -n '{
+    source: "demo.flexlab.results",
+    target: "core.clinical.lab.result",
+    schema: [
+      {column: "patient_id", type: "integer"},
+      {column: "order_type", type: "text"},
+      {column: "result_value", type: "numeric"}
+    ],
+    samples: [{patient_id: 1, order_type: "STD", result_value: 42}]
+  }')
+  PROPOSAL=$(curl -sS -X POST "${MAPPING}/propose" -H "Content-Type: application/json" -d "$PROPOSE_BODY")
+  PROPOSAL_ID=$(echo "$PROPOSAL" | jq -r '.id')
+  PROVIDER=$(echo "$PROPOSAL" | jq -r '.provider_id')
+  RESIDENCY=$(echo "$PROPOSAL" | jq -r '.data_residency')
+  PROMPT_HASH=$(echo "$PROPOSAL" | jq -r '.prompt_hash[:16]')
+  PROPOSED_PATH=$(echo "$PROPOSAL" | jq -r '.proposed_path // "—"')
+  echo -e "  ✓ Suggestion ${BOLD}${PROPOSAL_ID}${NC} skapat via ${PROVIDER} (${RESIDENCY})"
+  echo -e "    prompt-hash: ${PROMPT_HASH}…"
+  echo -e "    skriven till: ${PROPOSED_PATH}"
+
+  echo -e "  ${YELLOW}→${NC} POST /suggestions/${PROPOSAL_ID}/approve (mänsklig granskning)"
+  APPROVE_BODY=$(jq -n '{
+    approver_hsa_id: "SE-DEMO-INTEGRATION-ADMIN",
+    approver_role: "integration-admin",
+    reason: "demo: granskat och godkänt i Fru Andersson-flöde"
+  }')
+  APPROVED=$(curl -sS -X POST "${MAPPING}/suggestions/${PROPOSAL_ID}/approve" -H "Content-Type: application/json" -d "$APPROVE_BODY")
+  STATUS_AFTER=$(echo "$APPROVED" | jq -r '.status')
+  echo -e "  ✓ Status: ${BOLD}${STATUS_AFTER}${NC}"
+  echo -e "    Audit-event publicerat till core.audit.mapping (eller bufrat om Kafka är nere)"
+else
+  echo -e "  ${YELLOW}⚠${NC}  mapping-assistant ej tillgänglig på ${MAPPING} — hoppar över steget"
+fi
+echo ""
+
 echo -e "${CYAN}=====================================${NC}"
 echo -e "${GREEN}${BOLD}✅ Demo slutförd${NC}"
 echo -e "   Öppna dashboarden: ${YELLOW}http://localhost:3010${NC}"
+echo -e "   Mappings-vy:       ${YELLOW}http://localhost:3010/mappings${NC}"
 echo ""

@@ -6,6 +6,7 @@ import CdsAlerts from './pages/CdsAlerts';
 import SystemStatus from './pages/SystemStatus';
 import AuditLog from './pages/AuditLog';
 import Topology from './pages/Topology';
+import Mappings from './pages/Mappings';
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/patient/:pnr/cds" element={<CdsAlerts />} />
         <Route path="/system" element={<SystemStatus />} />
         <Route path="/topology" element={<Topology />} />
+        <Route path="/mappings" element={<Mappings />} />
         <Route path="/audit" element={<AuditLog />} />
         <Route path="*" element={<Navigate to="/search" replace />} />
       </Routes>

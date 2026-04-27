@@ -5,6 +5,7 @@ const NAV = [
   { to: '/search', label: 'Patientsök', icon: '🔍' },
   { to: '/system', label: 'Systemstatus', icon: '📊' },
   { to: '/topology', label: 'Topologi', icon: '🕸️' },
+  { to: '/mappings', label: 'Mappings', icon: '🤖' },
   { to: '/audit', label: 'Åtkomstlogg', icon: '🔒' },
 ];
 

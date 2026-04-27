@@ -139,7 +139,7 @@ export class MappingAssistantDb {
     approver_role: string;
     decision_reason: string | null;
   }): SuggestionRow | null {
-    this.db
+    const result = this.db
       .prepare(
         `UPDATE suggestions
             SET status = @status,
@@ -150,6 +150,10 @@ export class MappingAssistantDb {
           WHERE id = @id AND status = 'pending'`,
       )
       .run(args);
+    // changes==0 betyder att raden inte var pending (eller inte fanns).
+    // Vi vill inte gröna detta — caller använder null-retur som signal
+    // för "redan beslutad" och returnerar 404.
+    if (result.changes === 0) return null;
     return this.findSuggestion(args.id);
   }
 

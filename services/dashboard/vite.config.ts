@@ -9,6 +9,7 @@ const AUDIT = process.env.AUDIT_BASE_URL ?? 'http://audit:3005';
 const REPLICATION = process.env.REPLICATION_BASE_URL ?? 'http://replication:3007';
 const EDGE_FHIR = process.env.EDGE_FHIR_BASE_URL ?? 'http://edge-su:3003';
 const TERMINOLOGY = process.env.TERMINOLOGY_BASE_URL ?? 'http://terminology:3008';
+const MAPPING_ASSISTANT = process.env.MAPPING_ASSISTANT_BASE_URL ?? 'http://mapping-assistant:3009';
 
 export default defineConfig({
   plugins: [react()],
@@ -33,6 +34,11 @@ export default defineConfig({
         target: TERMINOLOGY,
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api\/terminology/, ''),
+      },
+      '/api/mappings': {
+        target: MAPPING_ASSISTANT,
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/mappings/, ''),
       },
     },
   },
