@@ -158,9 +158,42 @@ services:
     networks:
       - core
 
+  # ============================================================
+  # Care-unit-edge: Vårdcentralen Bengtsfors (Sprint 1, P2)
+  # Lättviktsruntime — SQLite + HTTP-sync, ingen lokal Kafka.
+  # Designprincip: 30 dagars offline-tolerans, vårdcentralskala.
+  # Aktiveras med profilen "edge-careunit-dalsland".
+  # ============================================================
+  care-unit-dalsland:
+    build:
+      context: .
+      dockerfile: services/care-unit-edge/Dockerfile
+    container_name: care-unit-dalsland
+    environment:
+      UNIT_ID: vc-dalsland-01
+      UNIT_NAME: "Vårdcentralen Bengtsfors"
+      UNIT_HSA_ID: "SE2321000131-E000000000999"
+      CENTRAL_URL: http://fhir-facade:3003
+      LISTED_PATIENTS: "19500315-2384"
+      CARE_UNIT_DB: /data/care-unit.db
+      LOG_LEVEL: info
+    depends_on:
+      fhir-facade:
+        condition: service_healthy
+    volumes:
+      - care-unit-dalsland-data:/data
+    ports:
+      - "5003:3003" # Lokal FHIR
+      - "5004:3004" # Lokal CDS
+      - "5006:3006" # Status / health
+    profiles: ["edge-careunit-dalsland"]
+    networks:
+      - core
+
 volumes:
   edge-su-kafka-data:
   edge-su-data:
+  care-unit-dalsland-data:
 
 networks:
   core:

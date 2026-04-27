@@ -14,14 +14,17 @@ interface EdgeNode {
   last_seen: string;
   stale: boolean;
   status: 'online' | 'offline' | 'replaying';
+  edge_type?: 'hospital' | 'care-unit' | 'client';
   metrics: {
-    cdc_events_processed: number;
-    fhir_cache_patients: number;
-    fhir_cache_size_mb: number;
-    buffered_events: number;
-    replication_lag_ms: number;
-    uptime_seconds: number;
-    central_hub_connected: boolean;
+    cdc_events_processed?: number;
+    fhir_cache_patients?: number;
+    fhir_cache_size_mb?: number;
+    buffered_events?: number;
+    replication_lag_ms?: number;
+    uptime_seconds?: number;
+    central_hub_connected?: boolean;
+    outbox_pending?: number;
+    outbox_synced?: number;
   };
 }
 
@@ -40,6 +43,9 @@ const EDGE_POSITIONS: Record<string, { x: number; y: number }> = {
   saes: { x: 630, y: 380 },
   kungalv: { x: 180, y: 420 },
   alingsas: { x: 600, y: 500 },
+  // Care-unit-edges (vårdcentralsnivå) — placeras i ringens ytterkant
+  'vc-dalsland-01': { x: 100, y: 280 },
+  'vc-bohuslan-01': { x: 730, y: 280 },
 };
 
 const CENTRAL = { x: 430, y: 280 };
@@ -124,6 +130,12 @@ export default function Topology() {
                 const pos = EDGE_POSITIONS[edge.instance_id] ?? { x: 100, y: 100 };
                 const fill = statusFill(edge.status);
                 const isSelected = selected === edge.instance_id;
+                const kind = edge.edge_type ?? 'hospital';
+                const baseSize = isSelected ? 28 : 24;
+                const labelText =
+                  kind === 'care-unit'
+                    ? edge.instance_id.split('-').pop()?.toUpperCase() ?? edge.instance_id.toUpperCase()
+                    : edge.instance_id.toUpperCase();
                 return (
                   <g
                     key={edge.instance_id}
@@ -136,19 +148,48 @@ export default function Topology() {
                         <animate attributeName="opacity" from="0.7" to="0" dur="1.8s" repeatCount="indefinite" />
                       </circle>
                     )}
-                    <circle
-                      cx={pos.x}
-                      cy={pos.y}
-                      r={isSelected ? 28 : 24}
-                      fill={fill}
-                      stroke={isSelected ? '#0D7377' : 'white'}
-                      strokeWidth={isSelected ? 3 : 2}
-                    />
-                    <text x={pos.x} y={pos.y + 4} textAnchor="middle" fill="white" style={{ fontSize: 11, fontWeight: 600 }}>
-                      {edge.instance_id.toUpperCase()}
+                    {/* Form per edge-typ:
+                        hospital  → cirkel (befintligt)
+                        care-unit → rundad kvadrat (mindre, mer "byggnadsaktig")
+                        client    → diamant (Beyond Sprint 5) */}
+                    {kind === 'hospital' && (
+                      <circle
+                        cx={pos.x}
+                        cy={pos.y}
+                        r={baseSize}
+                        fill={fill}
+                        stroke={isSelected ? '#0D7377' : 'white'}
+                        strokeWidth={isSelected ? 3 : 2}
+                      />
+                    )}
+                    {kind === 'care-unit' && (
+                      <rect
+                        x={pos.x - baseSize}
+                        y={pos.y - baseSize}
+                        width={baseSize * 2}
+                        height={baseSize * 2}
+                        rx={6}
+                        fill={fill}
+                        stroke={isSelected ? '#0D7377' : 'white'}
+                        strokeWidth={isSelected ? 3 : 2}
+                      />
+                    )}
+                    {kind === 'client' && (
+                      <polygon
+                        points={`${pos.x},${pos.y - baseSize} ${pos.x + baseSize},${pos.y} ${pos.x},${pos.y + baseSize} ${pos.x - baseSize},${pos.y}`}
+                        fill={fill}
+                        stroke={isSelected ? '#0D7377' : 'white'}
+                        strokeWidth={isSelected ? 3 : 2}
+                      />
+                    )}
+                    <text x={pos.x} y={pos.y + 4} textAnchor="middle" fill="white" style={{ fontSize: 10, fontWeight: 600 }}>
+                      {labelText.length > 5 ? labelText.slice(0, 5) : labelText}
                     </text>
                     <text x={pos.x} y={pos.y + 46} textAnchor="middle" fill="#4a5568" style={{ fontSize: 11 }}>
                       {edge.instance_name}
+                    </text>
+                    <text x={pos.x} y={pos.y + 60} textAnchor="middle" fill="#8b95a5" style={{ fontSize: 9 }}>
+                      {kind === 'care-unit' ? 'vårdcentral' : kind === 'client' ? 'klient' : 'sjukhus-edge'}
                     </text>
                   </g>
                 );
@@ -187,6 +228,7 @@ export default function Topology() {
 }
 
 function EdgeDetails({ edge }: { edge: EdgeNode }) {
+  const isCareUnit = edge.edge_type === 'care-unit';
   return (
     <div className="text-sm">
       <div className="flex items-center gap-2 mb-3">
@@ -195,22 +237,43 @@ function EdgeDetails({ edge }: { edge: EdgeNode }) {
           style={{ background: statusFill(edge.status) }}
         />
         <div className="font-semibold">{edge.instance_name}</div>
+        <span className="ml-auto text-[10px] uppercase tracking-wide text-gray-500">
+          {isCareUnit ? 'vårdcentral' : edge.edge_type === 'client' ? 'klient' : 'sjukhus-edge'}
+        </span>
       </div>
-      <div className="text-xs text-gray-500 mb-1">Sjukhus</div>
+      <div className="text-xs text-gray-500 mb-1">{isCareUnit ? 'Vårdenhet' : 'Sjukhus'}</div>
       <div className="mb-3">{edge.hospital_name}</div>
 
       <div className="text-xs text-gray-500 mb-1">HSA-ID</div>
-      <div className="mb-3 font-mono text-xs">{edge.hsa_id}</div>
+      <div className="mb-3 font-mono text-xs">{edge.hsa_id || '—'}</div>
 
       <div className="grid grid-cols-2 gap-3 mt-4">
         <Metric label="Status" value={edge.status} />
-        <Metric label="Hub connected" value={edge.metrics.central_hub_connected ? 'ja' : 'nej'} />
-        <Metric label="FHIR-cache patienter" value={edge.metrics.fhir_cache_patients} />
-        <Metric label="Cache-storlek" value={`${edge.metrics.fhir_cache_size_mb} MB`} />
-        <Metric label="CDC events processade" value={edge.metrics.cdc_events_processed} />
-        <Metric label="Buffrade events" value={edge.metrics.buffered_events} />
-        <Metric label="Replication lag" value={`${edge.metrics.replication_lag_ms} ms`} />
-        <Metric label="Uptime" value={formatUptime(edge.metrics.uptime_seconds)} />
+        <Metric
+          label="Hub connected"
+          value={edge.metrics.central_hub_connected !== undefined ? (edge.metrics.central_hub_connected ? 'ja' : 'nej') : '—'}
+        />
+        <Metric label="Patienter cachade" value={fmtNum(edge.metrics.fhir_cache_patients)} />
+        {isCareUnit ? (
+          <>
+            <Metric label="Outbox pending" value={fmtNum(edge.metrics.outbox_pending)} />
+            <Metric label="Outbox synced" value={fmtNum(edge.metrics.outbox_synced)} />
+          </>
+        ) : (
+          <>
+            <Metric
+              label="Cache-storlek"
+              value={edge.metrics.fhir_cache_size_mb !== undefined ? `${edge.metrics.fhir_cache_size_mb} MB` : '—'}
+            />
+            <Metric label="CDC events processade" value={fmtNum(edge.metrics.cdc_events_processed)} />
+            <Metric label="Buffrade events" value={fmtNum(edge.metrics.buffered_events)} />
+            <Metric
+              label="Replication lag"
+              value={edge.metrics.replication_lag_ms !== undefined ? `${edge.metrics.replication_lag_ms} ms` : '—'}
+            />
+            <Metric label="Uptime" value={edge.metrics.uptime_seconds !== undefined ? formatUptime(edge.metrics.uptime_seconds) : '—'} />
+          </>
+        )}
       </div>
 
       <div className="mt-4 text-xs text-gray-500">
@@ -219,6 +282,10 @@ function EdgeDetails({ edge }: { edge: EdgeNode }) {
       </div>
     </div>
   );
+}
+
+function fmtNum(n: number | undefined): string | number {
+  return n === undefined ? '—' : n;
 }
 
 function Metric({ label, value }: { label: string; value: string | number }) {

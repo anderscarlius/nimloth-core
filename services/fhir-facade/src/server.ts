@@ -19,6 +19,7 @@ import { notFound } from './resources/patient.js';
 import { authMiddleware } from './middleware/auth.js';
 import { pdlMiddleware } from './middleware/pdl.js';
 import { auditMiddleware } from './middleware/audit.js';
+import { createSyncRouter } from './sync.js';
 
 export interface MaterializerMetricsView {
   processed: number;
@@ -140,6 +141,10 @@ export function createServer(deps: ServerDeps): Express {
   });
 
   app.use('/fhir/r4', fhir);
+
+  // Care-unit-edge sync-API (Sprint 1, P2). Inte under /fhir/r4 — det är
+  // systemkommunikation mellan central och edge, inte klinisk access.
+  app.use('/sync', createSyncRouter({ pool: deps.pool, kafkaProducer: deps.auditProducer, logger: deps.logger }));
 
   // Error-handler
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
