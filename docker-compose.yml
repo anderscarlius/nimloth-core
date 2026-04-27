@@ -474,12 +474,69 @@ services:
     networks:
       - core
 
+  # --- EHRbase (Sprint 2, P3) ---
+  # openEHR clinical data repository som parallellt kanoniskt lager.
+  # Composer-tjänsten (P3.2) skriver compositions hit; FHIR Facade läser
+  # via AQL-broker (P3.3). I Fas 3.0 används EHRbase enbart för verifiering
+  # av template-load via /definition/template/adl1.4-endpointen.
+  #
+  # Image-SHA verifierad mot Docker Hub 2026-04-27. Pinning säkerställer
+  # reproducerbar deploy. Uppgradering sker via dokumenterat arbetsflöde i
+  # infra/openehr/compiler/CHANGELOG.md.
+  ehrbase-db:
+    # ehrbase-v2-postgres innehåller temporal_tables + jsquery-extensions
+    # som EHRbase 2.x kräver. Skapar ehrbase + ehrbase_admin-roller via initdb.
+    image: ehrbase/ehrbase-v2-postgres:16.2@sha256:abe14e8f9ba33cabc9946c6c17c5aa95b64b35387f266cd20a894149203196d7
+    container_name: ehrbase-db
+    environment:
+      POSTGRES_PASSWORD: postgres
+      EHRBASE_USER: ehrbase
+      EHRBASE_PASSWORD: ehrbase
+      EHRBASE_USER_ADMIN: ehrbase_admin
+      EHRBASE_PASSWORD_ADMIN: ehrbase_admin
+    volumes:
+      - ehrbase-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    networks:
+      - core
+
+  ehrbase:
+    image: ehrbase/ehrbase:2.30.1@sha256:c08be93f41164bb6ba8e957532ce4cccd18e6b9d26e074ef97f3faff9c3cd52f
+    container_name: ehrbase
+    environment:
+      DB_URL: jdbc:postgresql://ehrbase-db:5432/ehrbase
+      DB_USER: ehrbase
+      DB_PASS: ehrbase
+      DB_USER_ADMIN: ehrbase_admin
+      DB_PASS_ADMIN: ehrbase_admin
+      SECURITY_AUTHTYPE: NONE
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: env,health,info,metrics,prometheus
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m"
+    ports:
+      - "8088:8080"
+    depends_on:
+      ehrbase-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/ehrbase/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    networks:
+      - core
+
 volumes:
   melior-data:
   asynja-data:
   core-data:
   kafka-data:
   mapping-assistant-data:
+  ehrbase-data:
 
 networks:
   core:

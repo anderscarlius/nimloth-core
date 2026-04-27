@@ -96,3 +96,13 @@ services:
     container_name: mapping-assistant-core
     ports: !override
       - "8009:3009"
+
+  # --- openEHR-spår (P3) ---
+  ehrbase:
+    container_name: ehrbase-core
+    ports: !override
+      - "18088:8080"
+
+  ehrbase-db:
+    container_name: ehrbase-db-core
+    # Ingen host-port-export — DB-access bara via service-namn

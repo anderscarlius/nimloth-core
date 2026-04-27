@@ -1,0 +1,100 @@
+name: openEHR Compiler
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/openehr/**'
+      - 'test/openehr.test.ts'
+      - '.github/workflows/openehr-compiler.yml'
+  pull_request:
+    paths:
+      - 'infra/openehr/**'
+      - 'test/openehr.test.ts'
+      - '.github/workflows/openehr-compiler.yml'
+
+jobs:
+  verify-archie-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify archie-all is published on Maven Central
+        run: bash infra/openehr/compiler/scripts/verify-archie-version.sh com.nedap.healthcare.archie archie-all
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    needs: verify-archie-version
+    services:
+      ehrbase-db:
+        image: ehrbase/ehrbase-v2-postgres:16.2@sha256:abe14e8f9ba33cabc9946c6c17c5aa95b64b35387f266cd20a894149203196d7
+        env:
+          POSTGRES_PASSWORD: postgres
+          EHRBASE_USER: ehrbase
+          EHRBASE_PASSWORD: ehrbase
+          EHRBASE_USER_ADMIN: ehrbase_admin
+          EHRBASE_PASSWORD_ADMIN: ehrbase_admin
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 15
+
+      ehrbase:
+        image: ehrbase/ehrbase:2.30.1@sha256:c08be93f41164bb6ba8e957532ce4cccd18e6b9d26e074ef97f3faff9c3cd52f
+        env:
+          DB_URL: jdbc:postgresql://ehrbase-db:5432/ehrbase
+          DB_USER: ehrbase
+          DB_PASS: ehrbase
+          DB_USER_ADMIN: ehrbase_admin
+          DB_PASS_ADMIN: ehrbase_admin
+          SECURITY_AUTHTYPE: NONE
+          JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m"
+        ports:
+          - 18088:8080
+        options: >-
+          --health-cmd "wget -q --spider http://localhost:8080/ehrbase/ || exit 1"
+          --health-interval 15s
+          --health-timeout 5s
+          --health-retries 20
+          --health-start-period 60s
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build openEHR compiler image
+        run: bash infra/openehr/compiler/scripts/build-image.sh
+
+      - name: Run compiler against body_temperature.v2
+        run: pnpm openehr:compile
+
+      - name: Wait for EHRbase
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:18088/ehrbase/ > /dev/null; then break; fi
+            echo "Väntar på EHRbase ($i/30)..."
+            sleep 5
+          done
+
+      - name: Load fixtures into EHRbase
+        run: pnpm openehr:load-templates
+        env:
+          EHRBASE_URL: http://localhost:18088
+
+      - name: Run smoke tests
+        run: pnpm --filter @nimloth-core/e2e exec vitest run openehr.test.ts
+        env:
+          EHRBASE_URL: http://localhost:18088
