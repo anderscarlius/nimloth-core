@@ -15,6 +15,8 @@
     "lint": "pnpm -r lint",
     "clean": "pnpm -r clean",
     "seed:all": "pnpm --filter @nimloth-core/test-data seed:all",
+    "openehr:compile": "bash infra/openehr/compiler/scripts/run-compile.sh",
+    "openehr:load-templates": "node infra/openehr/scripts/load-templates.mjs",
     "mapper:propose": "pnpm --filter @nimloth-core/mapping-assistant cli:propose --",
     "test:e2e": "pnpm --filter @nimloth-core/e2e test",
     "test:e2e:distributed": "pnpm --filter @nimloth-core/e2e test:distributed",

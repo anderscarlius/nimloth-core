@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>se.nimloth</groupId>
+  <artifactId>openehr-compiler</artifactId>
+  <version>0.1.0</version>
+  <packaging>jar</packaging>
+
+  <name>Nimloth Core openEHR Compiler</name>
+  <description>ADL 1.4 → OPT 1.4 batch compiler för Nimloth Core (P3.0, Nivå 1).</description>
+
+  <properties>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- archie 3.14.0 är senaste på Maven Central per 2025-05-15.
+         GitHub-releases finns på 3.15+ men är ej publicerade. -->
+    <archie.version>3.14.0</archie.version>
+    <slf4j.version>2.0.13</slf4j.version>
+  </properties>
+
+  <dependencies>
+    <!-- archie-all: paraplyartefakt som transitivt drar in alla submoduler
+         (aom, openehr-rm, tools, grammars, etc) i exakt matchande version. -->
+    <dependency>
+      <groupId>com.nedap.healthcare.archie</groupId>
+      <artifactId>archie-all</artifactId>
+      <version>${archie.version}</version>
+    </dependency>
+
+    <!-- Logging (minimal). slf4j-simple skriver till stderr.
+         OBS: archie 3.14.0 drar slf4j 1.x via transitive — vi pinnar 2.x
+         och måste excludera den gamla för att inte få dubbla bindings. -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>openehr-compiler</finalName>
+    <plugins>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.5.2</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals><goal>shade</goal></goals>
+            <configuration>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>se.nimloth.openehr.compiler.CompileMain</mainClass>
+                </transformer>
+                <!-- Sammanfoga META-INF/services (ServiceLoader-konfig) korrekt -->
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              </transformers>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

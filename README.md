@@ -116,6 +116,7 @@ Detaljer i [`docs/ROADMAP.md`](docs/ROADMAP.md).
 | [`docs/POSITIONING.md`](docs/POSITIONING.md) | Nimloth-familjens struktur |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Utvecklingsplan sprint för sprint |
 | [`docs/prompts/`](docs/prompts/) | Utbyggnadsprompter P1–P7 |
+| [`infra/openehr/`](infra/openehr/) | openEHR-spår: ADL-källor, OPT-templates, batch-compiler |
 
 ---
 
