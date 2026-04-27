@@ -15,6 +15,7 @@
     "lint": "pnpm -r lint",
     "clean": "pnpm -r clean",
     "seed:all": "pnpm --filter @nimloth-core/test-data seed:all",
+    "mapper:propose": "pnpm --filter @nimloth-core/mapping-assistant cli:propose --",
     "test:e2e": "pnpm --filter @nimloth-core/e2e test",
     "test:e2e:distributed": "pnpm --filter @nimloth-core/e2e test:distributed",
     "start": "./scripts/start.sh",

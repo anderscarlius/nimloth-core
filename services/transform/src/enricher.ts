@@ -8,7 +8,8 @@ import type { TransformConfig, DbCfg } from './config.js';
 import { PatientCache } from './patient-cache.js';
 import { DqdMetrics } from './quality.js';
 import { MAPPERS } from './mappings/index.js';
-import type { CdcRawEvent, MapperContext } from './types.js';
+import { randomUUID } from 'node:crypto';
+import type { CdcRawEvent, MapperContext, MapperResult } from './types.js';
 
 export class Enricher {
   private readonly kafka: Kafka;
@@ -31,6 +32,8 @@ export class Enricher {
     this.producer = this.kafka.producer({ idempotent: true, maxInFlightRequests: 5 });
   }
 
+  private metricsTimer: ReturnType<typeof setInterval> | null = null;
+
   async start(): Promise<void> {
     // Pre-populera patient-cache direkt från källsystemens DB för att undvika
     // race condition där procedure/observation-events processas innan motsvarande
@@ -39,6 +42,10 @@ export class Enricher {
 
     await this.producer.connect();
     await this.consumer.connect();
+
+    // Periodisk skip-publish till core.system.quality.metrics. Mapping-
+    // assistant:s Observer aggregerar dessa events.
+    this.metricsTimer = setInterval(() => void this.flushSkips(), 5_000);
     this.logger.info({ topics: this.config.rawTopics }, 'Subscribing to raw CDC topics');
     await this.consumer.subscribe({ topics: this.config.rawTopics, fromBeginning: true });
     await this.consumer.run({
@@ -87,6 +94,18 @@ export class Enricher {
     const results = Array.isArray(result) ? result : [result];
 
     for (const r of results) {
+      // Mappers som rapporterar confidence='low' publicerar till
+      // mapping.pending istället för måltopiken — eventet hålls tillbaka
+      // tills asker (eller mänsklig granskning) fattat ett beslut.
+      if (r.confidence === 'low') {
+        await this.publishPending(raw, r);
+        this.metrics.recordSkip({
+          source_system: raw.source_system,
+          source_table: raw.source_table,
+          reason: r.rationale ?? 'low_confidence',
+        });
+        continue;
+      }
       await this.producer.send({
         topic: r.topic,
         messages: [
@@ -118,8 +137,70 @@ export class Enricher {
 
   async stop(): Promise<void> {
     this.logger.info('Stopping enricher');
+    if (this.metricsTimer) clearInterval(this.metricsTimer);
+    this.metricsTimer = null;
+    await this.flushSkips().catch(() => undefined);
     await this.consumer.disconnect();
     await this.producer.disconnect();
+  }
+
+  /** Drainar skip-buffert till core.system.quality.metrics. */
+  private async flushSkips(): Promise<void> {
+    const skips = this.metrics.drainSkips();
+    if (skips.length === 0) return;
+    const messages = skips.map((s) => ({
+      key: `${s.source_system}.${s.source_table}.${s.column_name ?? ''}.${s.reason}`,
+      value: JSON.stringify({ type: 'skip', ...s }),
+      headers: { 'content-type': 'application/json', 'event-type': 'quality.skip' },
+    }));
+    try {
+      await this.producer.send({ topic: 'core.system.quality.metrics', messages });
+      this.logger.debug({ count: skips.length }, 'flushed skip events');
+    } catch (err) {
+      // Lägg tillbaka i bufferten — kommer publiceras vid nästa flush
+      for (const s of skips) this.metrics.skipBuffer.push(s);
+      this.logger.warn({ err: String(err) }, 'flushSkips failed (will retry)');
+    }
+  }
+
+  /** Publicera ett "låg confidence"-event till core.system.mapping.pending. */
+  private async publishPending(raw: CdcRawEvent, r: MapperResult): Promise<void> {
+    const eventId = randomUUID();
+    const payload = {
+      event_id: eventId,
+      source_system: raw.source_system,
+      source_table: raw.source_table,
+      mapper_name: `${raw.source_table}-mapper`,
+      target_topic: r.topic,
+      raw_event: raw.after ?? raw.before ?? null,
+      proposed_event: r.event,
+      confidence: 'low',
+      rationale: r.rationale ?? null,
+      timestamp: new Date().toISOString(),
+    };
+    try {
+      await this.producer.send({
+        topic: 'core.system.mapping.pending',
+        messages: [
+          {
+            key: eventId,
+            value: JSON.stringify(payload),
+            headers: {
+              'content-type': 'application/json',
+              'event-type': 'mapping.pending',
+              'source-system': raw.source_system,
+              'source-table': raw.source_table,
+            },
+          },
+        ],
+      });
+      this.logger.info(
+        { event_id: eventId, source_table: raw.source_table, target: r.topic },
+        'published mapping.pending (confidence=low)',
+      );
+    } catch (err) {
+      this.logger.warn({ err: String(err), event_id: eventId }, 'publishPending failed');
+    }
   }
 
   private async prePopulatePatientCache(): Promise<void> {

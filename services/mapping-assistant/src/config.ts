@@ -21,6 +21,23 @@ export interface MappingAssistantConfig {
     auditTopic: string;
     /** Hur ofta outbox drainas. */
     drainIntervalMs: number;
+    /** Topic att konsumera quality-metrics från (observer). */
+    qualityTopic: string;
+    /** Topic att konsumera asker-pending-events från (asker-flow). */
+    askerTopic: string;
+    /** Consumer-group-prefix. */
+    groupPrefix: string;
+  };
+  observer: {
+    enabled: boolean;
+    windowSeconds: number;
+    threshold: number;
+    evaluateIntervalMs: number;
+    pruneSeconds: number;
+  };
+  asker: {
+    enabled: boolean;
+    pollIntervalMs: number;
   };
   /** När true: vägrar starta om template-manifest inte matchar filsystemet. När false: loggar varning. */
   requireValidPrompts: boolean;
@@ -65,6 +82,20 @@ export function loadConfig(): MappingAssistantConfig {
       clientId: process.env.KAFKA_CLIENT_ID ?? 'core-mapping-assistant',
       auditTopic: process.env.MAPPING_AUDIT_TOPIC ?? 'core.audit.mapping',
       drainIntervalMs: num('AUDIT_DRAIN_INTERVAL_MS', 10_000),
+      qualityTopic: process.env.QUALITY_METRICS_TOPIC ?? 'core.system.quality.metrics',
+      askerTopic: process.env.MAPPING_PENDING_TOPIC ?? 'core.system.mapping.pending',
+      groupPrefix: process.env.KAFKA_GROUP_PREFIX ?? 'core-mapping-assistant',
+    },
+    observer: {
+      enabled: bool('OBSERVER_ENABLED', true),
+      windowSeconds: num('OBSERVER_WINDOW_SECONDS', 86_400),
+      threshold: num('OBSERVER_THRESHOLD', 10),
+      evaluateIntervalMs: num('OBSERVER_EVALUATE_INTERVAL_MS', 60_000),
+      pruneSeconds: num('OBSERVER_PRUNE_SECONDS', 172_800),
+    },
+    asker: {
+      enabled: bool('ASKER_ENABLED', true),
+      pollIntervalMs: num('ASKER_POLL_INTERVAL_MS', 15_000),
     },
     requireValidPrompts: bool('REQUIRE_VALID_PROMPTS', true),
   };

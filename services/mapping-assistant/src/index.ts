@@ -8,6 +8,8 @@ import { createLogger } from './logger.js';
 import { MappingAssistantDb } from './db.js';
 import { loadAndVerifyPrompts } from './prompt-store.js';
 import { Proposer } from './proposer.js';
+import { Observer } from './observer.js';
+import { Asker } from './asker.js';
 import { AuditPublisher } from './audit-publisher.js';
 import { createApp } from './server.js';
 
@@ -81,13 +83,57 @@ async function main(): Promise<void> {
   );
   await publisher.start();
 
-  // 5. Proposer + HTTP-server
+  // 5. Observer (Fas 4.2) — Kafka-consumer på core.system.quality.metrics
+  let observer: Observer | null = null;
+  if (config.observer.enabled) {
+    observer = new Observer(
+      {
+        brokers: config.kafka.brokers,
+        clientId: `${config.kafka.clientId}-observer`,
+        groupId: `${config.kafka.groupPrefix}-observer`,
+        topic: config.kafka.qualityTopic,
+        windowSeconds: config.observer.windowSeconds,
+        threshold: config.observer.threshold,
+        evaluateIntervalMs: config.observer.evaluateIntervalMs,
+        pruneSeconds: config.observer.pruneSeconds,
+      },
+      db,
+      router,
+      verification.templates,
+      logger.child({ component: 'observer' }),
+    );
+    await observer.start();
+  }
+
+  // 6. Asker (Fas 4.2) — Kafka-consumer på core.system.mapping.pending
+  let asker: Asker | null = null;
+  if (config.asker.enabled) {
+    asker = new Asker(
+      {
+        brokers: config.kafka.brokers,
+        clientId: `${config.kafka.clientId}-asker`,
+        groupId: `${config.kafka.groupPrefix}-asker`,
+        topic: config.kafka.askerTopic,
+        pollIntervalMs: config.asker.pollIntervalMs,
+        batchSize: 10,
+      },
+      db,
+      router,
+      verification.templates,
+      logger.child({ component: 'asker' }),
+    );
+    await asker.start();
+  }
+
+  // 7. Proposer + HTTP-server
   const proposer = new Proposer(router, db, verification.templates, config.proposedMappersPath, logger);
   const app = createApp({
     db,
     router,
     proposer,
     publisher,
+    observer,
+    asker,
     promptVerification: verification,
     logger,
     loadedAt: new Date().toISOString(),
@@ -100,6 +146,8 @@ async function main(): Promise<void> {
   const shutdown = async (signal: string): Promise<void> => {
     logger.info({ signal }, 'shutting down');
     server.close();
+    await asker?.stop();
+    await observer?.stop();
     await publisher.stop();
     db.close();
     process.exit(0);

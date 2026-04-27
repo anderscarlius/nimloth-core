@@ -223,6 +223,223 @@ export class MappingAssistantDb {
       .run(args);
   }
 
+  // ============================================================
+  // Observer (Fas 4.2)
+  // ============================================================
+  recordSkipEvent(args: {
+    source_system: string;
+    source_table: string;
+    column_name: string | null;
+    reason: string;
+    sample_value: string | null;
+    occurred_at?: string;
+  }): void {
+    this.db
+      .prepare(
+        `INSERT INTO observer_skip_events (source_system, source_table, column_name, reason, sample_value, occurred_at)
+         VALUES (@source_system, @source_table, @column_name, @reason, @sample_value, COALESCE(@occurred_at, CURRENT_TIMESTAMP))`,
+      )
+      .run({
+        source_system: args.source_system,
+        source_table: args.source_table,
+        column_name: args.column_name,
+        reason: args.reason,
+        sample_value: args.sample_value,
+        occurred_at: args.occurred_at ?? null,
+      });
+  }
+
+  /** Räkna skips inom rullande fönster. SQLite-datetime används direkt. */
+  aggregateSkips(windowSeconds: number): Array<{
+    source_table: string;
+    column_name: string | null;
+    reason: string;
+    count: number;
+    sample_value: string | null;
+    source_system: string;
+    last_seen: string;
+  }> {
+    return this.db
+      .prepare<unknown[], {
+        source_table: string;
+        column_name: string | null;
+        reason: string;
+        count: number;
+        sample_value: string | null;
+        source_system: string;
+        last_seen: string;
+      }>(
+        `SELECT source_table, column_name, reason, source_system,
+                COUNT(*) AS count,
+                MAX(occurred_at) AS last_seen,
+                (SELECT sample_value FROM observer_skip_events s2
+                  WHERE s2.source_table = s1.source_table
+                    AND IFNULL(s2.column_name,'') = IFNULL(s1.column_name,'')
+                    AND s2.reason = s1.reason
+                    AND s2.sample_value IS NOT NULL
+                  ORDER BY s2.id DESC LIMIT 1) AS sample_value
+           FROM observer_skip_events s1
+          WHERE occurred_at >= datetime('now', '-' || ? || ' seconds')
+          GROUP BY source_table, column_name, reason, source_system
+          ORDER BY count DESC`,
+      )
+      .all(windowSeconds);
+  }
+
+  isAggregateAlreadyTriggered(source_table: string, column_name: string | null, reason: string): boolean {
+    const r = this.db
+      .prepare<unknown[], { suggestion_id: string | null }>(
+        `SELECT suggestion_id FROM observer_triggers
+          WHERE source_table = ? AND IFNULL(column_name,'') = IFNULL(?,'') AND reason = ?`,
+      )
+      .get(source_table, column_name, reason);
+    return r !== undefined;
+  }
+
+  recordAggregateTrigger(args: {
+    source_table: string;
+    column_name: string | null;
+    reason: string;
+    suggestion_id: string;
+  }): void {
+    this.db
+      .prepare(
+        `INSERT OR REPLACE INTO observer_triggers (source_table, column_name, reason, suggestion_id, triggered_at)
+         VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      )
+      .run(args.source_table, args.column_name, args.reason, args.suggestion_id);
+  }
+
+  /** Rensa skips äldre än window — kallas av observer för att hålla tabellen liten. */
+  pruneOldSkips(windowSeconds: number): number {
+    const r = this.db
+      .prepare(`DELETE FROM observer_skip_events WHERE occurred_at < datetime('now', '-' || ? || ' seconds')`)
+      .run(windowSeconds);
+    return r.changes;
+  }
+
+  // ============================================================
+  // Asker (Fas 4.2)
+  // ============================================================
+  enqueueAsker(args: {
+    event_id: string;
+    source_system: string;
+    source_table: string;
+    mapper_name: string;
+    raw_event: object;
+    confidence?: string;
+  }): { enqueued: boolean } {
+    try {
+      this.db
+        .prepare(
+          `INSERT INTO asker_pending (event_id, source_system, source_table, mapper_name, raw_event, confidence)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          args.event_id,
+          args.source_system,
+          args.source_table,
+          args.mapper_name,
+          JSON.stringify(args.raw_event),
+          args.confidence ?? 'low',
+        );
+      return { enqueued: true };
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('UNIQUE constraint')) {
+        return { enqueued: false };
+      }
+      throw err;
+    }
+  }
+
+  pendingAskerJobs(limit: number): Array<{
+    id: number;
+    event_id: string;
+    source_system: string;
+    source_table: string;
+    mapper_name: string;
+    raw_event: string;
+    received_at: string;
+  }> {
+    return this.db
+      .prepare<unknown[], {
+        id: number;
+        event_id: string;
+        source_system: string;
+        source_table: string;
+        mapper_name: string;
+        raw_event: string;
+        received_at: string;
+      }>(
+        `SELECT id, event_id, source_system, source_table, mapper_name, raw_event, received_at
+           FROM asker_pending
+          WHERE status = 'pending'
+          ORDER BY id ASC LIMIT ?`,
+      )
+      .all(limit);
+  }
+
+  resolveAskerJob(args: {
+    event_id: string;
+    decision: 'apply' | 'reject' | 'escalate';
+    patch: object | null;
+    rationale: string | null;
+    suggestion_id: string | null;
+  }): void {
+    const status = args.decision === 'escalate' ? 'escalated' : 'answered';
+    this.db
+      .prepare(
+        `UPDATE asker_pending
+            SET status = @status,
+                decision = @decision,
+                patch = @patch,
+                rationale = @rationale,
+                suggestion_id = @suggestion_id,
+                answered_at = CURRENT_TIMESTAMP
+          WHERE event_id = @event_id AND status = 'pending'`,
+      )
+      .run({
+        status,
+        decision: args.decision,
+        patch: args.patch ? JSON.stringify(args.patch) : null,
+        rationale: args.rationale,
+        suggestion_id: args.suggestion_id,
+        event_id: args.event_id,
+      });
+  }
+
+  observerStats(): {
+    skips24h: number;
+    skipsTotal: number;
+    triggers: number;
+    asker: { pending: number; answered: number; escalated: number };
+  } {
+    const skips24h = this.db
+      .prepare(`SELECT COUNT(*) AS n FROM observer_skip_events WHERE occurred_at >= datetime('now','-86400 seconds')`)
+      .get() as { n: number };
+    const skipsTotal = this.db.prepare('SELECT COUNT(*) AS n FROM observer_skip_events').get() as { n: number };
+    const triggers = this.db.prepare('SELECT COUNT(*) AS n FROM observer_triggers').get() as { n: number };
+    const asker = this.db
+      .prepare(
+        `SELECT
+            SUM(status='pending') AS pending,
+            SUM(status='answered') AS answered,
+            SUM(status='escalated') AS escalated
+           FROM asker_pending`,
+      )
+      .get() as { pending: number; answered: number; escalated: number } | undefined;
+    return {
+      skips24h: skips24h.n,
+      skipsTotal: skipsTotal.n,
+      triggers: triggers.n,
+      asker: {
+        pending: Number(asker?.pending ?? 0),
+        answered: Number(asker?.answered ?? 0),
+        escalated: Number(asker?.escalated ?? 0),
+      },
+    };
+  }
+
   countSuggestions(): { pending: number; approved: number; rejected: number } {
     const row = this.db
       .prepare(

@@ -30,6 +30,15 @@ export interface MapperContext {
 export interface MapperResult {
   topic: string;
   event: Record<string, unknown>;
+  /**
+   * Mappar-self-confidence (Sprint 2, P4 Fas 4.2). Default: 'high' för
+   * existerande hand-skrivna mappers. Generated mappers eller mappers som
+   * stötter på okända input-värden ska sätta 'low' så enricher publicerar
+   * eventet till core.system.mapping.pending istället för måltopiken.
+   */
+  confidence?: 'low' | 'medium' | 'high';
+  /** Frivillig motivering för låg confidence (loggas + bifogas till asker-event). */
+  rationale?: string;
 }
 
 export type Mapper = (raw: CdcRawEvent, ctx: MapperContext) => MapperResult[] | MapperResult | null;

@@ -30,8 +30,17 @@ export function rangeCheck(type: string, value: number | null | undefined): Qual
 }
 
 // ============================================================
-// DQD-metrics (enkel counter)
+// DQD-metrics (enkel counter + skip-buffer)
 // ============================================================
+export interface SkipEvent {
+  source_system: string;
+  source_table: string;
+  column_name: string | null;
+  reason: string;
+  sample_value: string | null;
+  occurred_at: string;
+}
+
 export class DqdMetrics {
   processedByTopic = new Map<string, number>();
   flagsByType = new Map<string, number>();
@@ -39,6 +48,8 @@ export class DqdMetrics {
   totalErrors = 0;
   latencySumMs = 0;
   latencyCount = 0;
+  /** In-memory ring av senaste skips. MetricPublisher drainar buffert till Kafka. */
+  skipBuffer: SkipEvent[] = [];
 
   recordProcessed(topic: string): void {
     this.totalProcessed++;
@@ -47,6 +58,37 @@ export class DqdMetrics {
 
   recordError(): void {
     this.totalErrors++;
+  }
+
+  /**
+   * Registrerar att ett event hoppade över transformeringen. Konsumeras av
+   * MetricPublisher som publicerar till core.system.quality.metrics.
+   * Mapping-assistantens Observer aggregerar dessa events.
+   */
+  recordSkip(args: {
+    source_system: string;
+    source_table: string;
+    column_name?: string | null;
+    reason: string;
+    sample_value?: string | null;
+  }): void {
+    this.skipBuffer.push({
+      source_system: args.source_system,
+      source_table: args.source_table,
+      column_name: args.column_name ?? null,
+      reason: args.reason,
+      sample_value: args.sample_value ?? null,
+      occurred_at: new Date().toISOString(),
+    });
+    // Tak — ska inte gärna behövas men förhindrar OOM om publisher dör.
+    if (this.skipBuffer.length > 5_000) this.skipBuffer.shift();
+  }
+
+  /** Drain av skip-buffert. Returnerar listan + nollställer. */
+  drainSkips(): SkipEvent[] {
+    const out = this.skipBuffer;
+    this.skipBuffer = [];
+    return out;
   }
 
   recordFlag(flag: string): void {

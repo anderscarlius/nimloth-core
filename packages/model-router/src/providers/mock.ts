@@ -35,11 +35,23 @@ export function mapMockTable(raw: CdcRawEvent, ctx: MapperContext): MapperResult
   },
   {
     match: 'mapping.observe',
-    text: 'Mock observation: pattern detected in skipped events. Suggest expanding mapper for unhandled order_type.',
+    text: `\`\`\`json
+{
+  "pattern": "new_enum_value",
+  "confidence": 0.6,
+  "rationale": "Mock observation: aggregat över 24h indikerar ett återkommande okänt värde. Detta kan vara ett nytt enum eller en datakvalitetsfråga.",
+  "suggestedAction": "request-review"
+}
+\`\`\``,
   },
   {
     match: 'mapping.ask',
-    text: 'Mock answer: cannot route PHI data without on-premise provider configured.',
+    text: `\`\`\`json
+{
+  "decision": "escalate",
+  "rationale": "Mock-providern kan inte fatta beslut för PHI-data. Ingen on-premise modell konfigurerad — eskalera till mänsklig granskning."
+}
+\`\`\``,
   },
 ];
 

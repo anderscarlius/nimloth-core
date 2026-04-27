@@ -113,6 +113,7 @@ echo ""
 echo "== System =="
 create_topic "core.system.quality.metrics"  1 "${RET_7D}"
 create_topic "core.system.errors"           1 "${RET_7D}"
+create_topic "core.system.mapping.pending"  3 "${RET_7D}"
 
 # ============================================================
 # Shared + system edge-heartbeat (förberedelse för Prompt 14)

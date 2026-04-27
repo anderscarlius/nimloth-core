@@ -16,6 +16,8 @@ import type { ModelRouter } from '@nimloth-core/model-router';
 import type { MappingAssistantDb } from './db.js';
 import type { AuditPublisher } from './audit-publisher.js';
 import type { Proposer, ProposeRequest } from './proposer.js';
+import type { Observer, QualityMetricEvent } from './observer.js';
+import type { Asker, MappingPendingEvent } from './asker.js';
 import type { VerificationResult } from './prompt-store.js';
 
 export interface ServerDeps {
@@ -23,6 +25,8 @@ export interface ServerDeps {
   router: ModelRouter;
   proposer: Proposer;
   publisher: AuditPublisher;
+  observer: Observer | null;
+  asker: Asker | null;
   promptVerification: VerificationResult;
   logger: Logger;
   loadedAt: string;
@@ -76,7 +80,73 @@ export function createApp(deps: ServerDeps): express.Express {
       },
       audit: deps.publisher.status(),
       suggestions: counts,
+      observer: deps.observer?.status() ?? { enabled: false },
+      asker: deps.asker?.status() ?? { enabled: false },
+      observerStats: deps.db.observerStats(),
     });
+  });
+
+  // ----------------------------------------------------------------
+  // Observer — direktinjicering av skip-events (för demo/test/dashboard)
+  // I produktion fyller Kafka-konsumenten denna data automatiskt.
+  // ----------------------------------------------------------------
+  app.post('/observer/skip', (req: Request, res: Response) => {
+    if (!deps.observer) {
+      res.status(503).json({ error: 'observer disabled' });
+      return;
+    }
+    const body = req.body as Partial<QualityMetricEvent> | undefined;
+    if (!body || body.type !== 'skip' || !body.source_system || !body.source_table || !body.reason) {
+      res.status(400).json({ error: 'expected { type:"skip", source_system, source_table, reason, column_name?, sample_value? }' });
+      return;
+    }
+    deps.observer.handleEvent(body as QualityMetricEvent);
+    res.status(202).json({ recorded: true });
+  });
+
+  app.post('/observer/evaluate', async (_req: Request, res: Response) => {
+    if (!deps.observer) {
+      res.status(503).json({ error: 'observer disabled' });
+      return;
+    }
+    try {
+      const r = await deps.observer.evaluate();
+      res.json(r);
+    } catch (err) {
+      deps.logger.error({ err: String(err) }, 'observer evaluate failed');
+      res.status(500).json({ error: 'evaluate failed' });
+    }
+  });
+
+  // ----------------------------------------------------------------
+  // Asker — direktinjicering av pending-events
+  // ----------------------------------------------------------------
+  app.post('/asker/pending', (req: Request, res: Response) => {
+    if (!deps.asker) {
+      res.status(503).json({ error: 'asker disabled' });
+      return;
+    }
+    const body = req.body as Partial<MappingPendingEvent> | undefined;
+    if (!body || !body.event_id || !body.source_system || !body.source_table || !body.mapper_name) {
+      res.status(400).json({ error: 'expected { event_id, source_system, source_table, mapper_name, raw_event, confidence? }' });
+      return;
+    }
+    deps.asker.handleEvent(body as MappingPendingEvent);
+    res.status(202).json({ enqueued: true });
+  });
+
+  app.post('/asker/tick', async (_req: Request, res: Response) => {
+    if (!deps.asker) {
+      res.status(503).json({ error: 'asker disabled' });
+      return;
+    }
+    try {
+      const r = await deps.asker.tick();
+      res.json(r);
+    } catch (err) {
+      deps.logger.error({ err: String(err) }, 'asker tick failed');
+      res.status(500).json({ error: 'tick failed' });
+    }
   });
 
   // ----------------------------------------------------------------
