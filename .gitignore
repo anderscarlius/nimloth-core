@@ -25,3 +25,7 @@ kafka-data/
 # AI-genererade mapper-utkast skrivs hit av mapping-assistant via volume-mount.
 # Granskade och godkända mappers flyttas manuellt till mappings/ av människa.
 services/transform/src/mappings/proposed/
+
+# openEHR diagnostic-rapport regenereras vid varje pnpm openehr:compile
+# och varierar med datum/path. Inte källa-of-truth.
+infra/openehr/templates/compiler-diagnostic-report.md

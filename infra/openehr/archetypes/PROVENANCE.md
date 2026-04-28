@@ -18,23 +18,105 @@ Varje arketyp dokumenteras med:
 - **CKM-id:** `openEHR-EHR-OBSERVATION.body_temperature.v2`
 - **UID:** `fbff84f3-2b33-4245-94f1-6dafe6679c54`
 - **Hämtad från:** https://raw.githubusercontent.com/openEHR/CKM-mirror/master/local/archetypes/entry/observation/openEHR-EHR-OBSERVATION.body_temperature.v2.adl
-- **CKM-mirror commit:** `master` per 2026-04-27 (verifierbar via `git log` om mirror-repot klonas)
+- **CKM-mirror commit:** `master` per 2026-04-27
 - **Hämtningsdatum:** 2026-04-27
 - **SHA256:** `5f3561def29748f73da74c9ab8c715195ad08cefc144954c49c0c68b13472ec3`
 - **Filstorlek:** 124 141 bytes
 - **ADL-version:** 1.4
-- **Användning:** Verifierings-arketyp för P3.0-pipelinen. Vald som en stabil,
-  publik CKM-arketyp som täcker realistisk komplexitet (event-baserad observation
-  med flera mätpunkter, units, tolkning, position, anatomical site) utan att vara
-  ohanterligt stor. Den används i Steg 3.3 av P3.0 för att verifiera att
-  compilern kan parse:a, flatta och serialisera en typisk klinisk arketyp.
+- **Användning:** Verifierings-arketyp för P3.0-pipelinen + temperatur-vitals i Sprint 2.
 - **Licens:** CC-BY-SA 3.0 (openEHR Foundation)
 
-### Reproduktionssteg
+## openEHR-EHR-OBSERVATION.blood_pressure.v2.adl
+
+- **CKM-id:** `openEHR-EHR-OBSERVATION.blood_pressure.v2`
+- **Hämtad från:** https://raw.githubusercontent.com/openEHR/CKM-mirror/master/local/archetypes/entry/observation/openEHR-EHR-OBSERVATION.blood_pressure.v2.adl
+- **CKM-mirror commit:** `master` per 2026-04-28
+- **Hämtningsdatum:** 2026-04-28
+- **SHA256:** `5d07e40060341128f57e44c56441824848c8a8d8eeea85b68306b605fa6d97fa`
+- **Filstorlek:** 230 380 bytes
+- **ADL-version:** 1.4
+- **Användning:** Vitals — blodtryck. P3.1-composer mappar via fixture (time_series.en.v1) tills P3.0b producerar XML-OPT.
+- **Licens:** CC-BY-SA 3.0 (openEHR Foundation)
+
+## openEHR-EHR-OBSERVATION.pulse.v2.adl
+
+- **CKM-id:** `openEHR-EHR-OBSERVATION.pulse.v2`
+- **Hämtad från:** https://raw.githubusercontent.com/openEHR/CKM-mirror/master/local/archetypes/entry/observation/openEHR-EHR-OBSERVATION.pulse.v2.adl
+- **CKM-mirror commit:** `master` per 2026-04-28
+- **Hämtningsdatum:** 2026-04-28
+- **SHA256:** `84547b34e0575ceef8da2a8dd37bd4716bbd79c1bbb9142c43e67983ed832ac5`
+- **Filstorlek:** 179 133 bytes
+- **ADL-version:** 1.4
+- **Användning:** Vitals — puls. P3.1-composer mappar via fixture (time_series.en.v1).
+- **Licens:** CC-BY-SA 3.0 (openEHR Foundation)
+
+## openEHR-EHR-EVALUATION.medication_summary.v1.adl
+
+- **CKM-id:** `openEHR-EHR-EVALUATION.medication_summary.v1`
+- **Hämtad från:** https://raw.githubusercontent.com/openEHR/CKM-mirror/master/local/archetypes/entry/evaluation/openEHR-EHR-EVALUATION.medication_summary.v1.adl
+- **CKM-mirror commit:** `master` per 2026-04-28
+- **Hämtningsdatum:** 2026-04-28
+- **SHA256:** `7712ac7fe6085402289c71ba964b8fb563bf6c46d7d8a39880031a5cb20bbd1e`
+- **Filstorlek:** 48 437 bytes
+- **ADL-version:** 1.4
+- **Användning:** Medicineringsdata.
+- **Avvikelse från P3.1-spec:** specens `medication_statement.v1` finns inte i CKM-mirror. `medication_summary.v1` är närmaste motsvarighet — täcker samma användningsfall (sammanställning av läkemedel patient står på). Notera: composer kan inte mappa medication-events än (gap loggat för P3.0b — fixturerna saknar EVALUATION-shape).
+- **Licens:** CC-BY-SA 3.0 (openEHR Foundation)
+
+## openEHR-EHR-EVALUATION.adverse_reaction_risk.v2.adl
+
+- **CKM-id:** `openEHR-EHR-EVALUATION.adverse_reaction_risk.v2`
+- **Hämtad från:** https://raw.githubusercontent.com/openEHR/CKM-mirror/master/local/archetypes/entry/evaluation/openEHR-EHR-EVALUATION.adverse_reaction_risk.v2.adl
+- **CKM-mirror commit:** `master` per 2026-04-28
+- **Hämtningsdatum:** 2026-04-28
+- **SHA256:** `cd691179b7ec929a1e673055f33ba788afcc75629c5220fe8aebf390576ba359`
+- **Filstorlek:** 142 504 bytes
+- **ADL-version:** 1.4
+- **Användning:** Allergi/biverkningsrisk-data (Fru Andersson har dokumenterad penicillinallergi).
+- **Avvikelse från P3.1-spec:** specens `.v1` finns inte i CKM-mirror — endast `.v2` publicerad. Vi använder `.v2`. Behövs P3.0b för att kunna mappa.
+- **Licens:** CC-BY-SA 3.0 (openEHR Foundation)
+
+## openEHR-EHR-ACTION.procedure.v1.adl
+
+- **CKM-id:** `openEHR-EHR-ACTION.procedure.v1`
+- **Hämtad från:** https://raw.githubusercontent.com/openEHR/CKM-mirror/master/local/archetypes/entry/action/openEHR-EHR-ACTION.procedure.v1.adl
+- **CKM-mirror commit:** `master` per 2026-04-28
+- **Hämtningsdatum:** 2026-04-28
+- **SHA256:** `8269c803ac9aa69c9ece95f5fb688613735b9487d0e12d96c17faff400178bf1`
+- **Filstorlek:** 214 778 bytes
+- **ADL-version:** 1.4
+- **Användning:** Procedure (Fru Andersson: höftledsoperation). P3.1-composer mappar via fixture (minimal_action.en.v1) tills P3.0b producerar XML-OPT.
+- **Licens:** CC-BY-SA 3.0 (openEHR Foundation)
+
+## openEHR-EHR-EVALUATION.problem_diagnosis.v1.adl
+
+- **CKM-id:** `openEHR-EHR-EVALUATION.problem_diagnosis.v1`
+- **Hämtad från:** https://raw.githubusercontent.com/openEHR/CKM-mirror/master/local/archetypes/entry/evaluation/openEHR-EHR-EVALUATION.problem_diagnosis.v1.adl
+- **CKM-mirror commit:** `master` per 2026-04-28
+- **Hämtningsdatum:** 2026-04-28
+- **SHA256:** `ce206e6aa253962e9165de5518fb0f9393a4878f989873a27ec764f576b0693d`
+- **Filstorlek:** 240 644 bytes
+- **ADL-version:** 1.4
+- **Användning:** Diagnoser (ICD-10-SE). Behövs P3.0b för att kunna mappa.
+- **Licens:** CC-BY-SA 3.0 (openEHR Foundation)
+
+---
+
+## Reproduktionssteg
+
+Hela uppsättningen kan re-hämtas:
 
 ```bash
-curl -fsSL "https://raw.githubusercontent.com/openEHR/CKM-mirror/master/local/archetypes/entry/observation/openEHR-EHR-OBSERVATION.body_temperature.v2.adl" \
-  -o infra/openehr/archetypes/openEHR-EHR-OBSERVATION.body_temperature.v2.adl
-shasum -a 256 infra/openehr/archetypes/openEHR-EHR-OBSERVATION.body_temperature.v2.adl
-# Förväntad SHA256: 5f3561def29748f73da74c9ab8c715195ad08cefc144954c49c0c68b13472ec3
+cd infra/openehr/archetypes
+BASE="https://raw.githubusercontent.com/openEHR/CKM-mirror/master/local/archetypes/entry"
+curl -fsSL "$BASE/observation/openEHR-EHR-OBSERVATION.body_temperature.v2.adl"   -o openEHR-EHR-OBSERVATION.body_temperature.v2.adl
+curl -fsSL "$BASE/observation/openEHR-EHR-OBSERVATION.blood_pressure.v2.adl"     -o openEHR-EHR-OBSERVATION.blood_pressure.v2.adl
+curl -fsSL "$BASE/observation/openEHR-EHR-OBSERVATION.pulse.v2.adl"              -o openEHR-EHR-OBSERVATION.pulse.v2.adl
+curl -fsSL "$BASE/evaluation/openEHR-EHR-EVALUATION.medication_summary.v1.adl"   -o openEHR-EHR-EVALUATION.medication_summary.v1.adl
+curl -fsSL "$BASE/evaluation/openEHR-EHR-EVALUATION.adverse_reaction_risk.v2.adl" -o openEHR-EHR-EVALUATION.adverse_reaction_risk.v2.adl
+curl -fsSL "$BASE/action/openEHR-EHR-ACTION.procedure.v1.adl"                    -o openEHR-EHR-ACTION.procedure.v1.adl
+curl -fsSL "$BASE/evaluation/openEHR-EHR-EVALUATION.problem_diagnosis.v1.adl"    -o openEHR-EHR-EVALUATION.problem_diagnosis.v1.adl
+shasum -a 256 *.adl
 ```
+
+Förväntade SHA256 listas per arketyp ovan.
