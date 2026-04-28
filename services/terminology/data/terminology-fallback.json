@@ -1,0 +1,73 @@
+{
+  "version": "1.0.0",
+  "description": "Fallback-data för terminologitjänsten. Genererad från services/transform/src/terminology.ts vid Sprint 1-start. Används när Snowstorm/HAPI-upstream är otillgängliga eller inte konfigurerade.",
+  "systems": {
+    "SNOMED": "http://snomed.info/sct",
+    "LOINC": "http://loinc.org",
+    "ICD10SE": "http://hl7.org/fhir/sid/icd-10-se",
+    "ATC": "http://whocc.no/atc",
+    "KVA": "http://klassifikationer.socialstyrelsen.se/kva",
+    "UCUM": "http://unitsofmeasure.org",
+    "NPU": "https://www.npu-terminology.org"
+  },
+  "translations": {
+    "MELIOR-VITALS": {
+      "BLOOD_PRESSURE": { "target": "SNOMED", "code": "75367002", "display": "Blood pressure" },
+      "HEART_RATE": { "target": "SNOMED", "code": "364075005", "display": "Heart rate" },
+      "TEMPERATURE": { "target": "SNOMED", "code": "386725007", "display": "Body temperature" },
+      "SPO2": { "target": "SNOMED", "code": "431314004", "display": "Oxygen saturation" },
+      "RESPIRATORY_RATE": { "target": "SNOMED", "code": "86290005", "display": "Respiratory rate" },
+      "WEIGHT": { "target": "SNOMED", "code": "27113001", "display": "Body weight" },
+      "HEIGHT": { "target": "SNOMED", "code": "50373000", "display": "Body height" }
+    },
+    "MELIOR-NPU": {
+      "NPU01685": { "target": "LOINC", "code": "718-7", "display": "Hemoglobin [Mass/volume] in Blood" },
+      "NPU19748": { "target": "LOINC", "code": "1988-5", "display": "C reactive protein [Mass/volume] in Serum or Plasma" },
+      "NPU04206": { "target": "LOINC", "code": "6301-6", "display": "INR in Platelet poor plasma by Coagulation assay" },
+      "NPU03577": { "target": "LOINC", "code": "2160-0", "display": "Creatinine [Mass/volume] in Serum or Plasma" },
+      "NPU28289": { "target": "LOINC", "code": "7799-0", "display": "D-Dimer [Mass/volume] in Platelet poor plasma" },
+      "NPU27300": { "target": "LOINC", "code": "4548-4", "display": "Hemoglobin A1c/Hemoglobin.total in Blood" },
+      "NPU21531": { "target": "LOINC", "code": "33914-3", "display": "Glomerular filtration rate/1.73 sq M" }
+    },
+    "MELIOR-KVA": {
+      "NFB49": { "target": "SNOMED", "code": "52734007", "display": "Total replacement of hip" },
+      "NFB29": { "target": "SNOMED", "code": "179294005", "display": "Total replacement of hip joint using cement" },
+      "NGB09": { "target": "SNOMED", "code": "112702004", "display": "Partial replacement of hip joint" },
+      "NFJ79": { "target": "SNOMED", "code": "179345003", "display": "Revision of total hip replacement" }
+    },
+    "MELIOR-ALLERGEN": {
+      "Penicillin": { "target": "SNOMED", "code": "373270004", "display": "Penicillin" },
+      "Pc-V": { "target": "SNOMED", "code": "373270004", "display": "Penicillin" },
+      "Latex": { "target": "SNOMED", "code": "37168000", "display": "Natural rubber latex" },
+      "Jordnöt": { "target": "SNOMED", "code": "91934008", "display": "Peanut" },
+      "Sulfa": { "target": "SNOMED", "code": "48709008", "display": "Sulfonamide" }
+    },
+    "MELIOR-DIAG-TYPE": {
+      "PRIMARY": { "target": "SNOMED", "code": "63161005", "display": "Primary diagnosis" },
+      "SECONDARY": { "target": "SNOMED", "code": "2603003", "display": "Secondary diagnosis" },
+      "COMPLICATION": { "target": "SNOMED", "code": "116223007", "display": "Complication" },
+      "CHRONIC": { "target": "SNOMED", "code": "90734009", "display": "Chronic" }
+    },
+    "MELIOR-UCUM": {
+      "mmHg": { "target": "UCUM", "code": "mm[Hg]", "display": "millimeter of mercury" },
+      "bpm": { "target": "UCUM", "code": "/min", "display": "per minute" },
+      "/min": { "target": "UCUM", "code": "/min", "display": "per minute" },
+      "°C": { "target": "UCUM", "code": "Cel", "display": "degree Celsius" },
+      "C": { "target": "UCUM", "code": "Cel", "display": "degree Celsius" },
+      "%": { "target": "UCUM", "code": "%", "display": "percent" },
+      "kg": { "target": "UCUM", "code": "kg", "display": "kilogram" },
+      "cm": { "target": "UCUM", "code": "cm", "display": "centimeter" },
+      "g/L": { "target": "UCUM", "code": "g/L", "display": "gram per liter" },
+      "mg/L": { "target": "UCUM", "code": "mg/L", "display": "milligram per liter" },
+      "µmol/L": { "target": "UCUM", "code": "umol/L", "display": "micromole per liter" },
+      "mmol/mol": { "target": "UCUM", "code": "mmol/mol", "display": "millimole per mole" },
+      "mL/min": { "target": "UCUM", "code": "mL/min", "display": "milliliter per minute" }
+    }
+  },
+  "constants": {
+    "VITALS_BP_COMPONENTS": {
+      "systolic": { "system": "SNOMED", "code": "271649006", "display": "Systolic blood pressure" },
+      "diastolic": { "system": "SNOMED", "code": "271650006", "display": "Diastolic blood pressure" }
+    }
+  }
+}

@@ -15,7 +15,6 @@ coverage/
 pnpm-debug.log*
 .pnpm-store/
 .vite/
-data/
 postgres-data/
 kafka-data/
 
