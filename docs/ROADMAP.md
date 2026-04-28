@@ -1,7 +1,7 @@
 # Nimloth Core — Roadmap
 
 **Status:** levande dokument
-**Senast uppdaterad:** 2026-04-22
+**Senast uppdaterad:** 2026-04-28
 **Scope:** Sprint 0–5 (14 veckor) + Beyond
 
 ---
@@ -287,16 +287,24 @@ Om Scenario B (Flow som ingest-motor för Core) blir aktuellt: egen arkitekturdi
 
 | Komponent | Status | Kommentar |
 |---|---|---|
-| Repo-fork från Flow | ⏳ Planerad | Enligt forkplan |
-| Sprint 0 | ⏳ Väntar | Startar när fork är klar |
-| Sprint 1 | ⏳ Väntar | Beror på Sprint 0 |
-| Sprint 2 | ⏳ Väntar | |
-| Sprint 3 | ⏳ Väntar | |
-| Sprint 4 | ⏳ Väntar | |
-| Sprint 5 | ⏳ Väntar | |
+| Repo-fork från Flow | ✅ Klar | Genomförd 2026-04-25 enligt forkplan |
+| Sprint 0 | ✅ Klar | Identitetsdokument + ARCHITECTURE för Sprint 5-målbild |
+| Sprint 1 — P1 + P2 | ✅ Klar | Terminologitjänst (P1) + care-unit-edge (P2) levererade |
+| Sprint 2 — P3.0 | ✅ Klar (pivot C) | Compiler foundation. AOM→XML-OPT-bridge lyft till P3.0b |
+| Sprint 2 — P3.1 | ✅ Klar | Composer foundation. 6 nya CKM-arketyper + fixture-baserade compositions. P3.0b empiriskt scopad till 13 RM-typer |
+| Sprint 2 — P3.0b | ⏳ Empiriskt scopad | AOM→XML-OPT-bridge. Bör starta efter P3.2 enligt P3.1-rapport |
+| Sprint 2 — P3.2 | 🔜 Nästa | Kafka-integration för composer |
+| Sprint 2 — P3.3 | ⏳ Specificerad | AQL-broker + CANONICAL_STORE-flag |
+| Sprint 2 — P3.4 | ⏳ Specificerad | Paritetsdiff-endpoint |
+| Sprint 2.5 — P4 | ⏳ Väntar | Mapping-assistant. Lyft till egen Sprint 2.5 enligt strategi 2026-04-23 |
+| Sprint 3 — P5 | ⏳ Väntar | Inera-stack |
+| Sprint 4 — P6 | ⏳ Väntar | Lakehouse + OMOP |
+| Sprint 5 — P7 | ⏳ Väntar | CDS-regler i CQL |
 | `1.0.0` RC | ⏳ Väntar | Efter Sprint 5 |
 
-Den här tabellen uppdateras när sprintar startas och avslutas.
+Den här tabellen uppdateras när sprintar startas och avslutas. Detaljerad
+sprint-status och Sprint 2-fasindelning underhålls i
+`nimloth-docs/Strategi_Nasta_Steg.md` (utanför repot).
 
 ---
 
@@ -320,6 +328,24 @@ Dokumenterat i `Forkplan_Nimloth_Core_och_Flow.md`.
 Prioritering: Terminologi + Care-unit-edge först (Sprint 1), öppnEHR + AI-mapping (Sprint 2), Inera (Sprint 3), Lakehouse (Sprint 4), CDS-CQL (Sprint 5).
 
 Motivering enligt `VGR_Datahub_Utbyggnadsplan.md`: Sprint 1 har låg risk och hög demo-effekt. Sprint 2 är arkitekturell tung lyftning men måste göras innan övriga spår bygger vidare. Sprint 3 gör plattformen trovärdig för säkerhetsarkitekter. Sprint 4 öppnar för forsknings- och EHDS-argument. Sprint 5 positionerar CDS för framtiden utan att bryta nuvarande.
+
+### 2026-04-23 — Sprint 2.5 etablerad
+
+Mapping-assistant (P4) lyft från Sprint 2 till egen Sprint 2.5. Skäl: P3-spåret (openEHR) är tyngre än ursprungligen tänkt — fyra-nivåers toolchain (compiler-container → runtime-tjänst → dashboard-editor → ev. JS-native) etablerad enligt `nimloth-docs/Strategi_Nasta_Steg.md` sektion 4.1. Att försöka leverera båda P3 och P4 i samma sprint riskerar att P4 blir halvfärdig och stör openEHR-fundamentet. Sprint 2.5 körs efter Sprint 2-leverans.
+
+### 2026-04-27 — P3.0 levererad som pivot C
+
+P3.0 (compiler foundation) levererad efter SDK-undersökning. Out-of-the-box AOM→XML-OPT-bridge finns inte i archie 3.14.0 eller `org.ehrbase.openehr.sdk:opt-1.4` — pivot till "diagnostic compiler + fixture-baserad EHRbase-load". XML-OPT-arbetet lyft till uppföljnings-prompt P3.0b. Strategiska frågor om CKM-licens (CC-BY-SA 3.0) identifierade — research planeras parallellt.
+
+Se `infra/openehr/compiler/PHASE-3.0-REPORT.md`.
+
+### 2026-04-28 — P3.1 levererad, P3.0b empiriskt scopad
+
+Composer-foundation klar med 6 nya CKM-arketyper och fixture-baserade compositions (4 av 7 Fru Andersson-event-typer fungerar end-to-end). 8 nya smoke-tester, 12 befintliga fortfarande gröna. CI-terminology-fail rättad parallellt (pre-existing från Sprint 1).
+
+P3.0b empiriskt scopad till **13 RM-typer** (var 30 i P3.0-rapporten) baserat på constraint-data från `gap-tracker`. EVALUATION-bridge bör prioriteras eftersom 3 av 7 event-typer (medication, allergi, diagnos) är blockerade tills den är på plats.
+
+Se `infra/openehr/compiler/P3.1-REPORT.md` sektion "Input till P3.0b".
 
 ---
 
