@@ -106,3 +106,8 @@ services:
   ehrbase-db:
     container_name: ehrbase-db-core
     # Ingen host-port-export — DB-access bara via service-namn
+
+  openehr-composer:
+    container_name: openehr-composer-core
+    ports: !override
+      - "13015:3015"

@@ -504,6 +504,36 @@ services:
     networks:
       - core
 
+  # --- openehr-composer (Sprint 2, P3.1) ---
+  # Konsumerar clinical events (HTTP i P3.1, Kafka i P3.2) och skriver
+  # compositions till EHRbase. Använder fixture-templates för Sprint 2:s
+  # leverans; egen-kompilerade OPT från archetypes/ kommer i P3.0b.
+  openehr-composer:
+    build:
+      context: .
+      dockerfile: services/openehr-composer/Dockerfile
+    container_name: openehr-composer
+    environment:
+      NODE_ENV: production
+      COMPOSER_PORT: "3015"
+      LOG_LEVEL: info
+      EHRBASE_URL: http://ehrbase:8080
+      CORE_DB_HOST: core-db
+      CORE_DB_PORT: "5432"
+      CORE_DB_NAME: core
+      CORE_DB_USER: core
+      CORE_DB_PASSWORD: core
+      EXPECTED_TEMPLATES: "time_series.en.v1,minimal_action.en.v1"
+    ports:
+      - "3015:3015"
+    depends_on:
+      core-db:
+        condition: service_healthy
+      ehrbase:
+        condition: service_healthy
+    networks:
+      - core
+
   ehrbase:
     image: ehrbase/ehrbase:2.30.1@sha256:c08be93f41164bb6ba8e957532ce4cccd18e6b9d26e074ef97f3faff9c3cd52f
     container_name: ehrbase
