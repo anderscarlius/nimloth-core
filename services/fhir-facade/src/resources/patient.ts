@@ -3,6 +3,8 @@
 import type pg from 'pg';
 import { Router } from 'express';
 import type { FhirPatient, FhirBundle } from '@nimloth-core/shared/types';
+import type { StoreRouter } from '../stores/index.js';
+import { storeContextFromRequest } from '../stores/store-context.js';
 
 export const PATIENT_IDENTIFIER_SYSTEM = 'urn:oid:1.2.752.129.2.1.3.1';
 
@@ -95,21 +97,32 @@ export async function searchPatients(
   return r.rows;
 }
 
-export function patientRouter(pool: pg.Pool): Router {
+export interface ResourceRouterDeps {
+  pool: pg.Pool;
+  storeRouter: StoreRouter;
+}
+
+export function patientRouter(deps: ResourceRouterDeps): Router {
+  const { storeRouter } = deps;
   const router = Router();
   router.get('/', async (req, res, next) => {
     try {
-      const rows = await searchPatients(pool, {
-        identifier: typeof req.query.identifier === 'string' ? req.query.identifier : undefined,
-        family: typeof req.query.family === 'string' ? req.query.family : undefined,
-        given: typeof req.query.given === 'string' ? req.query.given : undefined,
-        limit: req.query._count ? Number(req.query._count) : undefined,
-      });
+      const store = storeRouter.primary;
+      req.canonicalStore = store.canonicalStore;
+      const patients = await store.searchPatients(
+        {
+          identifier: typeof req.query.identifier === 'string' ? req.query.identifier : undefined,
+          family: typeof req.query.family === 'string' ? req.query.family : undefined,
+          given: typeof req.query.given === 'string' ? req.query.given : undefined,
+          limit: req.query._count ? Number(req.query._count) : undefined,
+        },
+        storeContextFromRequest(req),
+      );
       const bundle: FhirBundle = {
         resourceType: 'Bundle',
         type: 'searchset',
-        total: rows.length,
-        entry: rows.map((r) => ({ resource: renderPatient(r), search: { mode: 'match' } })),
+        total: patients.length,
+        entry: patients.map((p) => ({ resource: p, search: { mode: 'match' } })),
       };
       res.type('application/fhir+json').json(bundle);
     } catch (err) {
@@ -118,9 +131,11 @@ export function patientRouter(pool: pg.Pool): Router {
   });
   router.get('/:id', async (req, res, next) => {
     try {
-      const row = await findPatientById(pool, req.params.id);
-      if (!row) return notFound(res, 'Patient', req.params.id);
-      return res.type('application/fhir+json').json(renderPatient(row));
+      const store = storeRouter.primary;
+      req.canonicalStore = store.canonicalStore;
+      const patient = await store.getPatient(req.params.id, storeContextFromRequest(req));
+      if (!patient) return notFound(res, 'Patient', req.params.id);
+      return res.type('application/fhir+json').json(patient);
     } catch (err) {
       return next(err);
     }

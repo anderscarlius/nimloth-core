@@ -1,6 +1,7 @@
 // FHIR Facade-konfiguration.
 
 export type FhirMode = 'primary' | 'replica';
+export type CanonicalStoreMode = 'postgres' | 'openehr' | 'both';
 
 export interface FhirFacadeConfig {
   instanceId: string;
@@ -22,6 +23,13 @@ export interface FhirFacadeConfig {
   logLevel: string;
   /** Topics som materializern konsumerar för att populera FHIR-tabellerna. */
   clinicalTopics: string[];
+  /** Sprint 2 P3.3: vilken canonical store används för read-anrop.
+   *  postgres (default) = oförändrat beteende från P3.0–P3.2.
+   *  openehr = AQL-broker används istället.
+   *  both = postgres primär + openehr sekundär (förbereder P3.4 paritetsdiff). */
+  canonicalStore: CanonicalStoreMode;
+  /** EHRbase REST-endpoint (för openehr-store). */
+  ehrbaseUrl: string;
 }
 
 export function loadConfig(): FhirFacadeConfig {
@@ -61,5 +69,13 @@ export function loadConfig(): FhirFacadeConfig {
     )
       .split(',')
       .map((s) => s.trim()),
+    canonicalStore: ((): CanonicalStoreMode => {
+      const v = (process.env.CANONICAL_STORE ?? 'postgres').toLowerCase();
+      if (v === 'postgres' || v === 'openehr' || v === 'both') return v;
+      // eslint-disable-next-line no-console
+      console.warn(`Invalid CANONICAL_STORE=${v}, defaulting to postgres`);
+      return 'postgres';
+    })(),
+    ehrbaseUrl: process.env.EHRBASE_URL ?? 'http://ehrbase:8080',
   };
 }

@@ -1,0 +1,11 @@
+SELECT
+  c/uid/value AS composition_uid,
+  c/context/start_time/value AS effective_time,
+  c/archetype_details/template_id/value AS template_id,
+  o/archetype_node_id AS archetype_node_id,
+  o/data[at0001]/events[at0002]/data[at0003]/items[at0004]/value AS value
+FROM EHR e
+CONTAINS COMPOSITION c
+CONTAINS OBSERVATION o
+WHERE e/ehr_id/value = $ehr_id
+ORDER BY c/context/start_time/value DESC

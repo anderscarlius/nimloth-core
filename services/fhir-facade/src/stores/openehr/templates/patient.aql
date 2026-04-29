@@ -1,0 +1,6 @@
+SELECT
+  e/ehr_id/value AS ehr_id,
+  e/ehr_status/subject/external_ref/id/value AS pnr,
+  e/time_created/value AS created
+FROM EHR e
+WHERE e/ehr_id/value = $ehr_id

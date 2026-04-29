@@ -5,7 +5,8 @@
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && pnpm copy-assets",
+    "copy-assets": "mkdir -p dist/stores/openehr/templates && cp src/stores/openehr/templates/*.aql dist/stores/openehr/templates/",
     "clean": "rm -rf dist",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",

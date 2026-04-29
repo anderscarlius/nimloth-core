@@ -1,0 +1,21 @@
+-- MedicationStatement-AQL.
+--
+-- Template-filter borttaget eftersom EHRbase 2.30.1 inte stödjer LIKE eller
+-- regex-MATCHES på template_id/value (bara =, !=, eller MATCHES {set} med
+-- exakta värden). När P3.0b producerar EVALUATION-templates ska AqlToFhir
+-- klient-sidan filtrera på archetype_node_id (ev/archetype_node_id LIKE
+-- 'openEHR-EHR-EVALUATION.medication_%') alternativt här via konkret set.
+--
+-- I Sprint 2 returnerar denna AQL 0 rows — alla medication-events är gap
+-- (no_template_mapping) och kan inte komponeras tills P3.0b är klar.
+SELECT
+  c/uid/value AS composition_uid,
+  c/context/start_time/value AS effective_time,
+  c/archetype_details/template_id/value AS template_id,
+  ev/archetype_node_id AS archetype_node_id,
+  ev/data AS data
+FROM EHR e
+CONTAINS COMPOSITION c
+CONTAINS EVALUATION ev
+WHERE e/ehr_id/value = $ehr_id
+ORDER BY c/context/start_time/value DESC

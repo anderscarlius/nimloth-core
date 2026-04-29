@@ -1,7 +1,8 @@
 import type pg from 'pg';
 import { Router } from 'express';
 import type { FhirProcedure, FhirBundle } from '@nimloth-core/shared/types';
-import { notFound } from './patient.js';
+import { notFound, type ResourceRouterDeps } from './patient.js';
+import { storeContextFromRequest } from '../stores/store-context.js';
 
 interface ProcedureRow {
   procedure_id: string;
@@ -107,7 +108,8 @@ export async function findProcedureById(pool: pg.Pool, id: string): Promise<Proc
   return r.rows[0] ?? null;
 }
 
-export function procedureRouter(pool: pg.Pool): Router {
+export function procedureRouter(deps: ResourceRouterDeps): Router {
+  const { pool, storeRouter } = deps;
   const router = Router();
   router.get('/', async (req, res, next) => {
     try {
@@ -118,20 +120,29 @@ export function procedureRouter(pool: pg.Pool): Router {
           issue: [{ severity: 'error', code: 'invalid', diagnostics: 'patient parameter required' }],
         });
       }
-      const rows = await findProceduresByPatient(pool, patient);
+      const count = req.query._count ? Number(req.query._count) : undefined;
+
+      const store = storeRouter.primary;
+      req.canonicalStore = store.canonicalStore;
+      const items = await store.searchProcedures(
+        { patient, limit: count },
+        storeContextFromRequest(req),
+      );
       const bundle: FhirBundle = {
         resourceType: 'Bundle',
         type: 'searchset',
-        total: rows.length,
-        entry: rows.map((r) => ({ resource: renderProcedure(r), search: { mode: 'match' } })),
+        total: items.length,
+        entry: items.map((p) => ({ resource: p, search: { mode: 'match' } })),
       };
       return res.type('application/fhir+json').json(bundle);
     } catch (err) {
       return next(err);
     }
   });
+  // /:id-uppslag är postgres-only i Sprint 2 (se observation.ts för rationale).
   router.get('/:id', async (req, res, next) => {
     try {
+      req.canonicalStore = 'postgres';
       const row = await findProcedureById(pool, req.params.id);
       if (!row) return notFound(res, 'Procedure', req.params.id);
       return res.type('application/fhir+json').json(renderProcedure(row));

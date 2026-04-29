@@ -6,6 +6,7 @@ import { createLogger } from './logger.js';
 import { createPool } from './db.js';
 import { Materializer } from './materializer.js';
 import { createServer } from './server.js';
+import { createStoreRouter } from './stores/index.js';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -48,12 +49,24 @@ async function main(): Promise<void> {
 
   const materializer = new Materializer(config, pool, logger);
 
+  const storeRouter = createStoreRouter({
+    pool,
+    ehrbaseUrl: config.ehrbaseUrl,
+    mode: config.canonicalStore,
+    logger,
+  });
+  logger.info(
+    { canonical_store: config.canonicalStore, ehrbase_url: config.ehrbaseUrl },
+    'Store router initialized',
+  );
+
   const app = createServer({
     pool,
     auditProducer,
     logger,
     instanceId: config.instanceId,
     mode: config.mode,
+    storeRouter,
     getMaterializerMetrics: () => ({
       processed: materializer.processed,
       errors: materializer.errors,

@@ -1,7 +1,8 @@
 import type pg from 'pg';
 import { Router } from 'express';
 import type { FhirMedicationStatement, FhirBundle } from '@nimloth-core/shared/types';
-import { notFound } from './patient.js';
+import { notFound, type ResourceRouterDeps } from './patient.js';
+import { storeContextFromRequest } from '../stores/store-context.js';
 
 interface MedicationRow {
   medication_id: string;
@@ -86,7 +87,8 @@ export async function findMedicationById(pool: pg.Pool, id: string): Promise<Med
   return r.rows[0] ?? null;
 }
 
-export function medicationStatementRouter(pool: pg.Pool): Router {
+export function medicationStatementRouter(deps: ResourceRouterDeps): Router {
+  const { pool, storeRouter } = deps;
   const router = Router();
   router.get('/', async (req, res, next) => {
     try {
@@ -97,22 +99,29 @@ export function medicationStatementRouter(pool: pg.Pool): Router {
           issue: [{ severity: 'error', code: 'invalid', diagnostics: 'patient parameter required' }],
         });
       }
-      const status = typeof req.query.status === 'string' ? req.query.status : undefined;
-      const fhirStatus = status === 'active' ? 'ACTIVE' : status === 'completed' ? 'COMPLETED' : status;
-      const rows = await findMedicationsByPatient(pool, patient, fhirStatus);
+      const count = req.query._count ? Number(req.query._count) : undefined;
+
+      const store = storeRouter.primary;
+      req.canonicalStore = store.canonicalStore;
+      const items = await store.searchMedicationStatements(
+        { patient, limit: count },
+        storeContextFromRequest(req),
+      );
       const bundle: FhirBundle = {
         resourceType: 'Bundle',
         type: 'searchset',
-        total: rows.length,
-        entry: rows.map((r) => ({ resource: renderMedicationStatement(r), search: { mode: 'match' } })),
+        total: items.length,
+        entry: items.map((m) => ({ resource: m, search: { mode: 'match' } })),
       };
       return res.type('application/fhir+json').json(bundle);
     } catch (err) {
       return next(err);
     }
   });
+  // /:id-uppslag är postgres-only i Sprint 2 (se observation.ts för rationale).
   router.get('/:id', async (req, res, next) => {
     try {
+      req.canonicalStore = 'postgres';
       const row = await findMedicationById(pool, req.params.id);
       if (!row) return notFound(res, 'MedicationStatement', req.params.id);
       return res.type('application/fhir+json').json(renderMedicationStatement(row));

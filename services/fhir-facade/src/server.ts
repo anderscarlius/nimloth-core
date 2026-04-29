@@ -20,6 +20,7 @@ import { authMiddleware } from './middleware/auth.js';
 import { pdlMiddleware } from './middleware/pdl.js';
 import { auditMiddleware } from './middleware/audit.js';
 import { createSyncRouter } from './sync.js';
+import type { StoreRouter } from './stores/index.js';
 
 export interface MaterializerMetricsView {
   processed: number;
@@ -33,6 +34,11 @@ export interface ServerDeps {
   logger: Logger;
   instanceId: string;
   mode: 'primary' | 'replica';
+  /** Sprint 2 P3.3: store-router (postgres / openehr / both). */
+  storeRouter: StoreRouter;
+  /** PDL-enforce-flag — default false (loggar bara), true returnerar 403 vid
+   *  saknad vårdrelation eller spärr. Används av PDL-bevarande-tester. */
+  pdlEnforce?: boolean;
   /** Callback som returnerar en ren snapshot av materializer-stats. */
   getMaterializerMetrics: () => MaterializerMetricsView;
 }
@@ -82,11 +88,18 @@ export function createServer(deps: ServerDeps): Express {
     res.type('text/plain; version=0.0.4').send(lines.join('\n') + '\n');
   });
 
-  // FHIR-endpoints med auth/pdl/audit
+  // FHIR-endpoints med auth/audit/pdl.
+  //
+  // Notera ordningen: audit registreras FÖRE pdl. Annars hinner audit-
+  // listenern (`res.on('finish')`) inte registreras innan pdl-middleware
+  // skickar 403 vid saknad vårdrelation eller spärr — och audit-spåret
+  // blir blint för nekade access-försök. PDL-lag kräver att försök loggas,
+  // inte bara lyckade läsningar. Audit läser req.pdl + req.user vid
+  // finish-tid, så datat finns där oavsett middleware-ordning.
   const fhir = express.Router();
   fhir.use(authMiddleware({ required: false }));
-  fhir.use(pdlMiddleware(deps.pool, { enforce: false }));
   fhir.use(auditMiddleware({ producer: deps.auditProducer, logger: deps.logger }));
+  fhir.use(pdlMiddleware(deps.pool, { enforce: deps.pdlEnforce ?? false }));
 
   // Patient + $everything — registreras som direkt GET-route före /Patient-routern
   // (Express `use` med '$' i path matchar inte pålitligt; direkt .get fungerar).
@@ -99,13 +112,16 @@ export function createServer(deps: ServerDeps): Express {
       return next(err);
     }
   });
-  fhir.use('/Patient', patientRouter(deps.pool));
+  const resourceDeps = { pool: deps.pool, storeRouter: deps.storeRouter };
+  fhir.use('/Patient', patientRouter(resourceDeps));
 
-  // Övriga resurser
-  fhir.use('/Observation', observationRouter(deps.pool));
-  fhir.use('/MedicationStatement', medicationStatementRouter(deps.pool));
-  fhir.use('/Condition', conditionRouter(deps.pool));
-  fhir.use('/Procedure', procedureRouter(deps.pool));
+  // Övriga resurser — de fem core-resurserna går via store-router (postgres
+  // eller openehr beroende på CANONICAL_STORE). Övriga är kvar på postgres
+  // tills openEHR-spåret täcker dem (Sprint 3+).
+  fhir.use('/Observation', observationRouter(resourceDeps));
+  fhir.use('/MedicationStatement', medicationStatementRouter(resourceDeps));
+  fhir.use('/Condition', conditionRouter(resourceDeps));
+  fhir.use('/Procedure', procedureRouter(resourceDeps));
   fhir.use('/AllergyIntolerance', allergyIntoleranceRouter(deps.pool));
   fhir.use('/Encounter', encounterRouter(deps.pool));
   fhir.use('/DiagnosticReport', diagnosticReportRouter(deps.pool));
@@ -141,6 +157,21 @@ export function createServer(deps: ServerDeps): Express {
   });
 
   app.use('/fhir/r4', fhir);
+
+  // Sprint 2 P3.3: openEHR-coverage rapport. Listar fält som ofta returnerade
+  // null/undefined från AQL-mappningen — diagnostisk för P3.0b XML-OPT-arbetet.
+  // Inte FHIR-resurs, ingen PDL-kontroll. Skydd via netverkspolicy i prod.
+  app.get('/facade/coverage', (_req, res) => {
+    res.json({
+      mode: deps.storeRouter.mode,
+      total_missing: deps.storeRouter.coverage.totalMissing(),
+      gaps: deps.storeRouter.coverage.getCoverageReport(),
+    });
+  });
+  app.post('/facade/coverage/reset', (_req, res) => {
+    deps.storeRouter.coverage.reset();
+    res.json({ status: 'reset' });
+  });
 
   // Care-unit-edge sync-API (Sprint 1, P2). Inte under /fhir/r4 — det är
   // systemkommunikation mellan central och edge, inte klinisk access.

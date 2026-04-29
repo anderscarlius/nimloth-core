@@ -68,6 +68,10 @@ export function auditMiddleware(deps: AuditDeps) {
               legal_basis: req.pdl.legal_basis,
             }
           : undefined,
+        // Sprint 2 P3.3: vilken canonical store som faktiskt svarade.
+        // Sätts av store-routade route-handlers; undefined för legacy-routes
+        // som ännu inte använder store-router.
+        canonical_store: req.canonicalStore,
         outcome,
         source_ip: req.ip,
         user_agent: req.header('user-agent'),

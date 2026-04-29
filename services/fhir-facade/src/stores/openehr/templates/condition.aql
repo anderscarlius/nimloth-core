@@ -1,0 +1,15 @@
+-- Condition-AQL.
+-- Samma kontext som medication-statement.aql: template-filter saknas pga
+-- EHRbase MATCHES-syntax-begränsning. Sprint 2 returnerar 0 rows; AqlToFhir
+-- filtrerar klient-sidan på archetype_node_id när P3.0b är klar.
+SELECT
+  c/uid/value AS composition_uid,
+  c/context/start_time/value AS effective_time,
+  c/archetype_details/template_id/value AS template_id,
+  ev/archetype_node_id AS archetype_node_id,
+  ev/data AS data
+FROM EHR e
+CONTAINS COMPOSITION c
+CONTAINS EVALUATION ev
+WHERE e/ehr_id/value = $ehr_id
+ORDER BY c/context/start_time/value DESC

@@ -1,7 +1,8 @@
 import type pg from 'pg';
 import { Router } from 'express';
 import type { FhirObservation, FhirBundle, FhirCodeableConcept, FhirQuantity } from '@nimloth-core/shared/types';
-import { notFound } from './patient.js';
+import { notFound, type ResourceRouterDeps } from './patient.js';
+import { storeContextFromRequest } from '../stores/store-context.js';
 
 export interface ObservationRow {
   observation_id: string;
@@ -105,7 +106,8 @@ export async function findObservationById(pool: pg.Pool, id: string): Promise<Ob
   return r.rows[0] ?? null;
 }
 
-export function observationRouter(pool: pg.Pool): Router {
+export function observationRouter(deps: ResourceRouterDeps): Router {
+  const { pool, storeRouter } = deps;
   const router = Router();
   router.get('/', async (req, res, next) => {
     try {
@@ -117,22 +119,30 @@ export function observationRouter(pool: pg.Pool): Router {
         });
       }
       const category = normalizeCategory(typeof req.query.category === 'string' ? req.query.category : undefined);
-      const code = typeof req.query.code === 'string' ? req.query.code : undefined;
       const count = req.query._count ? Number(req.query._count) : undefined;
-      const rows = await findObservationsByPatient(pool, patient, category, code, count);
+
+      const store = storeRouter.primary;
+      req.canonicalStore = store.canonicalStore;
+      const observations = await store.searchObservations(
+        { patient, category, limit: count },
+        storeContextFromRequest(req),
+      );
       const bundle: FhirBundle = {
         resourceType: 'Bundle',
         type: 'searchset',
-        total: rows.length,
-        entry: rows.map((r) => ({ resource: renderObservation(r), search: { mode: 'match' } })),
+        total: observations.length,
+        entry: observations.map((o) => ({ resource: o, search: { mode: 'match' } })),
       };
       return res.type('application/fhir+json').json(bundle);
     } catch (err) {
       return next(err);
     }
   });
+  // /:id-uppslag är postgres-only i Sprint 2 (FHIR-id är observation_id;
+  // openehr-store använder composition_uid och har ingen by-id-yta ännu).
   router.get('/:id', async (req, res, next) => {
     try {
+      req.canonicalStore = 'postgres';
       const row = await findObservationById(pool, req.params.id);
       if (!row) return notFound(res, 'Observation', req.params.id);
       return res.type('application/fhir+json').json(renderObservation(row));
