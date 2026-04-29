@@ -36,6 +36,11 @@ services:
     ports: !override
       - "14092:9092"
       - "34092:29092"
+    # När override är aktiv: PLAINTEXT_HOST-listenern ska annonsera den
+    # host-port som faktiskt mappas (14092), inte default 9092.
+    # Annars säger Kafka åt klienter att ansluta till localhost:9092 → ECONNREFUSED.
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:14092
 
   schema-registry:
     container_name: schema-registry-core

@@ -18,6 +18,7 @@
     "openehr:compile": "bash infra/openehr/compiler/scripts/run-compile.sh",
     "openehr:load-templates": "node infra/openehr/scripts/load-templates.mjs",
     "mapper:propose": "pnpm --filter @nimloth-core/mapping-assistant cli:propose --",
+    "kafka:test:fru-andersson": "docker compose --profile kafka-tools run --rm kafka-test-producer fru-andersson",
     "test:e2e": "pnpm --filter @nimloth-core/e2e test",
     "test:e2e:distributed": "pnpm --filter @nimloth-core/e2e test:distributed",
     "start": "./scripts/start.sh",

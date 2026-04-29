@@ -24,6 +24,44 @@ importers:
         specifier: ^1.5.0
         version: 1.6.1(@types/node@20.19.39)
 
+  packages/kafka-test-producer:
+    dependencies:
+      kafkajs:
+        specifier: ^2.2.4
+        version: 2.2.4
+      uuid:
+        specifier: ^10.0.0
+        version: 10.0.0
+    devDependencies:
+      '@types/node':
+        specifier: ^20.12.7
+        version: 20.19.39
+      '@types/uuid':
+        specifier: ^10.0.0
+        version: 10.0.0
+      tsx:
+        specifier: ^4.9.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
+  packages/kafka-utils:
+    dependencies:
+      kafkajs:
+        specifier: ^2.2.4
+        version: 2.2.4
+    devDependencies:
+      '@types/node':
+        specifier: ^20.12.7
+        version: 20.19.39
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: ^1.5.0
+        version: 1.6.1(@types/node@20.19.39)
+
   packages/model-router:
     dependencies:
       '@anthropic-ai/sdk':
@@ -382,12 +420,18 @@ importers:
 
   services/openehr-composer:
     dependencies:
+      '@nimloth-core/kafka-utils':
+        specifier: workspace:*
+        version: link:../../packages/kafka-utils
       '@nimloth-core/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       express:
         specifier: ^4.19.2
         version: 4.22.1
+      kafkajs:
+        specifier: ^2.2.4
+        version: 2.2.4
       pg:
         specifier: ^8.11.5
         version: 8.20.0
@@ -533,6 +577,9 @@ importers:
       '@types/node':
         specifier: ^20.12.7
         version: 20.19.39
+      kafkajs:
+        specifier: ^2.2.4
+        version: 2.2.4
       typescript:
         specifier: ^5.4.5
         version: 5.9.3

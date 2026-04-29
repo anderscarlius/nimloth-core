@@ -504,10 +504,30 @@ services:
     networks:
       - core
 
-  # --- openehr-composer (Sprint 2, P3.1) ---
-  # Konsumerar clinical events (HTTP i P3.1, Kafka i P3.2) och skriver
-  # compositions till EHRbase. Använder fixture-templates för Sprint 2:s
-  # leverans; egen-kompilerade OPT från archetypes/ kommer i P3.0b.
+  # --- kafka-test-producer (Sprint 2, P3.2) ---
+  # Tooling-tjänst för att producera test-events till Kafka inifrån docker-network
+  # (kringgår advertised-listener-mismatch när host-port 9092 är override-mappad).
+  # Kör inte by default — aktiveras med profil "kafka-tools":
+  #   docker compose --profile kafka-tools run --rm kafka-test-producer fru-andersson
+  kafka-test-producer:
+    build:
+      context: .
+      dockerfile: packages/kafka-test-producer/Dockerfile
+    container_name: kafka-test-producer
+    environment:
+      KAFKA_BROKERS: kafka:29092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - core
+    profiles: ["kafka-tools"]
+
+  # --- openehr-composer (Sprint 2, P3.1 + P3.2) ---
+  # P3.1: HTTP-event-endpoint + ehr-cache + composition-builder.
+  # P3.2: Kafka-consumer på core.clinical.* + outbox-mönster + processor.
+  # Composern startar utan Kafka (KAFKA_ENABLED=false) — då fungerar bara
+  # HTTP-vägen + outbox-processor.
   openehr-composer:
     build:
       context: .
@@ -523,6 +543,12 @@ services:
       CORE_DB_NAME: core
       CORE_DB_USER: core
       CORE_DB_PASSWORD: core
+      KAFKA_ENABLED: "true"
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_GROUP_ID: core-openehr-composer
+      OUTBOX_POLL_INTERVAL_MS: "1000"
+      OUTBOX_BATCH_SIZE: "10"
+      OUTBOX_MAX_ATTEMPTS: "5"
       EXPECTED_TEMPLATES: "time_series.en.v1,minimal_action.en.v1"
     ports:
       - "3015:3015"
@@ -530,6 +556,8 @@ services:
       core-db:
         condition: service_healthy
       ehrbase:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     networks:
       - core
