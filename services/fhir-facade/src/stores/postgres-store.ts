@@ -13,6 +13,7 @@ import type {
   FhirMedicationStatement,
   FhirProcedure,
   FhirCondition,
+  FhirAllergyIntolerance,
 } from '@nimloth-core/shared/types';
 import type {
   CanonicalStore,
@@ -29,6 +30,7 @@ import {
 } from '../resources/medication-statement.js';
 import { findProceduresByPatient, renderProcedure } from '../resources/procedure.js';
 import { findConditionsByPatient, renderCondition } from '../resources/condition.js';
+import { findAllergiesByPatient, renderAllergyIntolerance } from '../resources/allergy-intolerance.js';
 
 export class PostgresStore implements FhirStore {
   readonly canonicalStore: CanonicalStore = 'postgres';
@@ -91,5 +93,13 @@ export class PostgresStore implements FhirStore {
   ): Promise<FhirCondition[]> {
     const rows = await findConditionsByPatient(this.pool, params.patient, params.limit ?? 100);
     return rows.map(renderCondition);
+  }
+
+  async searchAllergyIntolerances(
+    params: SearchByPatientParams,
+    _ctx: StoreContext,
+  ): Promise<FhirAllergyIntolerance[]> {
+    const rows = await findAllergiesByPatient(this.pool, params.patient, params.limit ?? 50);
+    return rows.map(renderAllergyIntolerance);
   }
 }

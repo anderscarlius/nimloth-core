@@ -11,7 +11,7 @@
 // Det är hur vi vet vilken patient som efterfrågas (för audit) och vilken
 // kontext som gäller (kan i framtiden påverka filtrering på care-unit-nivå).
 
-import type { FhirPatient, FhirObservation, FhirMedicationStatement, FhirProcedure, FhirCondition } from '@nimloth-core/shared/types';
+import type { FhirPatient, FhirObservation, FhirMedicationStatement, FhirProcedure, FhirCondition, FhirAllergyIntolerance } from '@nimloth-core/shared/types';
 
 /** Vilken store som faktiskt svarade — populeras av router för audit (Anders' tillägg B). */
 export type CanonicalStore = 'postgres' | 'openehr';
@@ -74,4 +74,7 @@ export interface FhirStore {
 
   /** Conditions för en patient. */
   searchConditions(params: SearchByPatientParams, ctx: StoreContext): Promise<FhirCondition[]>;
+
+  /** AllergyIntolerances för en patient (Sprint 2 P3.4 — first-class för paritetsmätning). */
+  searchAllergyIntolerances(params: SearchByPatientParams, ctx: StoreContext): Promise<FhirAllergyIntolerance[]>;
 }

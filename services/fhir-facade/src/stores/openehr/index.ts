@@ -13,6 +13,7 @@ import type {
   FhirMedicationStatement,
   FhirProcedure,
   FhirCondition,
+  FhirAllergyIntolerance,
 } from '@nimloth-core/shared/types';
 import type {
   CanonicalStore,
@@ -129,6 +130,17 @@ export class OpenehrStore implements FhirStore {
       this.logAqlError('Condition', params.patient, err);
       throw err;
     }
+  }
+
+  async searchAllergyIntolerances(
+    params: SearchByPatientParams,
+    _ctx: StoreContext,
+  ): Promise<FhirAllergyIntolerance[]> {
+    // AllergyIntolerance: ingen openEHR-archetype mappad än. Returnerar [] för
+    // att möjliggöra paritetsmätning (Sprint 2 P3.4). Adresseras i Sprint 3+
+    // när adverse_reaction_risk.v1 eller motsvarande mappning introduceras.
+    this.deps.coverage.logMissingField('AllergyIntolerance', 'archetype-not-mapped', `patient:${params.patient}`);
+    return [];
   }
 
   /** Slå upp ehr_id från openehr_ehr_cache (samma tabell som composer skriver till). */

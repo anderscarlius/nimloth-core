@@ -26,6 +26,7 @@ import type {
   FhirMedicationStatement,
   FhirProcedure,
   FhirCondition,
+  FhirAllergyIntolerance,
 } from '@nimloth-core/shared/types';
 
 import { createServer } from '../server.js';
@@ -79,6 +80,10 @@ class FakeStore implements FhirStore {
   }
   async searchConditions(_p: SearchByPatientParams, ctx: StoreContext): Promise<FhirCondition[]> {
     this.calls.push({ method: 'searchConditions', ctx });
+    return [];
+  }
+  async searchAllergyIntolerances(_p: SearchByPatientParams, ctx: StoreContext): Promise<FhirAllergyIntolerance[]> {
+    this.calls.push({ method: 'searchAllergyIntolerances', ctx });
     return [];
   }
 }
