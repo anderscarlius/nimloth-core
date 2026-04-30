@@ -21,6 +21,10 @@ import { pdlMiddleware } from './middleware/pdl.js';
 import { auditMiddleware } from './middleware/audit.js';
 import { createSyncRouter } from './sync.js';
 import type { StoreRouter } from './stores/index.js';
+import type { ParityRunner } from './parity/runner.js';
+import { selectLatest, selectHistory } from './parity/queries.js';
+import { renderSnapshots } from './parity/markdown.js';
+import type { ParityTrigger } from './parity/types.js';
 
 export interface MaterializerMetricsView {
   processed: number;
@@ -36,6 +40,10 @@ export interface ServerDeps {
   mode: 'primary' | 'replica';
   /** Sprint 2 P3.3: store-router (postgres / openehr / both). */
   storeRouter: StoreRouter;
+  /** Sprint 2 P3.4: paritets-runner. Optional — null när mode != 'both'
+   *  eftersom asymmetrisk paritet är meningslös. När null returnerar
+   *  /facade/parity/*-endpoints 503. */
+  parityRunner?: ParityRunner | null;
   /** PDL-enforce-flag — default false (loggar bara), true returnerar 403 vid
    *  saknad vårdrelation eller spärr. Används av PDL-bevarande-tester. */
   pdlEnforce?: boolean;
@@ -171,6 +179,73 @@ export function createServer(deps: ServerDeps): Express {
   app.post('/facade/coverage/reset', (_req, res) => {
     deps.storeRouter.coverage.reset();
     res.json({ status: 'reset' });
+  });
+
+  // Sprint 2 P3.4: paritetsdiff-endpoints. System-internal, monteras
+  // direkt på app utanför auth/audit/pdl-mw-kedjan (samma pattern som
+  // /facade/coverage och /sync). ParityRunner publicerar PARITY_RUN-
+  // audit-event manuellt via auditProducer i emitParityAudit.
+  app.post('/facade/parity/run', express.json(), async (req, res, next) => {
+    if (!deps.parityRunner) {
+      return res.status(503).json({
+        error: 'parity_runner_unavailable',
+        detail: `CANONICAL_STORE måste vara 'both' (är: ${deps.storeRouter.mode})`,
+      });
+    }
+    const patient =
+      typeof req.query.patient === 'string'
+        ? req.query.patient
+        : typeof (req.body as { patient?: unknown })?.patient === 'string'
+          ? ((req.body as { patient: string }).patient)
+          : undefined;
+    if (!patient) {
+      return res.status(400).json({ error: 'patient_required', detail: 'patient query-param eller body.patient krävs' });
+    }
+    const triggerInput = (req.body as { trigger?: unknown })?.trigger;
+    const trigger: ParityTrigger =
+      triggerInput === 'test' ? 'test' : triggerInput === 'scheduled' ? 'scheduled' : 'manual';
+    try {
+      const run = await deps.parityRunner.runForPatient(patient, trigger);
+      return res.json({
+        run_id: run.run_id,
+        taken_at: run.taken_at.toISOString(),
+        trigger: run.trigger,
+        patient_pnr: run.patient_pnr,
+        snapshots: run.snapshots,
+        failures: run.failures,
+      });
+    } catch (err) {
+      return next(err);
+    }
+  });
+
+  app.get('/facade/parity/latest', async (req, res, next) => {
+    try {
+      const patient = typeof req.query.patient === 'string' ? req.query.patient : undefined;
+      const format = req.query.format === 'markdown' ? 'markdown' : 'json';
+      const snapshots = await selectLatest(deps.pool, patient);
+      if (format === 'markdown') {
+        return res.type('text/markdown; charset=utf-8').send(renderSnapshots(snapshots));
+      }
+      return res.json({ snapshots });
+    } catch (err) {
+      return next(err);
+    }
+  });
+
+  app.get('/facade/parity/history', async (req, res, next) => {
+    try {
+      const patient = typeof req.query.patient === 'string' ? req.query.patient : undefined;
+      const limit = Math.min(Number(req.query.limit ?? 20) || 20, 500);
+      const format = req.query.format === 'markdown' ? 'markdown' : 'json';
+      const snapshots = await selectHistory(deps.pool, limit, patient);
+      if (format === 'markdown') {
+        return res.type('text/markdown; charset=utf-8').send(renderSnapshots(snapshots));
+      }
+      return res.json({ snapshots, limit });
+    } catch (err) {
+      return next(err);
+    }
   });
 
   // Care-unit-edge sync-API (Sprint 1, P2). Inte under /fhir/r4 — det är

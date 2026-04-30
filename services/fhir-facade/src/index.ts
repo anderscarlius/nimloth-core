@@ -8,6 +8,7 @@ import { createPool, migrate } from './db.js';
 import { Materializer } from './materializer.js';
 import { createServer } from './server.js';
 import { createStoreRouter } from './stores/index.js';
+import { ParityRunner } from './parity/runner.js';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -70,6 +71,19 @@ async function main(): Promise<void> {
     'Store router initialized',
   );
 
+  // Sprint 2 P3.4: ParityRunner skapas bara i 'both'-mode. I andra modes
+  // är paritetsmätning meningslös (asymmetrisk) — endpoints returnerar 503.
+  let parityRunner: ParityRunner | null = null;
+  if (config.canonicalStore === 'both') {
+    parityRunner = new ParityRunner({ storeRouter, pool, auditProducer, logger });
+    logger.info('Parity runner initialized (CANONICAL_STORE=both)');
+  } else {
+    logger.info(
+      { mode: config.canonicalStore },
+      'Parity runner not initialized — CANONICAL_STORE != both',
+    );
+  }
+
   const app = createServer({
     pool,
     auditProducer,
@@ -77,6 +91,7 @@ async function main(): Promise<void> {
     instanceId: config.instanceId,
     mode: config.mode,
     storeRouter,
+    parityRunner,
     getMaterializerMetrics: () => ({
       processed: materializer.processed,
       errors: materializer.errors,
