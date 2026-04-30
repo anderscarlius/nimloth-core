@@ -1,9 +1,10 @@
 // FHIR Facade — bootstrap.
 
+import path from 'node:path';
 import { Kafka } from 'kafkajs';
 import { loadConfig } from './config.js';
 import { createLogger } from './logger.js';
-import { createPool } from './db.js';
+import { createPool, migrate } from './db.js';
 import { Materializer } from './materializer.js';
 import { createServer } from './server.js';
 import { createStoreRouter } from './stores/index.js';
@@ -35,6 +36,15 @@ async function main(): Promise<void> {
     logger.info('DB connected');
   } catch (err) {
     logger.error({ err }, 'Cannot connect to core-db');
+    process.exit(1);
+  }
+
+  // Kör migrationer (Sprint 2 P3.4 — fhir-facade-ägda tabeller).
+  // Idempotent via IF NOT EXISTS i varje migration-fil.
+  try {
+    await migrate(pool, path.resolve(process.cwd(), 'migrations'), logger);
+  } catch (err) {
+    logger.error({ err }, 'Migration failed');
     process.exit(1);
   }
 
