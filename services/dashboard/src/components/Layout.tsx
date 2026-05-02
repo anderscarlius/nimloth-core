@@ -6,6 +6,7 @@ const NAV = [
   { to: '/system', label: 'Systemstatus', icon: '📊' },
   { to: '/topology', label: 'Topologi', icon: '🕸️' },
   { to: '/mappings', label: 'Mappings', icon: '🤖' },
+  { to: '/parity', label: 'Paritets-trend', icon: '⚖️' },
   { to: '/audit', label: 'Åtkomstlogg', icon: '🔒' },
 ];
 

@@ -40,6 +40,15 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api\/mappings/, ''),
       },
+      // Path Y: /facade/parity/* är system-internal på fhir-facade-sidan
+      // (utanför auth/audit/pdl-mw-kedjan). PDL-headers från jsonFetch
+      // ignoreras. Dashboard-triggad mätning loggas i parity_snapshots
+      // som trigger='manual' utan användar-attribution.
+      '/api/parity': {
+        target: FHIR,
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/parity/, '/facade/parity'),
+      },
     },
   },
   preview: {

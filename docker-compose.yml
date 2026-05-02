@@ -300,6 +300,11 @@ services:
       CORE_DB_USER: core
       CORE_DB_PASSWORD: core
       LOG_LEVEL: info
+      # Sprint 2 P3.4: 'both' krävs för ParityRunner (postgres + openehr-paritet).
+      # Override till 'postgres' eller 'openehr' i andra miljöer som inte
+      # behöver paritetsmätning.
+      CANONICAL_STORE: ${CANONICAL_STORE:-both}
+      EHRBASE_URL: ${EHRBASE_URL:-http://ehrbase:8080}
     ports:
       - "3003:3003"
     depends_on:

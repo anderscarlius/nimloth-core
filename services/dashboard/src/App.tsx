@@ -7,6 +7,7 @@ import SystemStatus from './pages/SystemStatus';
 import AuditLog from './pages/AuditLog';
 import Topology from './pages/Topology';
 import Mappings from './pages/Mappings';
+import ParityTrend from './pages/ParityTrend';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/system" element={<SystemStatus />} />
         <Route path="/topology" element={<Topology />} />
         <Route path="/mappings" element={<Mappings />} />
+        <Route path="/parity" element={<ParityTrend />} />
         <Route path="/audit" element={<AuditLog />} />
         <Route path="*" element={<Navigate to="/search" replace />} />
       </Routes>
