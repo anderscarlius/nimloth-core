@@ -9,6 +9,7 @@ import { Materializer } from './materializer.js';
 import { createServer } from './server.js';
 import { createStoreRouter } from './stores/index.js';
 import { ParityRunner } from './parity/runner.js';
+import { startParityScheduler, type ParitySchedulerHandle } from './parity/scheduler.js';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -74,9 +75,11 @@ async function main(): Promise<void> {
   // Sprint 2 P3.4: ParityRunner skapas bara i 'both'-mode. I andra modes
   // är paritetsmätning meningslös (asymmetrisk) — endpoints returnerar 503.
   let parityRunner: ParityRunner | null = null;
+  let parityScheduler: ParitySchedulerHandle | null = null;
   if (config.canonicalStore === 'both') {
     parityRunner = new ParityRunner({ storeRouter, pool, auditProducer, logger });
     logger.info('Parity runner initialized (CANONICAL_STORE=both)');
+    parityScheduler = startParityScheduler(parityRunner, logger);
   } else {
     logger.info(
       { mode: config.canonicalStore },
@@ -116,6 +119,7 @@ async function main(): Promise<void> {
   const shutdown = async (signal: string): Promise<void> => {
     logger.info({ signal }, 'Shutting down');
     server.close();
+    if (parityScheduler) parityScheduler.stop();
     try {
       await materializer.stop();
     } catch {
