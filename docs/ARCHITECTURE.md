@@ -189,12 +189,13 @@ Varje tabell har `source_instance` och `encounter_ref = source_instance || '-' |
 | `core.clinical.condition.diagnosed` | `problem_diagnosis.v1` |
 | `core.clinical.allergy.reported` | `adverse_reaction_risk.v1` |
 
-EHRbase exponerar AQL (Archetype Query Language) över sin REST-API. FHIR Facade får en `CANONICAL_STORE`-flagga med två lägen:
+EHRbase exponerar AQL (Archetype Query Language) över sin REST-API. FHIR Facade har en `CANONICAL_STORE`-flagga med tre lägen:
 
-- `CANONICAL_STORE=postgres` (default i Sprint 2) — läser från `fhir_*`-tabeller som tidigare.
+- `CANONICAL_STORE=postgres` — läser från `fhir_*`-tabeller som tidigare. P3.3-default; behåll för miljöer som inte behöver paritetsmätning.
 - `CANONICAL_STORE=openehr` — översätter FHIR-queries till AQL och hämtar från EHRbase. Översättning sker i ett tunt **AQL-broker-lager**.
+- `CANONICAL_STORE=both` — **default sedan P3.4 (2026-05-02)**. Postgres är primär läsväg, openEHR används parallellt för paritetsmätning. Krav för `ParityRunner` och `<ParityTrend />` dashboard-vy.
 
-**Paritet:** `GET /fhir/r4/Patient/{id}/$everything?store=both` returnerar både stores parallellt och en diff-rapport. Test som verifierar tom diff för Fru Andersson-scenariot.
+**Paritet:** `POST /facade/parity/run` triggar en mätning, `GET /facade/parity/history` returnerar mätserien, `<ParityTrend />` i dashboard visualiserar trend över tid. Veckovis schemalagd körning söndag 02:00 UTC. Se [P3.4-REPORT.md](../services/fhir-facade/P3.4-REPORT.md) för detaljer.
 
 > **Varför parallellt och inte ersättning?** openEHR är arkitekturellt rätt för svensk vård men FHIR-materialisering är pragmatisk för CDS Hooks och dashboard. Genom att köra båda får vi rätt arkitektur internt och rätt API externt. Beyond Sprint 5 kan FHIR-materialiseringen göras slimmare (bara projection-views) när AQL-broker mognat.
 
@@ -245,7 +246,7 @@ Implementerar **FHIR R4 SE** med 9 resurser: Patient, Encounter, Observation, Me
 
 **FHIR_MODE:**
 
-- `primary` (default) — läser från `CANONICAL_STORE` (postgres eller openehr).
+- `primary` (default) — läser från `CANONICAL_STORE` (postgres, openehr eller both).
 - `replica` — läser från lokal SQLite (region-edge eller care-unit-edge).
 
 **Sprint 3 (P5) inför PDL decision service** istället för enkel header-validering. Se §7.
