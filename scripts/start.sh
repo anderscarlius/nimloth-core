@@ -73,13 +73,18 @@ MELIOR_DB_PORT="${MELIOR_PORT:-5433}" \
   pnpm --filter @nimloth-core/test-data seed:all 2>&1 | tail -6
 
 # 5. Applikationstjänster
-echo -e "${GREEN}🚀 [5/6]${NC} Startar applikationstjänster..."
-docker compose up -d terminology ingest transform fhir-facade cds-hooks audit dashboard mapping-assistant >/dev/null
+# --build krävs så att kod-ändringar sedan senaste start propagerar till
+# körande containers. Utan flaggan återanvänder docker compose cachad image
+# och nya commits stannar i image-cachen (P3.4 4.7-incidenten — Sprint 2.5 B2).
+# Buildx-cache gör att oförändrade tjänster rebuildar på <5s, så kostnaden
+# är låg jämfört med risken att köra gammal kod.
+echo -e "${GREEN}🚀 [5/6]${NC} Startar applikationstjänster (rebuild via --build)..."
+docker compose up -d --build terminology ingest transform fhir-facade cds-hooks audit dashboard mapping-assistant >/dev/null
 
 # 6. Distribuerade edge-noder (om aktiverat)
 if [ "$DISTRIBUTED" = true ]; then
   echo -e "${GREEN}🌍 [6/6]${NC} Startar distribuerade edge-noder (profil: edge-su)..."
-  docker compose -f docker-compose.yml -f docker-compose.distributed.yml --profile edge-su up -d >/dev/null 2>&1 || \
+  docker compose -f docker-compose.yml -f docker-compose.distributed.yml --profile edge-su up -d --build >/dev/null 2>&1 || \
     echo -e "  ${YELLOW}⚠️  edge-profil finns som skelett — fylls i Prompt 13${NC}"
 else
   echo -e "${GREEN}✅ [6/6]${NC} Single-node klar."

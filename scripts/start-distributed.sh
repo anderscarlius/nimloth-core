@@ -56,12 +56,14 @@ echo -e "${GREEN}🌱 [4/7]${NC} Seedar testdata (Fru Andersson + 10 patienter).
 pnpm --filter @nimloth-core/test-data seed:all 2>&1 | tail -4
 
 # 5. Centrala applikationstjänster
-echo -e "${GREEN}🚀 [5/7]${NC} Startar centrala applikationstjänster..."
-docker compose up -d terminology ingest transform fhir-facade cds-hooks audit dashboard >/dev/null
+# --build krävs för att kod-ändringar ska propagera till körande containers.
+# Se scripts/start.sh + Sprint 2.5 B2 för bakgrund.
+echo -e "${GREEN}🚀 [5/7]${NC} Startar centrala applikationstjänster (rebuild via --build)..."
+docker compose up -d --build terminology ingest transform fhir-facade cds-hooks audit dashboard >/dev/null
 
 # 6. Edge-nod SU + replication-tjänst (profil edge-su startar båda)
 echo -e "${GREEN}🏥 [6/7]${NC} Startar edge-nod SU + replikeringstjänst..."
-$COMPOSE --profile edge-su up -d edge-kafka-su edge-su replication >/dev/null 2>&1
+$COMPOSE --profile edge-su up -d --build edge-kafka-su edge-su replication >/dev/null 2>&1
 wait_healthy edge-kafka-su 60
 
 # 7. Vänta på att edge hydrerar cachen
