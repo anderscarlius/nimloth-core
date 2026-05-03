@@ -6,15 +6,35 @@ import { Kafka, type Consumer } from 'kafkajs';
 import type pg from 'pg';
 import type { FhirFacadeConfig } from './config.js';
 
+/** Kafka-events med `core.clinical.*`-topics produceras av två källor:
+ *  - `transform/` (production-flöde) — skickar `patient_id` (PNR-string) +
+ *    `timestamp`. Detta var ursprungligt design.
+ *  - `kafka-test-producer/` (P3.2-fixture) — skickar `patient_pnr` +
+ *    `occurred_at`. Designat för composer-konsumtion (`openehr-composer/`
+ *    läser `patient_pnr` direkt) — men materializer som ursprungligen
+ *    bara läste `patient_id` failade på NOT NULL-violation (Sprint 2.5 B1).
+ *
+ *  Dual-key-läsning bevarar bakåtkompatibilitet med båda producenterna:
+ *  extractPnr/extractTimestamp läser primär-fält först, fallback om saknas. */
 type BaseEventLike = {
   event_id: string;
   event_type: string;
-  timestamp: string;
+  timestamp?: string;
+  occurred_at?: string;
   source_system?: string;
   source_instance?: string;
-  patient_id: string;
+  patient_id?: string;
+  patient_pnr?: string;
   payload?: Record<string, unknown>;
 };
+
+function extractPnr(event: BaseEventLike): string | null {
+  return event.patient_id ?? event.patient_pnr ?? null;
+}
+
+function extractTimestamp(event: BaseEventLike): string | null {
+  return event.timestamp ?? event.occurred_at ?? null;
+}
 
 /** Debezium-unwrap-flat payload — fält direkt på roten + __op/__deleted metadata. */
 type DebeziumFlatRow = Record<string, unknown> & {
@@ -123,6 +143,16 @@ export class Materializer {
   // Clinical dispatch
   // ============================================================
   private async dispatchClinical(topic: string, event: BaseEventLike): Promise<void> {
+    // Sprint 2.5 B1: skipp event utan PNR med warning istället för att låta
+    // det bryta NOT NULL-constraint i FHIR-tabellen. Producent-fixet är
+    // `patient_pnr` ELLER `patient_id` (extractPnr accepterar båda).
+    if (!extractPnr(event)) {
+      this.logger.warn(
+        { event_id: event.event_id, topic, event_type: event.event_type },
+        'Materialize skipped: event saknar patient_id/patient_pnr',
+      );
+      return;
+    }
     switch (topic) {
       case 'core.clinical.encounter.started':
       case 'core.clinical.encounter.ended':
@@ -162,7 +192,7 @@ export class Materializer {
          updated_at = NOW()`,
       [
         encRef,
-        event.patient_id,
+        extractPnr(event),
         p.encounter_type ?? null,
         p.department_code ?? null,
         p.department_name ?? null,
@@ -188,7 +218,7 @@ export class Materializer {
        ON CONFLICT (event_id) DO UPDATE SET event_data = EXCLUDED.event_data`,
       [
         event.event_id,
-        event.patient_id,
+        extractPnr(event),
         primary.system ?? 'http://snomed.info/sct',
         primary.code ?? '',
         primary.display ?? String(p.observation_type ?? ''),
@@ -214,14 +244,14 @@ export class Materializer {
        ON CONFLICT (event_id) DO UPDATE SET event_data = EXCLUDED.event_data`,
       [
         event.event_id,
-        event.patient_id,
+        extractPnr(event),
         analysis.system,
         analysis.code,
         analysis.display,
         result.value_numeric ?? null,
         result.value_text ?? null,
         result.unit ?? '',
-        this.tsOrNull(p.result_available_at ?? p.sample_collected_at ?? event.timestamp),
+        this.tsOrNull(p.result_available_at ?? p.sample_collected_at ?? extractTimestamp(event)),
         this.encRef(event, p),
         event.source_system ?? null,
         event,
@@ -242,7 +272,7 @@ export class Materializer {
          event_data = EXCLUDED.event_data`,
       [
         event.event_id,
-        event.patient_id,
+        extractPnr(event),
         p.atc_code ?? null,
         p.drug_name ?? null,
         p.strength ?? null,
@@ -272,7 +302,7 @@ export class Materializer {
        ON CONFLICT (event_id) DO UPDATE SET event_data = EXCLUDED.event_data`,
       [
         event.event_id,
-        event.patient_id,
+        extractPnr(event),
         proc.system ?? '',
         proc.code ?? '',
         proc.display ?? '',
@@ -300,7 +330,7 @@ export class Materializer {
        ON CONFLICT (event_id) DO UPDATE SET event_data = EXCLUDED.event_data`,
       [
         event.event_id,
-        event.patient_id,
+        extractPnr(event),
         p.icd_code ?? null,
         p.diagnosis_text ?? null,
         p.diagnosis_type ?? null,
@@ -327,7 +357,7 @@ export class Materializer {
          event_data = EXCLUDED.event_data`,
       [
         event.event_id,
-        event.patient_id,
+        extractPnr(event),
         p.allergen ?? null,
         coded.system ?? null,
         coded.code ?? null,
