@@ -41,6 +41,17 @@ endpoint accepterar. Båda är genererade av Ocean Template Designer 2.8.94Beta
   att jämföra vår output mot ett känt-fungerande format.
 - **Licens:** Apache 2.0 (per ehrbase-integration-tests-repot)
 
+## ehrbase-test-minimal-evaluation.opt
+
+- **Källa:** https://github.com/ehrbase/integration-tests/blob/main/tests/robot/_resources/test_data_sets/valid_templates/minimal/minimal_evaluation.opt
+- **Branch:** main per 2026-05-03
+- **Hämtad URL:** https://raw.githubusercontent.com/ehrbase/integration-tests/main/tests/robot/_resources/test_data_sets/valid_templates/minimal/minimal_evaluation.opt
+- **Hämtningsdatum:** 2026-05-03
+- **SHA256:** `729136ab6f75b0a3393ceb0425424b1a878bacffb2f1556fe4ae7d1c80ab4b5f`
+- **Filstorlek:** 253 rader
+- **Användning:** Strukturell mall för P3.0b Path C — EVALUATION-arketyp med korrekt COMPOSITION-omslutning. Används av `infra/openehr/compiler/scripts/build-medication-summary-opt.sh` för att generera `medication_summary.v1.opt.xml` via string-transform (Sprint 2.5 alt 3-bygge, 2026-05-03).
+- **Licens:** Apache 2.0 (per ehrbase-integration-tests-repot)
+
 ## ehrbase-test-time-series.opt
 
 - **Källa:** https://github.com/ehrbase/integration-tests/blob/main/tests/robot/_resources/test_data_sets/valid_templates/time_series/time_series.opt
