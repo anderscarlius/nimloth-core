@@ -26,6 +26,7 @@ import {
 } from './aggregator.js';
 import type { LlmAssist } from './llm-assist.js';
 import type { AggregationResult } from '../types/review.js';
+import { buildAndEmit, type AuditEmitterDeps, type MappingAuditEvent } from '../audit.js';
 
 export type DeterministicResult = Record<string, MappedField<unknown> | null>;
 
@@ -84,6 +85,13 @@ export interface MapMedicationStatementOptions {
 export interface MapMedicationStatementDeps {
   /** LlmAssist-instans. Required om useLlm=true. */
   llm?: LlmAssist;
+  /** Audit-emit-deps. Optional — om saknas hoppar audit-emission. */
+  audit?: AuditEmitterDeps;
+}
+
+export interface MapMedicationStatementOutput extends AggregationResult {
+  /** Audit-event som emittades. Null om audit-deps saknades. */
+  auditEvent: MappingAuditEvent | null;
 }
 
 export async function mapMedicationStatement(
@@ -91,7 +99,7 @@ export async function mapMedicationStatement(
   inputId: string,
   deps: MapMedicationStatementDeps = {},
   options: MapMedicationStatementOptions = {},
-): Promise<AggregationResult> {
+): Promise<MapMedicationStatementOutput> {
   const useLlm = options.useLlm ?? true;
   const threshold = options.threshold ?? DEFAULT_CONFIDENCE_THRESHOLD;
 
@@ -116,5 +124,12 @@ export async function mapMedicationStatement(
     }
   }
 
-  return aggregate(deterministic, llmResults, inputId, threshold);
+  const result = aggregate(deterministic, llmResults, inputId, threshold);
+
+  let auditEvent: MappingAuditEvent | null = null;
+  if (deps.audit) {
+    auditEvent = buildAndEmit(deps.audit, ms, inputId, result);
+  }
+
+  return { ...result, auditEvent };
 }
