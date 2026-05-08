@@ -1,0 +1,42 @@
+{
+  "id": "med-031",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": true,
+    "notes": "Tvetydig free-text 'individanpassad dos' — kan inte mappas till numerisk dos. Triggerar review."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-warfarin-031",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "B01AA03", "display": "Warfarin" }
+      ]
+    },
+    "subject": { "reference": "Patient/19500315-2384" },
+    "effectiveDateTime": "2025-04-15T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "individanpassad dos enligt INR-värde",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        }
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Warfarin", "code": "B01AA03", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-04-15T08:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19500315-2384" } },
+    "doseQuantity": null,
+    "frequency": null,
+    "indication": null
+  }
+}

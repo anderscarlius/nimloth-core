@@ -1,0 +1,45 @@
+{
+  "id": "med-021",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Status=stopped (abandoned). Avslutad behandling med slutdatum i effectivePeriod."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-doxycyklin-021",
+    "status": "stopped",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "J01AA02", "display": "Doxycyklin" }
+      ]
+    },
+    "subject": { "reference": "Patient/19850410-5555" },
+    "effectivePeriod": { "start": "2025-03-10", "end": "2025-03-12" },
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "100 mg två gånger dagligen, avbrutet efter 2 dagar pga utslag",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 100, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Doxycyklin", "code": "J01AA02", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "abandoned" },
+    "startTime": { "value": "2025-03-10" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19850410-5555" } },
+    "doseQuantity": { "value": { "value": 100, "unit": "mg" } },
+    "frequency": { "value": "BID" },
+    "indication": null
+  }
+}

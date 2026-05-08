@@ -1,0 +1,42 @@
+{
+  "id": "med-013",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Free-text dosage '1 tabl x 1' kräver LLM-tolkning till numerisk dos + DAILY-frekvens."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-bisoprolol-013",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "C07AB07", "display": "Bisoprolol" }
+      ]
+    },
+    "subject": { "reference": "Patient/19440812-7777" },
+    "effectiveDateTime": "2024-05-15T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "1 tabl x 1",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        }
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Bisoprolol", "code": "C07AB07", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2024-05-15T08:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19440812-7777" } },
+    "doseQuantity": null,
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "id": "med-036",
+  "metadata": {
+    "complexity": "complex",
+    "expected_review": true,
+    "notes": "Status='entered-in-error' returnerar null från 4.3 deterministisk mappning. Triggar review."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-error-036",
+    "status": "entered-in-error",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "B01AA03", "display": "Warfarin" }
+      ]
+    },
+    "subject": { "reference": "Patient/19500315-2384" },
+    "effectiveDateTime": "2025-04-01T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "5 mg dagligen",
+        "doseAndRate": [
+          { "doseQuantity": { "value": 5, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Warfarin", "code": "B01AA03", "system": "http://www.whocc.no/atc" } },
+    "status": null,
+    "startTime": { "value": "2025-04-01T08:00:00Z" },
+    "route": null,
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19500315-2384" } },
+    "doseQuantity": { "value": { "value": 5, "unit": "mg" } },
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "id": "med-050",
+  "metadata": {
+    "complexity": "complex",
+    "expected_review": true,
+    "notes": "Multi-route i en composition (oral + topikal) — multipla dosage-blocks med olika routes. Mapping tar dosage[0]=oral."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-multi-route-050",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "H02AB04", "display": "Metylprednisolon" }
+      ]
+    },
+    "subject": { "reference": "Patient/19850410-5555" },
+    "effectiveDateTime": "2025-04-12T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "Tabletter 4 mg dagligen",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 4, "unit": "mg" } }
+        ]
+      },
+      {
+        "sequence": 2,
+        "text": "Salva applicera 1 ggr/dag",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "6064005", "display": "Topical" }
+          ]
+        }
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Metylprednisolon", "code": "H02AB04", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-04-12T08:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19850410-5555" } },
+    "doseQuantity": { "value": { "value": 4, "unit": "mg" } },
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

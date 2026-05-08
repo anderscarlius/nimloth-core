@@ -1,0 +1,45 @@
+{
+  "id": "med-007",
+  "metadata": {
+    "complexity": "simple",
+    "expected_review": false,
+    "notes": "Citalopram 20 mg dagligen oralt — SSRI-behandling depression."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-citalopram-007",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "N06AB04", "display": "Citalopram" }
+      ]
+    },
+    "subject": { "reference": "Patient/19710505-4444" },
+    "effectiveDateTime": "2024-08-15T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "20 mg dagligen",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 20, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Citalopram", "code": "N06AB04", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2024-08-15T08:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19710505-4444" } },
+    "doseQuantity": { "value": { "value": 20, "unit": "mg" } },
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

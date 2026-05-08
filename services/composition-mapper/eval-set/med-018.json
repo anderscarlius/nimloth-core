@@ -1,0 +1,44 @@
+{
+  "id": "med-018",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Saknar effectiveDateTime/effectivePeriod — startTime=null. Övrigt OK."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-acetylsalicylsyra-018",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "B01AC06", "display": "Acetylsalicylsyra" }
+      ]
+    },
+    "subject": { "reference": "Patient/19500315-2384" },
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "75 mg dagligen",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 75, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Acetylsalicylsyra", "code": "B01AC06", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": null,
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19500315-2384" } },
+    "doseQuantity": { "value": { "value": 75, "unit": "mg" } },
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

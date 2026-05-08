@@ -1,0 +1,45 @@
+{
+  "id": "med-046",
+  "metadata": {
+    "complexity": "complex",
+    "expected_review": false,
+    "notes": "Komplex polypharmacy-kombination med flera dosage-blocks (ASA + Plavix dual antiplatelet). Mapping tar dosage[0]."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-asa-046",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "B01AC06", "display": "Acetylsalicylsyra" }
+      ]
+    },
+    "subject": { "reference": "Patient/19500315-2384" },
+    "effectiveDateTime": "2025-04-15T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "75 mg dagligen — i kombination med klopidogrel 75 mg",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 75, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Acetylsalicylsyra", "code": "B01AC06", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-04-15T08:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19500315-2384" } },
+    "doseQuantity": { "value": { "value": 75, "unit": "mg" } },
+    "frequency": { "value": "DAILY" },
+    "indication": { "value": "Sekundärprevention efter MI (DAPT med klopidogrel)" }
+  }
+}

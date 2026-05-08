@@ -1,0 +1,42 @@
+{
+  "id": "med-032",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": true,
+    "notes": "Free-text 'enligt ordination' — placeholder, kräver granskning."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-tramadol-032",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "N02AX02", "display": "Tramadol" }
+      ]
+    },
+    "subject": { "reference": "Patient/19620920-3333" },
+    "effectiveDateTime": "2025-04-18T10:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "enligt ordination",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        }
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Tramadol", "code": "N02AX02", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-04-18T10:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19620920-3333" } },
+    "doseQuantity": null,
+    "frequency": null,
+    "indication": null
+  }
+}

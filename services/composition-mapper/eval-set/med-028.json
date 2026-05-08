@@ -1,0 +1,45 @@
+{
+  "id": "med-028",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Inhalation — route SNOMED 18679011 (Inhalation). Kortverkande beta-agonist."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-salbutamol-028",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "R03AC02", "display": "Salbutamol" }
+      ]
+    },
+    "subject": { "reference": "Patient/19710505-4444" },
+    "effectiveDateTime": "2024-12-15T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "100 mikrogram, 1-2 puffar vid behov",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "18679011", "display": "Inhalation" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 100, "unit": "ug" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Salbutamol", "code": "R03AC02", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2024-12-15T08:00:00Z" },
+    "route": { "value": { "value": "Inhalation", "terminology": "http://snomed.info/sct", "code": "18679011" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19710505-4444" } },
+    "doseQuantity": { "value": { "value": 100, "unit": "ug" } },
+    "frequency": { "value": "PRN" },
+    "indication": null
+  }
+}

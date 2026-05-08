@@ -1,0 +1,45 @@
+{
+  "id": "med-029",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Free-text 'tre gånger om dagen efter måltid'. Måltidsreferens som inte är schemafält."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-pantoprazol-029",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "A02BC02", "display": "Pantoprazol" }
+      ]
+    },
+    "subject": { "reference": "Patient/19440812-7777" },
+    "effectiveDateTime": "2024-10-20T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "40 mg tre gånger om dagen efter måltid",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 40, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Pantoprazol", "code": "A02BC02", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2024-10-20T08:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19440812-7777" } },
+    "doseQuantity": { "value": { "value": 40, "unit": "mg" } },
+    "frequency": { "value": "TID" },
+    "indication": null
+  }
+}

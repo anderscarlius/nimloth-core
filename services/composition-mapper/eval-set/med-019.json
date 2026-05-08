@@ -1,0 +1,45 @@
+{
+  "id": "med-019",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Status=intended (planned-mappning). Receptet ordinerat men ej startat ännu."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-apixaban-019",
+    "status": "intended",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "B01AF02", "display": "Apixaban" }
+      ]
+    },
+    "subject": { "reference": "Patient/19440812-7777" },
+    "effectiveDateTime": "2025-05-15T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "5 mg två gånger dagligen",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 5, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Apixaban", "code": "B01AF02", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "planned" },
+    "startTime": { "value": "2025-05-15T08:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19440812-7777" } },
+    "doseQuantity": { "value": { "value": 5, "unit": "mg" } },
+    "frequency": { "value": "BID" },
+    "indication": null
+  }
+}

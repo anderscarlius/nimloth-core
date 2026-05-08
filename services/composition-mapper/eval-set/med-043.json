@@ -1,0 +1,42 @@
+{
+  "id": "med-043",
+  "metadata": {
+    "complexity": "complex",
+    "expected_review": true,
+    "notes": "Free-text 'enligt schema bilaga A' — referens till externt dokument."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-bilaga-043",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "L04AB01", "display": "Etanercept" }
+      ]
+    },
+    "subject": { "reference": "Patient/19620920-3333" },
+    "effectiveDateTime": "2025-02-01T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "enligt schema bilaga A till receptet",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "34206005", "display": "Subcutaneous" }
+          ]
+        }
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Etanercept", "code": "L04AB01", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-02-01T08:00:00Z" },
+    "route": { "value": { "value": "Subcutaneous", "terminology": "http://snomed.info/sct", "code": "34206005" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19620920-3333" } },
+    "doseQuantity": null,
+    "frequency": null,
+    "indication": null
+  }
+}

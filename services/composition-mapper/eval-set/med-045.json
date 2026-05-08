@@ -1,0 +1,42 @@
+{
+  "id": "med-045",
+  "metadata": {
+    "complexity": "complex",
+    "expected_review": true,
+    "notes": "Tvetydig free-text 'samma dos som tidigare' — relativ referens kräver granskning."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-samma-dos-045",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "C07AB02", "display": "Metoprolol" }
+      ]
+    },
+    "subject": { "reference": "Patient/19400201-1111" },
+    "effectiveDateTime": "2025-04-25T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "samma dos som tidigare",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        }
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Metoprolol", "code": "C07AB02", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-04-25T08:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19400201-1111" } },
+    "doseQuantity": null,
+    "frequency": null,
+    "indication": null
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "id": "med-042",
+  "metadata": {
+    "complexity": "complex",
+    "expected_review": true,
+    "notes": "Display utan code i medicationCodeableConcept — fångas av Zod (input invalid). Ändå skickad för att verifiera 4.6 fail-soft."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-no-code-042",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "UNKNOWN", "display": "Okänt läkemedel — bara handelsnamn registrerat" }
+      ],
+      "text": "Marknadsfört som 'Trippelpiller' av apotek"
+    },
+    "subject": { "reference": "Patient/19710505-4444" },
+    "effectiveDateTime": "2025-04-22T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "1 tablett dagligen",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        }
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Okänt läkemedel — bara handelsnamn registrerat", "code": "UNKNOWN", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-04-22T08:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19710505-4444" } },
+    "doseQuantity": null,
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

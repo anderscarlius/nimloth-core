@@ -1,0 +1,42 @@
+{
+  "id": "med-014",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Free-text '2 tabl x 3' kräver LLM-parsing av dos/frekvens. Ingen explicit doseAndRate."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-paracetamol-014",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "N02BE01", "display": "Paracetamol" }
+      ]
+    },
+    "subject": { "reference": "Patient/19500315-2384" },
+    "effectiveDateTime": "2025-04-20T09:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "2 tabl x 3",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        }
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Paracetamol", "code": "N02BE01", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-04-20T09:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19500315-2384" } },
+    "doseQuantity": null,
+    "frequency": { "value": "TID" },
+    "indication": null
+  }
+}

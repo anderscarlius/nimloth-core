@@ -1,0 +1,45 @@
+{
+  "id": "med-001",
+  "metadata": {
+    "complexity": "simple",
+    "expected_review": false,
+    "notes": "Waran 2.5 mg dagligen oralt — klassisk antikoagulationsregim, alla deterministiska fält ifyllda."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-waran-001",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "B01AA03", "display": "Warfarin" }
+      ]
+    },
+    "subject": { "reference": "Patient/19500315-2384" },
+    "effectiveDateTime": "2025-03-18T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "2.5 mg dagligen",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 2.5, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Warfarin", "code": "B01AA03", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-03-18T08:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19500315-2384" } },
+    "doseQuantity": { "value": { "value": 2.5, "unit": "mg" } },
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

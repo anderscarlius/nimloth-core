@@ -1,0 +1,45 @@
+{
+  "id": "med-020",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Status=on-hold (suspended). Pausad pga biverkningar."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-prednisolon-020",
+    "status": "on-hold",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "H02AB06", "display": "Prednisolon" }
+      ]
+    },
+    "subject": { "reference": "Patient/19710505-4444" },
+    "effectivePeriod": { "start": "2025-02-01" },
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "10 mg morgon",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 10, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Prednisolon", "code": "H02AB06", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "suspended" },
+    "startTime": { "value": "2025-02-01" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19710505-4444" } },
+    "doseQuantity": { "value": { "value": 10, "unit": "mg" } },
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

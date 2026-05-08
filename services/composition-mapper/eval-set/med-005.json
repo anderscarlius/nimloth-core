@@ -1,0 +1,45 @@
+{
+  "id": "med-005",
+  "metadata": {
+    "complexity": "simple",
+    "expected_review": false,
+    "notes": "Simvastatin 20 mg kvällsdos oralt — standard kolesterolsänkande."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-simvastatin-005",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "C10AA01", "display": "Simvastatin" }
+      ]
+    },
+    "subject": { "reference": "Patient/19550715-2222" },
+    "effectiveDateTime": "2022-01-01T20:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "20 mg till kvällen",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 20, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Simvastatin", "code": "C10AA01", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2022-01-01T20:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19550715-2222" } },
+    "doseQuantity": { "value": { "value": 20, "unit": "mg" } },
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

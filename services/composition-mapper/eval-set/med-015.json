@@ -1,0 +1,45 @@
+{
+  "id": "med-015",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Free-text 'vid behov, max 4/dygn' (PRN). LLM ska känna igen PRN-mönstret."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-paracetamol-prn-015",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "N02BE01", "display": "Paracetamol" }
+      ]
+    },
+    "subject": { "reference": "Patient/19620920-3333" },
+    "effectiveDateTime": "2025-04-22T10:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "1 g vid behov, max 4 gånger per dygn",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 1000, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Paracetamol", "code": "N02BE01", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-04-22T10:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19620920-3333" } },
+    "doseQuantity": { "value": { "value": 1000, "unit": "mg" } },
+    "frequency": { "value": "PRN" },
+    "indication": null
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "med-004",
+  "metadata": {
+    "complexity": "simple",
+    "expected_review": false,
+    "notes": "Furosemid 40 mg morgon oralt — diuretika-regim hjärtsvikt."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-furosemid-004",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "C03CA01", "display": "Furosemid" }
+      ]
+    },
+    "subject": { "reference": "Patient/19400201-1111" },
+    "effectiveDateTime": "2024-11-10T07:30:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "40 mg på morgonen",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 40, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Furosemid", "code": "C03CA01", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2024-11-10T07:30:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19400201-1111" } },
+    "doseQuantity": { "value": { "value": 40, "unit": "mg" } },
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

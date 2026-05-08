@@ -1,0 +1,36 @@
+{
+  "id": "med-038",
+  "metadata": {
+    "complexity": "complex",
+    "expected_review": true,
+    "notes": "Status='unknown' — historisk dokumentation utan känd status."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-unknown-038",
+    "status": "unknown",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "N02BE01", "display": "Paracetamol" }
+      ]
+    },
+    "subject": { "reference": "Patient/19710505-4444" },
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "vid behov"
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Paracetamol", "code": "N02BE01", "system": "http://www.whocc.no/atc" } },
+    "status": null,
+    "startTime": null,
+    "route": null,
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19710505-4444" } },
+    "doseQuantity": null,
+    "frequency": { "value": "PRN" },
+    "indication": null
+  }
+}

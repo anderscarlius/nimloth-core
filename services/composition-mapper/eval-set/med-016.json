@@ -1,0 +1,40 @@
+{
+  "id": "med-016",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Saknar route — composition-mapper ska sätta route=null. Övriga deterministiska fält OK."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-vitamind-016",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "A11CC05", "display": "Cholecalciferol" }
+      ]
+    },
+    "subject": { "reference": "Patient/19710505-4444" },
+    "effectiveDateTime": "2024-12-01T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "800 IE dagligen",
+        "doseAndRate": [
+          { "doseQuantity": { "value": 800, "unit": "[iU]" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Cholecalciferol", "code": "A11CC05", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2024-12-01T08:00:00Z" },
+    "route": null,
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19710505-4444" } },
+    "doseQuantity": { "value": { "value": 800, "unit": "[iU]" } },
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

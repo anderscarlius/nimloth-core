@@ -1,0 +1,45 @@
+{
+  "id": "med-034",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Sänkt dos efter justering — 'halv tablett dagligen' kräver LLM-tolkning till numerisk dos relaterad till tablett-styrka."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-digoxin-034",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "C01AA05", "display": "Digoxin" }
+      ]
+    },
+    "subject": { "reference": "Patient/19400201-1111" },
+    "effectiveDateTime": "2024-08-20T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "0,125 mg dagligen (halv tablett om 0,25 mg)",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 0.125, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Digoxin", "code": "C01AA05", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2024-08-20T08:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19400201-1111" } },
+    "doseQuantity": { "value": { "value": 0.125, "unit": "mg" } },
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "med-025",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Free-text 'enligt nedtrappningsschema'. Kräver LLM-tolkning men har specifik instruktionsform."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-prednisolon-taper-025",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "H02AB06", "display": "Prednisolon" }
+      ]
+    },
+    "subject": { "reference": "Patient/19710505-4444" },
+    "effectiveDateTime": "2025-04-01T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "Start 30 mg dagligen, nedtrappning enligt schema (5 mg per vecka)",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 30, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Prednisolon", "code": "H02AB06", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-04-01T08:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19710505-4444" } },
+    "doseQuantity": { "value": { "value": 30, "unit": "mg" } },
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

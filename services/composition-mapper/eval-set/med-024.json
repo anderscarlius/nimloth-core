@@ -1,0 +1,45 @@
+{
+  "id": "med-024",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Free-text 'en gång i veckan' (WEEKLY)."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-alendronat-024",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "M05BA04", "display": "Alendronat" }
+      ]
+    },
+    "subject": { "reference": "Patient/19620920-3333" },
+    "effectiveDateTime": "2024-06-01T07:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "70 mg en gång i veckan, fastande",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 70, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Alendronat", "code": "M05BA04", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2024-06-01T07:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19620920-3333" } },
+    "doseQuantity": { "value": { "value": 70, "unit": "mg" } },
+    "frequency": { "value": "WEEKLY" },
+    "indication": null
+  }
+}

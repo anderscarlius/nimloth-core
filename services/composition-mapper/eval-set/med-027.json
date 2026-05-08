@@ -1,0 +1,42 @@
+{
+  "id": "med-027",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Topikal applikation — route SNOMED 6064005 (Topical). Salva-text."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-mometason-027",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "D07AC13", "display": "Mometason" }
+      ]
+    },
+    "subject": { "reference": "Patient/19850410-5555" },
+    "effectiveDateTime": "2025-04-10T20:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "Applicera tunt lager på drabbat hudområde två gånger dagligen",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "6064005", "display": "Topical" }
+          ]
+        }
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Mometason", "code": "D07AC13", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-04-10T20:00:00Z" },
+    "route": { "value": { "value": "Topical", "terminology": "http://snomed.info/sct", "code": "6064005" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19850410-5555" } },
+    "doseQuantity": null,
+    "frequency": { "value": "BID" },
+    "indication": null
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "med-037",
+  "metadata": {
+    "complexity": "complex",
+    "expected_review": true,
+    "notes": "Status='not-taken' — patient tog inte medicinen. Status returnerar null (kontextuellt)."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-not-taken-037",
+    "status": "not-taken",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "C09AA05", "display": "Ramipril" }
+      ]
+    },
+    "subject": { "reference": "Patient/19620920-3333" },
+    "effectivePeriod": { "start": "2025-03-01" },
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "5 mg dagligen — patient rapporterar att denne ej tagit",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 5, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Ramipril", "code": "C09AA05", "system": "http://www.whocc.no/atc" } },
+    "status": null,
+    "startTime": { "value": "2025-03-01" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19620920-3333" } },
+    "doseQuantity": { "value": { "value": 5, "unit": "mg" } },
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

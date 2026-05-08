@@ -1,0 +1,45 @@
+{
+  "id": "med-002",
+  "metadata": {
+    "complexity": "simple",
+    "expected_review": false,
+    "notes": "Metoprolol 50 mg en gång dagligen oralt — standard beta-blockerar-regim post-MI."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-metoprolol-002",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "C07AB02", "display": "Metoprolol" }
+      ]
+    },
+    "subject": { "reference": "Patient/19500315-2384" },
+    "effectiveDateTime": "2020-06-20T09:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "50 mg en gång dagligen",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "26643006", "display": "Oral" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 50, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Metoprolol", "code": "C07AB02", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2020-06-20T09:00:00Z" },
+    "route": { "value": { "value": "Oral", "terminology": "http://snomed.info/sct", "code": "26643006" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19500315-2384" } },
+    "doseQuantity": { "value": { "value": 50, "unit": "mg" } },
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}

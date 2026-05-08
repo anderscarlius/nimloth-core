@@ -1,0 +1,45 @@
+{
+  "id": "med-023",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Free-text 'var 8:e timme' (TID). Tidsintervall-tolkning."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-cefuroxim-023",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "J01DC02", "display": "Cefuroxim" }
+      ]
+    },
+    "subject": { "reference": "Patient/19850410-5555" },
+    "effectivePeriod": { "start": "2025-04-25" },
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "750 mg intravenöst var 8:e timme",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "47625008", "display": "Intravenous" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 750, "unit": "mg" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Cefuroxim", "code": "J01DC02", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-04-25" },
+    "route": { "value": { "value": "Intravenous", "terminology": "http://snomed.info/sct", "code": "47625008" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19850410-5555" } },
+    "doseQuantity": { "value": { "value": 750, "unit": "mg" } },
+    "frequency": { "value": "TID" },
+    "indication": null
+  }
+}

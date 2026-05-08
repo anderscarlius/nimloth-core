@@ -1,0 +1,46 @@
+{
+  "id": "med-047",
+  "metadata": {
+    "complexity": "complex",
+    "expected_review": true,
+    "notes": "Endast text utan strukturerad code — coding[]:s första element saknar information."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-text-only-047",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://example.com/local-formulary", "code": "LOCAL-001" }
+      ],
+      "text": "Lokalt blandat preparat — Apoteksextempore #2025-A"
+    },
+    "subject": { "reference": "Patient/19710505-4444" },
+    "effectiveDateTime": "2025-04-20T10:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "1 ml subkutant en gång i veckan",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "34206005", "display": "Subcutaneous" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 1, "unit": "mL" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "LOCAL-001", "code": "LOCAL-001", "system": "http://example.com/local-formulary" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-04-20T10:00:00Z" },
+    "route": { "value": { "value": "Subcutaneous", "terminology": "http://snomed.info/sct", "code": "34206005" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19710505-4444" } },
+    "doseQuantity": { "value": { "value": 1, "unit": "mL" } },
+    "frequency": { "value": "WEEKLY" },
+    "indication": null
+  }
+}

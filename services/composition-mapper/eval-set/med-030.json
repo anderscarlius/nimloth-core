@@ -1,0 +1,31 @@
+{
+  "id": "med-030",
+  "metadata": {
+    "complexity": "moderate",
+    "expected_review": false,
+    "notes": "Saknar dosage helt — bara medication + status + subject. Composition-mapper sätter dosage-fält=null."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-folsyra-030",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "B03BB01", "display": "Folsyra" }
+      ]
+    },
+    "subject": { "reference": "Patient/19710505-4444" },
+    "effectiveDateTime": "2025-01-10T08:00:00Z"
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Folsyra", "code": "B03BB01", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2025-01-10T08:00:00Z" },
+    "route": null,
+    "sequence": null,
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19710505-4444" } },
+    "doseQuantity": null,
+    "frequency": null,
+    "indication": null
+  }
+}

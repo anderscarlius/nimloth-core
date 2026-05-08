@@ -1,0 +1,45 @@
+{
+  "id": "med-010",
+  "metadata": {
+    "complexity": "simple",
+    "expected_review": false,
+    "notes": "Insulin glargin 24 IE subkutant kvällsdos — diabetes typ 2."
+  },
+  "input_fhir": {
+    "resourceType": "MedicationStatement",
+    "id": "ms-insulin-glargin-010",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        { "system": "http://www.whocc.no/atc", "code": "A10AE04", "display": "Insulin glargin" }
+      ]
+    },
+    "subject": { "reference": "Patient/19490630-6666" },
+    "effectiveDateTime": "2023-02-14T22:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "24 IE subkutant till natten",
+        "route": {
+          "coding": [
+            { "system": "http://snomed.info/sct", "code": "34206005", "display": "Subcutaneous" }
+          ]
+        },
+        "doseAndRate": [
+          { "doseQuantity": { "value": 24, "unit": "[iU]" } }
+        ]
+      }
+    ]
+  },
+  "expected_fields": {
+    "medicationName": { "value": { "name": "Insulin glargin", "code": "A10AE04", "system": "http://www.whocc.no/atc" } },
+    "status": { "value": "active" },
+    "startTime": { "value": "2023-02-14T22:00:00Z" },
+    "route": { "value": { "value": "Subcutaneous", "terminology": "http://snomed.info/sct", "code": "34206005" } },
+    "sequence": { "value": 1 },
+    "subject": { "value": { "namespace": "patient", "type": "PERSON", "id": "19490630-6666" } },
+    "doseQuantity": { "value": { "value": 24, "unit": "[iU]" } },
+    "frequency": { "value": "DAILY" },
+    "indication": null
+  }
+}
