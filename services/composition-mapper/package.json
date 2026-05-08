@@ -12,7 +12,9 @@
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "test": "vitest run --passWithNoTests",
-    "eval": "echo 'eval-runner kommer i P4 4.8' && exit 0"
+    "eval": "tsx src/eval/runner.ts",
+    "eval:deterministic": "tsx src/eval/runner.ts --pathway=deterministic",
+    "eval:all": "tsx src/eval/runner.ts --pathway=all"
   },
   "dependencies": {
     "@nimloth-core/model-router": "workspace:*",
