@@ -30,6 +30,22 @@ providers:
       endpoint: http://host.docker.internal:11434
       timeoutMs: 60000
 
+  # Hemmabasen NAS Ollama-instans. Primary on-premise inference för PHI-tasks
+  # (composition-mapper P4). Modell-katalog uppdateras separat via NAS-konsol.
+  - id: hemmabasen-ollama
+    type: ollama
+    enabled: true
+    models:
+      - qwen2.5-coder:32b
+      - deepseek-r1:32b
+      - gemma3:12b
+      - qwen2.5-coder:7b-instruct-q4_K_M
+    dataResidency: on-premise
+    requiresInternet: false
+    config:
+      endpoint: http://192.168.1.200:11434
+      timeoutMs: 120000
+
   - id: mock
     type: mock
     enabled: true
@@ -61,5 +77,19 @@ routing:
     require: on-premise
     prefer:
       - { providerId: local-ollama, model: llama3.3:70b }
+    fallback:
+      - { providerId: mock, model: mock-default }
+
+  # composition-mapper LLM-assist (P4 4.5) för FHIR R4 → openEHR
+  # medication_summary.v1. Used by services/composition-mapper för fält där
+  # deterministisk mappning är otillräcklig (free-text dosage parsing,
+  # status inference, ATC suggestion).
+  # PHI-sensitivity hard rule: never us-cloud. Fallback via mock —
+  # local-ollama är disabled per Anders 2026-05-08 (Alt 1).
+  - task: mapping.medication.compose
+    sensitivity: phi
+    require: on-premise
+    prefer:
+      - { providerId: hemmabasen-ollama, model: qwen2.5-coder:32b }
     fallback:
       - { providerId: mock, model: mock-default }
