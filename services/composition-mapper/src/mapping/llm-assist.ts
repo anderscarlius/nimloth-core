@@ -21,6 +21,7 @@ import { z } from 'zod';
 import type { Logger } from 'pino';
 import type { ModelRouter } from '@nimloth-core/model-router';
 import type { MedicationStatement } from '../validation/fhir.js';
+import type { DataMode } from '../config.js';
 
 // ============================================================
 // Output-schemas (sources of truth — prompts hänvisar hit)
@@ -114,6 +115,10 @@ const TASK_ID = 'mapping.medication.compose';
  * Anropa router, extrahera JSON, validera mot schema. Retry upp till
  * `maxAttempts` (default 3 = initial + 2 retries) på extract- eller
  * Zod-fel. Returnerar `null` vid uppgivande.
+ *
+ * `dataMode` styr sensitivity som skickas till router (B22.5):
+ *   - 'phi' (default)    → sensitivity: 'phi' → on-premise hard-rule
+ *   - 'synthetic' (demo) → sensitivity: 'synthetic' → cloud-routing tillåten
  */
 export async function invokeAndParse<T>(
   router: ModelRouter,
@@ -121,13 +126,20 @@ export async function invokeAndParse<T>(
   userPrompt: string,
   schema: z.ZodSchema<T>,
   logger: Logger,
+  dataMode: DataMode = 'phi',
   maxAttempts = 3,
 ): Promise<{ data: T; attempts: number } | null> {
+  const sensitivity: 'phi' | 'synthetic' =
+    dataMode === 'synthetic' ? 'synthetic' : 'phi';
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
+      logger.info(
+        { task: TASK_ID, sensitivity, attempt, maxAttempts },
+        'llm-assist invocation',
+      );
       const response = await router.invoke({
         task: TASK_ID,
-        sensitivity: 'phi',
+        sensitivity,
         systemPrompt,
         userPrompt,
         maxTokens: 500,
@@ -221,17 +233,21 @@ export interface LlmAssistDeps {
   logger: Logger;
   /** Override prompts (för tester). Default: ladda från prompts/-katalogen. */
   prompts?: Record<string, PromptTemplate>;
+  /** Dataläge som styr sensitivity i model-router. Default 'phi' (B22.5). */
+  dataMode?: DataMode;
 }
 
 export class LlmAssist {
   private readonly router: ModelRouter;
   private readonly logger: Logger;
   private readonly prompts: Record<string, PromptTemplate>;
+  private readonly dataMode: DataMode;
 
   constructor(deps: LlmAssistDeps) {
     this.router = deps.router;
     this.logger = deps.logger;
     this.prompts = deps.prompts ?? loadPrompts();
+    this.dataMode = deps.dataMode ?? 'phi';
   }
 
   // -- 1. parseDosageText ------------------------------------------------
@@ -301,6 +317,7 @@ export class LlmAssist {
       userPrompt,
       schema,
       this.logger,
+      this.dataMode,
     );
     if (result === null) return null;
     return {

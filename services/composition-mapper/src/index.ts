@@ -13,7 +13,21 @@ import { createApp } from './server.js';
 async function main(): Promise<void> {
   const config = loadConfig();
   const logger = createLogger(config.logLevel);
-  logger.info({ port: config.port, scaffold: true }, 'starting composition-mapper');
+  logger.info(
+    { port: config.port, scaffold: true, dataMode: config.dataMode },
+    'starting composition-mapper',
+  );
+
+  // B22.5 — synlig boot-warning vid demo-mode. Ska vara svår att missa
+  // eftersom NIMLOTH_DATA_MODE=synthetic tillåter cloud-routing av LLM-anrop.
+  if (config.dataMode === 'synthetic') {
+    logger.warn(
+      'NIMLOTH_DATA_MODE=synthetic. LLM-anrop får routas till cloud-providers. ' +
+        'Detta läge är endast för demo med syntetisk data. ' +
+        'ALDRIG för produktion med riktiga patientdata. ' +
+        'Se docs/operations/Demo_Mode_Configuration.md.',
+    );
+  }
 
   // 1. Säkerställ datakatalog
   const dbDir = dirname(config.dbPath);
