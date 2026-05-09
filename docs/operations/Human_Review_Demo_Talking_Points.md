@@ -116,7 +116,97 @@
 > kräver dock en partner som vill bygga klinikergränssnittet ovanpå
 > vår strukturerade payload."
 
-## 7. Att undvika
+## 7. Demo-fråga: "Hur skiljer ni produktion från demo? Använder ni cloud-AI?" (CIO-fråga, B22.5)
+
+**Snabbsvar (20 sekunder):**
+
+> "Vi har en sensitivity-tier i vår model-router. PHI-data — riktiga
+> patientdata — är hard-låsta till on-premise providers via en regel
+> som inte kan kringgås från caller-koden. Demo-läget använder syntetisk
+> data, vilket vi explicit markerar och loggar, och tillåter cloud-
+> routing eftersom datan inte är patient-relaterad. Skiftet styrs av en
+> miljövariabel som default är `phi` — produktion kräver inget
+> tilläggsbeslut, demo kräver explicit override."
+
+**Längre svar (1.5 minut):**
+
+> "Frågan är legitim — våra eval-resultat kommer från cloud-modell-anrop
+> mot Anthropic. Det är medvetet och dokumenterat.
+>
+> Composition-mappers model-router har fyra sensitivity-tier: `phi`,
+> `pii`, `synthetic`, och `public`. Varje tier har en hård-kodad lista
+> över tillåtna data-residencies. För `phi` är listan exakt
+> `on-premise` — ingen cloud-provider kan väljas oavsett hur routing-
+> regeln är konfigurerad. Det är en hard-rule i `residencyAllows()` och
+> validerad vid boot — om någon försökte konfigurera en phi-task utan
+> on-premise-require kraschar tjänsten innan den startar.
+>
+> `synthetic` är ny tier som vi införde 2026-05-09. Den representerar
+> data som *ser ut som* PHI strukturellt men är fabricerad — eval-set:s
+> 50 par har `Patient/test-XXX`-referenser, inga riktiga personnummer
+> eller journaldata. Att routa sådan data till cloud är inte en
+> säkerhetsrisk, det är en effektivitetsvinst — Hemmabasens NAS saknar
+> GPU och 32B-modeller blir CPU-bundna. Anthropic ger oss 1-3s/anrop mot
+> 60-180s lokalt.
+>
+> Skiftet mellan tier styrs av `NIMLOTH_DATA_MODE`-environment-variabel.
+> Default är `phi` — i produktion behöver operatörer inte göra något
+> aktivt val, systemet är hård-låst. Demo-mode kräver explicit
+> `NIMLOTH_DATA_MODE=synthetic` och loggar en obligatorisk WARN-rad vid
+> boot. Det blir omöjligt att råka köra demo-mode oupptäckt.
+>
+> Hela strategin finns dokumenterad i
+> `docs/operations/Demo_Mode_Configuration.md` med audit-spår, tabell
+> över tillåtna scenarier, och skydd mot oavsiktlig produktions-
+> exponering. Det är inte en tillfällig avvikelse — det är ett
+> arkitekturiskt designval som håller även när on-premise GPU-resurs
+> finns på plats."
+
+**Fördjupning vid följdfråga "men hur vet vi att synthetic faktiskt
+*är* synthetic?":**
+
+> "Tre svar:
+>
+> 1. **Audit-eventet.** Varje LLM-anrop genererar en `RouterAuditEvent`
+>    med `sensitivity`, `providerId` och `dataResidency`. Du kan i
+>    efterhand bevisa att en specifik anrop markerades `synthetic` och
+>    routades till `anthropic-cloud`. Eller motsatt — visa att alla
+>    `phi`-anrop gick till `hemmabasen-ollama`.
+>
+> 2. **Eval-rapporten.** `EvalReport` har ett `dataMode`-fält som
+>    dokumenterar vilken sensitivity-tier körningen körde i. Eval-
+>    siffrorna i P4-leveransen kommer från `dataMode: synthetic`-
+>    körningar — dokumenterat på rapport-nivå.
+>
+> 3. **Driftrutin.** I produktion läggs en runbook-sida som beskriver att
+>    `NIMLOTH_DATA_MODE=synthetic` aldrig får sättas i en miljö med
+>    riktiga patient-data. Det är operativt ansvar; tekniken hjälper med
+>    boot-warning men sista skyddet är processuellt."
+
+**Vad som motverkar oro:**
+
+- Hard-rule är *inte* en best-effort. Den är boot-time-validerad och
+  failar fast vid felkonfiguration.
+- Default-värde är produktions-säker. Inget ansvar läggs på operatör
+  att sätta något korrekt.
+- Synthetic-mode lämnar synliga spår (boot-warning, per-invocation
+  logs, audit-events, eval-rapport-fält). Det är opraktiskt att
+  använda i smyg.
+- Dokumentationen är versionerad och tillgänglig för regulatorisk
+  granskning.
+
+**Vad du som demo-presentatör ska undvika:**
+
+- "Vi använder cloud bara för demo" — det är sant men ofullständigt och
+  väcker frågor. Använd hela formuleringen ovan istället.
+- "Det är ingen risk" — risk-resonemang ska vara komplett. Säg "PHI är
+  hard-låst on-premise; synthetic är fabricerad data utan koppling till
+  individ".
+- "Vi planerar att gå on-premise senare" — visar svaghet. Säg "synthetic-
+  tier är arkitekturiskt val som håller; on-premise-routing aktiveras
+  per default när produktions-data hanteras".
+
+## 8. Att undvika
 
 Prata inte om:
 
@@ -133,7 +223,7 @@ Prata inte om:
 - **Att review-pathway är 'AI-säkerhet'** — det är klinisk-säkerhet.
   Nyans: AI är delkomponent, säkerhetsmodellen är klinisk.
 
-## 8. Visuella hjälpmedel
+## 9. Visuella hjälpmedel
 
 Förbered för demo:
 
@@ -145,7 +235,7 @@ Förbered för demo:
 | Threshold-känslighet | TBD efter 4.9 | Tabell threshold (0.5/0.7/0.9) → review-recall + FPR |
 | Code-review-analogi | Skiss | Side-by-side: GitHub PR-review-UI ↔ kliniker-review |
 
-## 9. Stand-up-format för 5-minuters demo
+## 10. Stand-up-format för 5-minuters demo
 
 ```
 1. Open (30s):
@@ -172,8 +262,9 @@ Förbered för demo:
    Använd sektion 1-7 som källa för svar.
 ```
 
-## 10. Revisionslogg
+## 11. Revisionslogg
 
 | Version | Datum | Ändring |
 |---|---|---|
 | v1 | 2026-05-08 | Initial leverans (P4 4.6b). Sektion 2 har platshållare för 4.9-mätningar — uppdatera när eval-runner körts. |
+| v1.1 | 2026-05-09 | Lagt till §7 om CIO-fråga produktion vs demo (B22.5). Renumrerat existerande §7 "Att undvika" → §8, §8 "Visuella hjälpmedel" → §9, §9 "Stand-up-format" → §10, §10 "Revisionslogg" → §11. |

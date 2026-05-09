@@ -208,17 +208,75 @@ composition-mapper själv.
 - **Eskalationskedjor.** Om kliniker A inte kan besluta, vem är näst i
   linje? Out-of-scope för composition-mapper.
 
-## 8. Referenser
+## 8. Sensitivity-tier och cloud-routing — relation till review-pathway (B22.5)
+
+Sedan 2026-05-09 har model-router en sensitivity-tier `synthetic` som
+tillåter cloud-routing av syntetisk data (eval-paren, demo-fixtures).
+`composition-mapper` läser `NIMLOTH_DATA_MODE`-env vid boot och
+propagerar `synthetic` till varje LLM-anrop när env-variabeln är satt.
+Default förblir `phi` med hard-locked on-premise-routing.
+
+### 8.1 — Påverkar synthetic-routing review-pathway?
+
+**Nej, inte i logik.** Aggregator-, threshold- och triggers-logiken är
+provideroberoende. Confidence-aggregering, conflicting-evidence-
+hantering och min-rule fungerar identiskt oavsett om LLM-anropet
+gick till `hemmabasen-ollama` eller `anthropic-cloud`.
+
+**Ja, i kalibrering.** Olika modeller har olika confidence-kalibrering
+(LLM-self-reported confidence är notoriskt opålitlig och varierar
+mellan modell-familjer). Threshold `0.7` som etableras i 4.9-iteration
+mot Anthropic-cloud kanske inte är den rätta tröskeln när
+`hemmabasen-ollama` qwen2.5-coder:32b används i produktion. Kalibrerings-
+utfall ska därför rapporteras med modell-kontext:
+
+> "I 4.9-iteration mot anthropic-cloud claude-sonnet-4-6 nådde vi
+> review-recall X / FPR Y vid threshold 0.7." (synthetic-mode)
+
+> "I post-P4 omkörning mot hemmabasen-ollama qwen2.5-coder:32b nådde
+> vi review-recall X' / FPR Y' vid threshold T'." (phi-mode, när
+> hårdvara finns)
+
+Kalibreringen är inte en fast siffra utan en *funktion av modell*. Det
+ligger i §4 TODO-punkten — uppdatera dokumentet med faktiska siffror per
+modell när omkörningen är gjord.
+
+### 8.2 — Vad om en kliniker frågar "vilken modell körde det här mappnings-fallet?"
+
+`MAPPING_RUN`-event (P4 4.7) inkluderar `providerId` + `modelUsed` +
+`dataResidency`. Review-payload har också `fieldEvidence`-listan med
+`source`-fält per LLM-fält som identifierar vilken modell som tolkade
+fritext. För granskning av enskilt fall kan man alltid se exakt vilken
+provider som genererade vilket värde.
+
+### 8.3 — Får review-utfall från `synthetic`-mode användas för PHI-kalibrering?
+
+Med försiktighet. Modell-bias är inte fundamentalt olika mellan
+phi-routing och synthetic-routing — det är *samma* modell-mekanismer som
+parsar fritext, inferrar status etc. Men om olika modeller används för
+olika tier (Anthropic för synthetic, qwen2.5 för phi) är kalibrerings-
+utfallen inte direkt utbytbara. Det är en strukturell skillnad, inte
+en sensitivity-skillnad.
+
+I praktiken: 4.9-iteration mot Anthropic ger oss en hyfsad första
+calibration. Post-P4 omkörning mot riktig on-premise-modell justerar
+om det behövs. Båda är legitima datapunkter — bara med olika modell-
+kontext.
+
+## 9. Referenser
 
 - `nimloth-docs/P4_Composition_Mapper.md` sektion 4.6 + 4.6b (spec)
 - `services/composition-mapper/src/mapping/aggregator.ts` (implementation)
 - `services/composition-mapper/src/types/review.ts` (typedefinitioner)
 - `services/composition-mapper/eval-set/README.md` (triggervillkors-exempel)
 - `nimloth-docs/Strategi_Nasta_Steg.md` (B19-leverans, B22.5-kandidat)
+- `nimloth-docs/B22.5_Tier_Based_Sensitivity_Strategy.md` (sensitivity-tier-strategi)
+- `docs/operations/Demo_Mode_Configuration.md` (operationell ref)
 - `docs/operations/Human_Review_Demo_Talking_Points.md` (demo-stöd)
 
-## 9. Revisionslogg
+## 10. Revisionslogg
 
 | Version | Datum | Ändring |
 |---|---|---|
 | v1 | 2026-05-08 | Initial leverans (P4 4.6b). Threshold 0.7 är default; kalibreras i 4.9. Sektion 4 har TODO för kalibrerings-utfall. |
+| v1.1 | 2026-05-09 | Lagt till §8 om synthetic-tier och dess påverkan på kalibrering. Renumrerat Referenser → §9, Revisionslogg → §10. |
