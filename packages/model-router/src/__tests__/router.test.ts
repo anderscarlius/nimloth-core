@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { ModelRouter } from '../router.js';
+import { ModelRouter, residencyAllows } from '../router.js';
 import { MockProvider } from '../providers/mock.js';
 import {
   RouteUnavailableError,
+  type DataResidency,
   type Provider,
   type ProviderDescriptor,
   type RouterAuditEvent,
   type RouterConfig,
+  type Sensitivity,
 } from '../types.js';
 
 function mockDescriptor(over: Partial<ProviderDescriptor> = {}): ProviderDescriptor {
@@ -183,6 +185,89 @@ describe('ModelRouter', () => {
         sensitivity: 'phi',
       }),
     ).rejects.toBeInstanceOf(RouteUnavailableError);
+  });
+
+  it('synthetic-sensitivity routar till us-cloud när det är preferens (B22.5)', async () => {
+    // Syntetisk data (eval-paren, demo-fixtures) får routas till cloud.
+    // Speglar produktions-pattern där composition-mapper sätter sensitivity
+    // baserat på NIMLOTH_DATA_MODE-env.
+    const config: RouterConfig = {
+      providers: [
+        mockDescriptor({ id: 'anthropic-cloud', dataResidency: 'us-cloud', requiresInternet: true }),
+        mockDescriptor({ id: 'local', dataResidency: 'on-premise' }),
+      ],
+      routing: [
+        {
+          task: 'mapping.medication.compose',
+          sensitivity: 'synthetic',
+          prefer: [
+            { providerId: 'anthropic-cloud', model: 'mock-default' },
+            { providerId: 'local', model: 'mock-default' },
+          ],
+          fallback: [],
+        },
+      ],
+    };
+    const router = new ModelRouter(config);
+    const result = await router.invoke({
+      task: 'mapping.medication.compose',
+      systemPrompt: 's',
+      userPrompt: 'u',
+      sensitivity: 'synthetic',
+    });
+    expect(result.providerId).toBe('anthropic-cloud');
+  });
+
+  it('phi-hard-rule är oförändrat trots att synthetic-tier finns (regression-skydd, B22.5)', async () => {
+    // Verifierar att tillägget av synthetic INTE har luckrat upp phi-låsningen.
+    // Cloud listad först — routern måste hoppa över den även med synthetic-
+    // tier i samma config.
+    const config: RouterConfig = {
+      providers: [
+        mockDescriptor({ id: 'cloud', dataResidency: 'us-cloud', requiresInternet: true }),
+        mockDescriptor({ id: 'local', dataResidency: 'on-premise' }),
+      ],
+      routing: [
+        {
+          task: 'mapping.medication.compose',
+          sensitivity: 'phi',
+          require: 'on-premise',
+          prefer: [
+            { providerId: 'cloud', model: 'mock-default' },
+            { providerId: 'local', model: 'mock-default' },
+          ],
+          fallback: [],
+        },
+      ],
+    };
+    const router = new ModelRouter(config);
+    const result = await router.invoke({
+      task: 'mapping.medication.compose',
+      systemPrompt: 's',
+      userPrompt: 'u',
+      sensitivity: 'phi',
+    });
+    expect(result.providerId).toBe('local');
+  });
+
+  describe('residencyAllows-matrix (B22.5)', () => {
+    const cases: Array<[Sensitivity, DataResidency, boolean]> = [
+      ['phi', 'on-premise', true],
+      ['phi', 'eu-cloud', false],
+      ['phi', 'us-cloud', false],
+      ['pii', 'on-premise', true],
+      ['pii', 'eu-cloud', true],
+      ['pii', 'us-cloud', false],
+      ['synthetic', 'on-premise', true],
+      ['synthetic', 'eu-cloud', true],
+      ['synthetic', 'us-cloud', true],
+      ['schema-only', 'on-premise', true],
+      ['schema-only', 'us-cloud', true],
+      ['public', 'us-cloud', true],
+    ];
+    it.each(cases)('residencyAllows(%s, %s) === %s', (sens, res, expected) => {
+      expect(residencyAllows(sens, res)).toBe(expected);
+    });
   });
 
   it('promptHash är deterministisk', async () => {

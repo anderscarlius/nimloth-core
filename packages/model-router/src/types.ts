@@ -4,6 +4,10 @@
 // Sensitivity-nivåerna är medvetet inspirerade av VGR:s informationsklassning:
 //   - public:      ingen restriktion (publika referenser, dokumentation)
 //   - schema-only: tabellnamn, kolumnnamn, syntetiska samples (ingen riktig data)
+//   - synthetic:   data ser ut som riktig vårddata men är fabricerad (t.ex.
+//                  eval-paren, demo-fixtures). Tillåter cloud-routing eftersom
+//                  ingen riktig patient-data exponeras. Styrs i composition-
+//                  mapper via NIMLOTH_DATA_MODE-env (B22.5).
 //   - pii:         personidentifierare utan vårdsammanhang
 //   - phi:         vårddata kopplad till individ (måste stanna on-premise)
 //
@@ -12,7 +16,7 @@
 
 export type DataResidency = 'us-cloud' | 'eu-cloud' | 'on-premise';
 export type ProviderType = 'anthropic' | 'ollama' | 'mock';
-export type Sensitivity = 'public' | 'schema-only' | 'pii' | 'phi';
+export type Sensitivity = 'public' | 'schema-only' | 'synthetic' | 'pii' | 'phi';
 
 export interface ProviderDescriptor {
   id: string;

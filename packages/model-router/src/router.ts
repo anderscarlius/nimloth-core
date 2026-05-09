@@ -205,12 +205,17 @@ export class ModelRouter {
   }
 }
 
-function residencyAllows(sensitivity: Sensitivity, residency: DataResidency): boolean {
+export function residencyAllows(sensitivity: Sensitivity, residency: DataResidency): boolean {
   switch (sensitivity) {
     case 'phi':
       return residency === 'on-premise';
     case 'pii':
       return residency === 'on-premise' || residency === 'eu-cloud';
+    case 'synthetic':
+      // Syntetisk data tillåter alla residency-typer eftersom ingen riktig
+      // patient-data exponeras. Explicit lista istället för `return true`
+      // så framtida residency-typer (gov-cloud, etc.) tvingar medvetet beslut.
+      return residency === 'on-premise' || residency === 'eu-cloud' || residency === 'us-cloud';
     case 'schema-only':
     case 'public':
       return true;
