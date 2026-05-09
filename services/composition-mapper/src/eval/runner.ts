@@ -16,6 +16,7 @@ import { mapMedicationStatement } from '../mapping/index.js';
 import { LlmAssist } from '../mapping/llm-assist.js';
 import { computeFieldAccuracy } from './accuracy.js';
 import type { ExpectedFields } from '../types/review.js';
+import type { DataMode } from '../config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -58,6 +59,13 @@ export interface EvalReport {
   timestamp: string;
   pathway: Pathway;
   threshold: number;
+  /**
+   * Dataläge som eval-runnern körde i (B22.5). Eval-set:s 50 par är
+   * syntetisk testdata, så runnern hård-kodar `'synthetic'` här. Fältet
+   * dokumenterar för CIO-granskning att eval-resultaten kommer från
+   * cloud-routing av syntetisk data — inte produktions-PHI.
+   */
+  dataMode: DataMode;
   totalPairs: number;
   fieldAccuracy: number;
   reviewRecall: number;
@@ -88,7 +96,10 @@ export async function runEval(args: EvalArgs): Promise<EvalReport> {
       args.routerConfigPath ?? join(__dirname, '..', '..', '..', '..', 'config', 'model-routing.yaml');
     const routerConfig = loadRouterConfig(cfgPath);
     const router = new ModelRouter(routerConfig);
-    llm = new LlmAssist({ router, logger });
+    // Eval-set är syntetisk testdata (B22.5) — tvinga sensitivity 'synthetic'
+    // direkt på LlmAssist istället för att läcka NIMLOTH_DATA_MODE-side-effects
+    // till resten av processen.
+    llm = new LlmAssist({ router, logger, dataMode: 'synthetic' });
   }
 
   const results: PerPairResult[] = [];
@@ -198,6 +209,9 @@ export function generateReport(
     timestamp: new Date().toISOString(),
     pathway: args.pathway,
     threshold: args.threshold,
+    // Eval-set är syntetisk per definition (B22.5). Hard-coded snarare än
+    // läst från env eftersom runnern kontrollerar sin egen LlmAssist-config.
+    dataMode: 'synthetic',
     totalPairs: results.length,
     fieldAccuracy,
     reviewRecall,
@@ -272,6 +286,7 @@ async function main(): Promise<void> {
   // eslint-disable-next-line no-console
   console.log(`
 Pairs: ${report.totalPairs}
+Data mode: ${report.dataMode} (B22.5 — eval-set är syntetisk data)
 Field accuracy: ${(report.fieldAccuracy * 100).toFixed(1)}%
 Review recall: ${(report.reviewRecall * 100).toFixed(1)}%
 False-positive review rate: ${(report.falsePositiveReviewRate * 100).toFixed(1)}%

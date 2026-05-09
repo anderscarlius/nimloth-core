@@ -95,6 +95,14 @@ describe('generateReport', () => {
     // 95:e percentilen av 10..200 i steg 10 = index Math.floor(20*0.95)=19 → 200ms
     expect(report.p95ElapsedMs).toBe(200);
   });
+
+  it('rapporten dokumenterar dataMode=synthetic (B22.5)', () => {
+    // Eval-set:s 50 par är syntetisk testdata. Rapporten ska explicit visa
+    // att resultaten kommer från cloud-routing av syntetisk data — inte PHI.
+    // Pålitligt fält att referera till i CIO-granskning av eval-rapporter.
+    const report = generateReport([makePerPair({ pairId: 'a' })], baseArgs);
+    expect(report.dataMode).toBe('synthetic');
+  });
 });
 
 describe('runEval (mot mini eval-set)', () => {
