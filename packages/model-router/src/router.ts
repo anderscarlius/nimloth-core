@@ -51,14 +51,27 @@ export interface RouterDeps {
 
 export class ModelRouter {
   private readonly providers: Map<string, Provider>;
-  private readonly rules: Map<string, RoutingRule>;
+  /**
+   * Routing-regler grupperas på task-namn. En task får ha flera regler
+   * (en per sensitivity-tier) — så samma logiska anrop, t.ex.
+   * `mapping.medication.compose`, kan ha `phi`-regel som hård-låser
+   * on-premise OCH `synthetic`-regel som tillåter cloud-routing för
+   * eval/demo (B22.5).
+   */
+  private readonly rulesByTask: Map<string, RoutingRule[]>;
   private readonly audit?: AuditSink;
   private readonly doHealthChecks: boolean;
 
   constructor(config: RouterConfig, deps: RouterDeps = {}) {
     const factory = deps.providerFactory ?? defaultProviderFactory;
     this.providers = new Map(config.providers.map((p) => [p.id, factory(p)]));
-    this.rules = new Map(config.routing.map((r) => [r.task, r]));
+    const byTask = new Map<string, RoutingRule[]>();
+    for (const rule of config.routing) {
+      const list = byTask.get(rule.task) ?? [];
+      list.push(rule);
+      byTask.set(rule.task, list);
+    }
+    this.rulesByTask = byTask;
     this.audit = deps.audit;
     this.doHealthChecks = deps.healthChecks ?? true;
   }
@@ -70,20 +83,23 @@ export class ModelRouter {
 
   /** Lista routing-regler (för status-endpoints). */
   listRules(): RoutingRule[] {
-    return Array.from(this.rules.values());
+    return Array.from(this.rulesByTask.values()).flat();
   }
 
   async invoke(req: InvokeRequest): Promise<InvokeResponse> {
-    const rule = this.rules.get(req.task);
-    if (!rule) {
+    const rulesForTask = this.rulesByTask.get(req.task);
+    if (!rulesForTask || rulesForTask.length === 0) {
       throw new RouteUnavailableError(req.task, `no routing rule defined for task`, []);
     }
-    if (rule.sensitivity !== req.sensitivity) {
+    const rule = rulesForTask.find((r) => r.sensitivity === req.sensitivity);
+    if (!rule) {
+      // Task finns men inte med begärd sensitivity. Vanliga orsaker:
+      // (1) caller läcker fel sensitivity, (2) demo-config saknar synthetic-
+      // regel för en task som anropas i synthetic-mode.
       throw new SensitivityViolationError(
         req.task,
         req.sensitivity,
         '<routing-mismatch>',
-        // Bara för att fylla typen — egentliga problemet är att caller skickar fel sensitivity.
         'on-premise',
       );
     }

@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { parse } from 'yaml';
 import type { RouterConfig, RoutingRule, ProviderDescriptor, Sensitivity } from './types.js';
 
-const VALID_SENSITIVITY: Sensitivity[] = ['public', 'schema-only', 'pii', 'phi'];
+const VALID_SENSITIVITY: Sensitivity[] = ['public', 'schema-only', 'synthetic', 'pii', 'phi'];
 const VALID_PROVIDER_TYPES = ['anthropic', 'ollama', 'mock'] as const;
 const VALID_RESIDENCY = ['us-cloud', 'eu-cloud', 'on-premise'] as const;
 

@@ -93,3 +93,16 @@ routing:
       - { providerId: hemmabasen-ollama, model: qwen2.5-coder:32b }
     fallback:
       - { providerId: mock, model: mock-default }
+
+  # B22.5 — samma task som ovan, men med sensitivity=synthetic. Aktiveras
+  # när composition-mapper bootas med NIMLOTH_DATA_MODE=synthetic eller när
+  # eval-runner kör (eval-set:s 50 par är syntetisk testdata, inte PHI).
+  # Routar till anthropic-cloud för verklighetsnära LLM-pathway-validering
+  # innan on-premise GPU finns. Fallback till mock.
+  # ENDAST FÖR DEMO/EVAL — phi-regeln ovan är produktions-default.
+  - task: mapping.medication.compose
+    sensitivity: synthetic
+    prefer:
+      - { providerId: anthropic-cloud, model: claude-sonnet-4-6 }
+    fallback:
+      - { providerId: mock, model: mock-default }

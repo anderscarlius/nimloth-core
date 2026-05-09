@@ -218,6 +218,48 @@ describe('ModelRouter', () => {
     expect(result.providerId).toBe('anthropic-cloud');
   });
 
+  it('väljer rätt regel när samma task har både phi- och synthetic-regler (B22.5)', async () => {
+    // Production-config har `mapping.medication.compose` med phi-routing till
+    // on-premise OCH synthetic-routing till cloud. Routern måste välja
+    // regeln vars sensitivity matchar req.sensitivity — inte bara den första.
+    const config: RouterConfig = {
+      providers: [
+        mockDescriptor({ id: 'cloud', dataResidency: 'us-cloud', requiresInternet: true }),
+        mockDescriptor({ id: 'local', dataResidency: 'on-premise' }),
+      ],
+      routing: [
+        {
+          task: 'mapping.medication.compose',
+          sensitivity: 'phi',
+          require: 'on-premise',
+          prefer: [{ providerId: 'local', model: 'mock-default' }],
+          fallback: [],
+        },
+        {
+          task: 'mapping.medication.compose',
+          sensitivity: 'synthetic',
+          prefer: [{ providerId: 'cloud', model: 'mock-default' }],
+          fallback: [],
+        },
+      ],
+    };
+    const router = new ModelRouter(config);
+    const phiResult = await router.invoke({
+      task: 'mapping.medication.compose',
+      systemPrompt: 's',
+      userPrompt: 'u',
+      sensitivity: 'phi',
+    });
+    expect(phiResult.providerId).toBe('local');
+    const syntheticResult = await router.invoke({
+      task: 'mapping.medication.compose',
+      systemPrompt: 's',
+      userPrompt: 'u',
+      sensitivity: 'synthetic',
+    });
+    expect(syntheticResult.providerId).toBe('cloud');
+  });
+
   it('phi-hard-rule är oförändrat trots att synthetic-tier finns (regression-skydd, B22.5)', async () => {
     // Verifierar att tillägget av synthetic INTE har luckrat upp phi-låsningen.
     // Cloud listad först — routern måste hoppa över den även med synthetic-
