@@ -35,19 +35,38 @@
 
 ## 2. Demo-fråga: "Hur ofta händer det?"
 
-> *[siffror efter 4.9 — TODO: uppdatera när eval-runner körts mot
-> Hemmabasen LLM-pathway]*
+> **Konkreta siffror från eval-set 4.9 (B22.5.6, 2026-05-10, mot Anthropic
+> claude-sonnet-4-6 via synthetic-routning):**
 >
 > "Vårt eval-set är 50 manuellt skrivna par. Av dessa är 17 designade
 > för att utlösa granskning — de innehåller status-värden som inte är
 > deterministiskt mappningsbara, free-text dosering som är medvetet
-> tvetydig, eller saknade required-fält. När 4.9-iterationen är klar
-> har vi konkreta siffror på review-recall (hur många expected-review
-> som faktiskt utlöser) och false-positive-rate (oväntade reviews).
+> tvetydig, eller saknade required-fält.
+>
+> Av de 17 förväntade granskningarna fångar systemet 11 — review-recall
+> 64.7%. Fördelat per komplexitet:
+>
+> - **Simple (12 par):** 0 av 0 (inga simple-par är designade för review)
+> - **Moderate (23 par):** 3 av 3 expected_reviews — 100% recall
+> - **Complex (15 par):** 8 av 14 expected_reviews — 57.1% recall
+>
+> False-positive-review-rate (oväntade reviews) är 3.0% — väl under vårt
+> 10%-mål.
+>
+> Field-accuracy ligger på 98.9% i 4.9-utfallet — alla 6 deterministiska
+> fält samt LLM-fält doseQuantity (94.4%) och frequency (97.5%) levererar
+> hög precision.
 >
 > Det här är medvetet — eval-set är designat för att testa edge cases.
 > Real produktionsfrekvens beror på källdatakvalitet och kommer
 > kalibreras post-deployment."
+
+**Notera om review-recall under AC8-mål (≥95%):** de 6 missade complex-paren
+har strukturell ambiguity (multi-dosage-entries, multi-route-compositions,
+temporal-inkonsekvens i status) som inte fångas av confidence-baserade
+triggers. Att lyfta review-recall över ~75% kräver utvidgade triggers
+utöver low_confidence/missing/conflicting — det är dokumenterat som
+Sprint 3-arbete (`Strategi_Nasta_Steg.md` post-P4-backlog).
 
 ## 3. Demo-fråga: "Är det inte risk att systemet säger 'jag vet inte' för ofta?"
 
@@ -56,9 +75,15 @@
 > var korrekt. False-negative — att systemet accepterar en felaktig
 > mappning — är patient-risk. Vi väljer kostnaden över risken.
 >
+> Konkret data från 4.9-utfallet: vår false-positive-review-rate är
+> **3.0%** — d.v.s. i 3% av paren utlöste systemet review när det inte
+> borde behövts. Det är väl under vårt mål om ≤10%.
+>
 > Threshold för aggregat-confidence (default 0.7) är kalibreringspunkten.
 > Om vi sätter den för högt får vi för många reviews; för lågt och vi
-> riskerar accepterade fel. Eval-set:t kalibrerar var den ska ligga.
+> riskerar accepterade fel. Eval-set:t kalibrerade tröskeln till just 0.7
+> — den behölls efter iteration eftersom det var prompts och aggregator-
+> logik som behövde justering, inte threshold-värdet.
 >
 > Dessutom är granskningspayloaden direktstyrd — kliniker ser inte
 > bara att systemet är osäkert, utan vilket exakt fält och varför.
@@ -268,3 +293,4 @@ Förbered för demo:
 |---|---|---|
 | v1 | 2026-05-08 | Initial leverans (P4 4.6b). Sektion 2 har platshållare för 4.9-mätningar — uppdatera när eval-runner körts. |
 | v1.1 | 2026-05-09 | Lagt till §7 om CIO-fråga produktion vs demo (B22.5). Renumrerat existerande §7 "Att undvika" → §8, §8 "Visuella hjälpmedel" → §9, §9 "Stand-up-format" → §10, §10 "Revisionslogg" → §11. |
+| v1.2 | 2026-05-10 | Fyllt i §2 med faktiska siffror från B22.5.6 4.9-utfallet (98.9% / 64.7% / 3.0%). §3 uppdaterad med konkret FPR (3.0%). Notering om review-recall-gap till AC8-mål (≥95%) som Sprint 3-arbete. |

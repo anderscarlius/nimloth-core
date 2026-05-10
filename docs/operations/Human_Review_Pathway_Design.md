@@ -111,8 +111,28 @@ par har `expected_review: true`). Tröskeln justeras tills
 `false_positive_review_rate` (oväntade reviews / expected complete) blir
 hög.
 
-> **TODO efter 4.9:** uppdatera detta dokument med faktisk kalibrerad
-> threshold + utfall (e.g. "0.65 ger review_recall 0.94 / FPR 0.08").
+**Slutliga kalibrerings-data (B22.5.6, 2026-05-10, Anthropic claude-sonnet-4-6
+via synthetic-routning):**
+
+| Iteration | Field-accuracy | Review-recall | FPR | Notering |
+|---|---:|---:|---:|---|
+| 0 (baseline) | 87.4% | 41.2% | 0.0% | Pre-tuning, V1-prompts |
+| 1 (prompt-tuning) | 98.6% | 35.3% | 0.0% | parseDosageText/inferStatus/suggestAtc V2 — gav field-accuracy-vinst men review-recall-regression |
+| 2 (aggregator-fix) | **98.9%** | **64.7%** | **3.0%** | Aggregator-3-case-distinktion för null-LLM-fält (B22.5.6) |
+
+**Threshold 0.7 behölls** efter iteration. Justeringar gjordes i prompts
++ aggregator, inte i threshold-värdet. Iteration 1:s prompt-tuning
+gjorde LLM:n humblare på tvetydig fritext (returnerar `value:null,
+confidence:0` istället för att gissa). Iteration 2:s aggregator-fix
+säkerställde att sådana null-svar bidrar till min-aggregaten så att
+`low_confidence`-trigger fyrar. Tillsammans lyfte review-recall från
+41.2% till 64.7% utan att rörda field-accuracy åt fel håll (faktiskt +11.5
+punkter förbättring eftersom prompts blev mer disciplinerade).
+
+Kvarvarande gap (64.7% vs ≥95%-mål) är arkitekturisk skuld: 6 av 14
+complex-pair triggar inte review trots `expected_review: true`. Dessa
+har strukturell ambiguity (multi-dosage, multi-route, status-temporal-
+inkonsekvens) som inte fångas av confidence-trigger. Sprint 3-arbete.
 
 Om enskilda fält kräver striktare gränser (t.ex. `doseQuantity` är
 säkerhetskritiskt) → se sektion 6.1 (per-fält-trösklar) som post-MVP-
@@ -225,21 +245,22 @@ gick till `hemmabasen-ollama` eller `anthropic-cloud`.
 
 **Ja, i kalibrering.** Olika modeller har olika confidence-kalibrering
 (LLM-self-reported confidence är notoriskt opålitlig och varierar
-mellan modell-familjer). Threshold `0.7` som etableras i 4.9-iteration
+mellan modell-familjer). Threshold `0.7` som etablerades i 4.9-iteration
 mot Anthropic-cloud kanske inte är den rätta tröskeln när
 `hemmabasen-ollama` qwen2.5-coder:32b används i produktion. Kalibrerings-
-utfall ska därför rapporteras med modell-kontext:
+utfall rapporteras därför med modell-kontext:
 
-> "I 4.9-iteration mot anthropic-cloud claude-sonnet-4-6 nådde vi
-> review-recall X / FPR Y vid threshold 0.7." (synthetic-mode)
+> **Anthropic claude-sonnet-4-6 (synthetic-mode, B22.5.6, 2026-05-10):**
+> review-recall 64.7% / FPR 3.0% / field-accuracy 98.9% vid threshold 0.7.
 
-> "I post-P4 omkörning mot hemmabasen-ollama qwen2.5-coder:32b nådde
-> vi review-recall X' / FPR Y' vid threshold T'." (phi-mode, när
-> hårdvara finns)
+> **Hemmabasen qwen2.5-coder:32b (phi-mode, väntar på GPU-resurs):**
+> mätningar TBD när on-premise-pathway aktiveras (post-P4 / Sprint 3+).
 
-Kalibreringen är inte en fast siffra utan en *funktion av modell*. Det
-ligger i §4 TODO-punkten — uppdatera dokumentet med faktiska siffror per
-modell när omkörningen är gjord.
+Kalibreringen är inte en fast siffra utan en *funktion av modell*. När
+hårdvara levereras körs eval-set:t mot lokal modell och tröskeln
+omkalibreras vid behov. Anthropic-utfallet är inte direkt utbytbart
+mot lokal modell, men ger en användbar referenspunkt för relativ
+positions-känsla.
 
 ### 8.2 — Vad om en kliniker frågar "vilken modell körde det här mappnings-fallet?"
 
@@ -280,3 +301,4 @@ kontext.
 |---|---|---|
 | v1 | 2026-05-08 | Initial leverans (P4 4.6b). Threshold 0.7 är default; kalibreras i 4.9. Sektion 4 har TODO för kalibrerings-utfall. |
 | v1.1 | 2026-05-09 | Lagt till §8 om synthetic-tier och dess påverkan på kalibrering. Renumrerat Referenser → §9, Revisionslogg → §10. |
+| v1.2 | 2026-05-10 | Fyllt i §4 med slutlig kalibrerings-data från B22.5.6 (Anthropic claude-sonnet-4-6 synthetic-routning): 98.9% field-accuracy, 64.7% review-recall, 3.0% FPR, threshold behållen vid 0.7. Uppdaterat §8.1 med Anthropic-utfall + TBD-platshållare för on-premise omkörning. |
