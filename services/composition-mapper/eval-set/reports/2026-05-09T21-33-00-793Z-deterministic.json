@@ -1,0 +1,401 @@
+{
+  "timestamp": "2026-05-09T21:33:00.793Z",
+  "pathway": "deterministic",
+  "threshold": 0.7,
+  "dataMode": "synthetic",
+  "totalPairs": 50,
+  "fieldAccuracy": 0.7837078651685393,
+  "reviewRecall": 0.4117647058823529,
+  "falsePositiveReviewRate": 0,
+  "byComplexity": {
+    "simple": {
+      "count": 12,
+      "fieldAccuracy": 0.75,
+      "reviewRecall": 0
+    },
+    "moderate": {
+      "count": 23,
+      "fieldAccuracy": 0.8012048192771084,
+      "reviewRecall": 0
+    },
+    "complex": {
+      "count": 15,
+      "fieldAccuracy": 0.7872340425531915,
+      "reviewRecall": 0.5
+    }
+  },
+  "byField": {
+    "medicationName": {
+      "correct": 50,
+      "total": 50,
+      "accuracy": 1
+    },
+    "status": {
+      "correct": 43,
+      "total": 43,
+      "accuracy": 1
+    },
+    "startTime": {
+      "correct": 46,
+      "total": 46,
+      "accuracy": 1
+    },
+    "route": {
+      "correct": 44,
+      "total": 44,
+      "accuracy": 1
+    },
+    "sequence": {
+      "correct": 46,
+      "total": 46,
+      "accuracy": 1
+    },
+    "subject": {
+      "correct": 50,
+      "total": 50,
+      "accuracy": 1
+    },
+    "doseQuantity": {
+      "correct": 0,
+      "total": 36,
+      "accuracy": 0
+    },
+    "frequency": {
+      "correct": 0,
+      "total": 40,
+      "accuracy": 0
+    },
+    "indication": {
+      "correct": 0,
+      "total": 1,
+      "accuracy": 0
+    }
+  },
+  "failures": [
+    {
+      "pairId": "med-001",
+      "complexity": "simple",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-002",
+      "complexity": "simple",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-003",
+      "complexity": "simple",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-004",
+      "complexity": "simple",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-005",
+      "complexity": "simple",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-006",
+      "complexity": "simple",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-007",
+      "complexity": "simple",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-008",
+      "complexity": "simple",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-009",
+      "complexity": "simple",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-010",
+      "complexity": "simple",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-011",
+      "complexity": "simple",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-012",
+      "complexity": "simple",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-013",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-014",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-015",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-016",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-017",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-018",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-019",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-020",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-021",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-022",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-023",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-024",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-025",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-026",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-027",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-028",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-029",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-034",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-036",
+      "complexity": "complex",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-037",
+      "complexity": "complex",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-038",
+      "complexity": "complex",
+      "missingOrWrong": [
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-039",
+      "complexity": "complex",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-040",
+      "complexity": "complex",
+      "missingOrWrong": [
+        "doseQuantity"
+      ]
+    },
+    {
+      "pairId": "med-042",
+      "complexity": "complex",
+      "missingOrWrong": [
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-044",
+      "complexity": "complex",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-046",
+      "complexity": "complex",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency",
+        "indication"
+      ]
+    },
+    {
+      "pairId": "med-047",
+      "complexity": "complex",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-048",
+      "complexity": "complex",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-050",
+      "complexity": "complex",
+      "missingOrWrong": [
+        "doseQuantity",
+        "frequency"
+      ]
+    }
+  ],
+  "meanElapsedMs": 0.04,
+  "p95ElapsedMs": 0
+}

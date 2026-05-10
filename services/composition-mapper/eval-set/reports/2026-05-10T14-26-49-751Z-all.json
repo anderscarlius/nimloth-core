@@ -1,0 +1,113 @@
+{
+  "timestamp": "2026-05-10T14:26:49.751Z",
+  "pathway": "all",
+  "threshold": 0.7,
+  "dataMode": "synthetic",
+  "totalPairs": 50,
+  "fieldAccuracy": 0.9859550561797753,
+  "reviewRecall": 0.35294117647058826,
+  "falsePositiveReviewRate": 0,
+  "byComplexity": {
+    "simple": {
+      "count": 12,
+      "fieldAccuracy": 0.9895833333333334,
+      "reviewRecall": 0
+    },
+    "moderate": {
+      "count": 23,
+      "fieldAccuracy": 0.9819277108433735,
+      "reviewRecall": 0
+    },
+    "complex": {
+      "count": 15,
+      "fieldAccuracy": 0.9893617021276596,
+      "reviewRecall": 0.42857142857142855
+    }
+  },
+  "byField": {
+    "medicationName": {
+      "correct": 50,
+      "total": 50,
+      "accuracy": 1
+    },
+    "status": {
+      "correct": 43,
+      "total": 43,
+      "accuracy": 1
+    },
+    "startTime": {
+      "correct": 46,
+      "total": 46,
+      "accuracy": 1
+    },
+    "route": {
+      "correct": 44,
+      "total": 44,
+      "accuracy": 1
+    },
+    "sequence": {
+      "correct": 46,
+      "total": 46,
+      "accuracy": 1
+    },
+    "subject": {
+      "correct": 50,
+      "total": 50,
+      "accuracy": 1
+    },
+    "doseQuantity": {
+      "correct": 33,
+      "total": 36,
+      "accuracy": 0.9166666666666666
+    },
+    "frequency": {
+      "correct": 39,
+      "total": 40,
+      "accuracy": 0.975
+    },
+    "indication": {
+      "correct": 0,
+      "total": 1,
+      "accuracy": 0
+    }
+  },
+  "failures": [
+    {
+      "pairId": "med-003",
+      "complexity": "simple",
+      "missingOrWrong": [
+        "doseQuantity"
+      ]
+    },
+    {
+      "pairId": "med-015",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity"
+      ]
+    },
+    {
+      "pairId": "med-025",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "frequency"
+      ]
+    },
+    {
+      "pairId": "med-028",
+      "complexity": "moderate",
+      "missingOrWrong": [
+        "doseQuantity"
+      ]
+    },
+    {
+      "pairId": "med-046",
+      "complexity": "complex",
+      "missingOrWrong": [
+        "indication"
+      ]
+    }
+  ],
+  "meanElapsedMs": 5196.82,
+  "p95ElapsedMs": 10113
+}
