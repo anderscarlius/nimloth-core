@@ -1,6 +1,6 @@
 ---
 id: suggest-atc
-version: 1
+version: 2
 output_schema: AtcSuggestionSchema
 ---
 
@@ -23,6 +23,30 @@ Svara ENDAST med ett JSON-objekt enligt detta schema:
 
 ATC-format: 1 stor bokstav (A-V), 2 siffror, 2 stora bokstäver, 2 siffror.
 Exempel: `B01AA03` (Warfarin), `C07AB02` (Metoprolol), `N02BE01` (Paracetamol).
+
+## Confidence-bedömning (kritiskt för review-pathway)
+
+Returnera `confidence < 0.7` när input saknar tillräcklig kontext för
+**säker** ATC-mappning, även om en ATC-kod kan gissas. Detta inkluderar:
+
+- **Display-fält saknas helt** (endast `code` finns, inget substansnamn att
+  verifiera mot) — kontext-saknad motiverar mänsklig verifiering oavsett
+  hur säker `code`-tolkningen verkar
+- **Display är endast ett generiskt namn utan styrka, form eller
+  beredning** — kontext räcker inte för 1:1 ATC-tillordning
+- **Display matchar flera ATC-koder lika bra** (kombinationspreparat,
+  tvetydiga handelsnamn, släkter av aktiva substanser)
+- **Coding[]:s första element saknar `code`-fält men har display** —
+  ATC måste gissas helt från textnamn
+
+Returnera `confidence ≥ 0.85` ENDAST när:
+- Display är ett välkänt enskilt läkemedel med entydig ATC (t.ex. "Waran"
+  → B01AA03, "Metoprolol" → C07AB02)
+- Display matchar svensk INN-konvention och har bevisad 1:1-mappning
+- Inga konkurrerande ATC-tolkningar finns
+
+Vid osäkerhet — sätt `confidence` till 0.5-0.6 hellre än att gissa högt
+även om koden känns rimlig.
 
 Regler:
 - `code` ska vara giltig ATC-kod om du är säker; `null` annars.

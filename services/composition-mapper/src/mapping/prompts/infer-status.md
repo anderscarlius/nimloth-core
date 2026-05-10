@@ -1,6 +1,6 @@
 ---
 id: infer-status
-version: 1
+version: 2
 output_schema: StatusInferenceSchema
 ---
 
@@ -38,6 +38,26 @@ Tolkningstips:
   troligen `active`.
 - Om både `start` och `end` finns: troligen `completed` eller `abandoned`
   beroende på dosage-text.
+
+## Confidence-bedömning (kritiskt för review-pathway)
+
+Returnera `confidence < 0.7` när **temporala signaler är inkonsekventa**
+eller när inferensen kräver gissning utöver explicit data:
+
+- **Status="completed" utan effectivePeriod.end** — kuren är märkt som
+  genomförd men avslutsdatum saknas. Inkonsekvens som kräver granskning.
+- **Status="active" utan start-datum** — pågående medicinering utan
+  startpunkt är odokumenterad.
+- **Status="completed" utan dosage-info som backar avslut** — backning
+  saknas för completion-claim.
+- FHIR-status saknas helt eller är fritext istället för enum-värde.
+- Dosage-text antyder annan status än FHIR-fältet (t.ex. status="active"
+  men dosage säger "kur avslutad").
+
+Returnera `confidence ≥ 0.85` ENDAST när alla temporala fält är
+konsekventa och dosage-text bekräftar status-claim utan motsägelser.
+
+Vid osäkerhet — sätt `confidence` till 0.5 hellre än att gissa högt.
 
 Regler:
 - `confidence` reflekterar säkerheten i inferensen. Klar signal ("slutade
