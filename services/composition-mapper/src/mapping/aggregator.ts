@@ -163,6 +163,14 @@ export function aggregate(
   }
 
   // ---- 4. doseQuantity (LLM only) ----
+  // Tre case-distinktion (B22.5.6):
+  //  (a) LLM gav värde       → source: 'llm', confidence från modell
+  //  (b) LLM kallades men sa "vet inte" (value: null OCH confidence: 0/lågt)
+  //      → source: 'llm', confidence: 0 (BIDRAR till min-aggregat → kan trigga
+  //         low_confidence). Detta är essentialen för review-pathway när
+  //         prompts korrekt flaggar tvetydig fritext (B22.5.6 Iter 1).
+  //  (c) LLM kallades inte alls (text saknades / parseDosageText returnerade null)
+  //      → source: 'unknown' (skips i min-aggregaten — fältet är inte tillämpligt)
   if (llm.doseQuantity?.value.value != null && llm.doseQuantity.value.unit) {
     const dq = { value: llm.doseQuantity.value.value, unit: llm.doseQuantity.value.unit };
     fieldEvidence.push({
@@ -174,6 +182,16 @@ export function aggregate(
       attempts: llm.doseQuantity.attempts,
     });
     composition.doseQuantity = { value: dq };
+  } else if (llm.doseQuantity != null) {
+    // LLM kallades men returnerade null — explicit "vet inte"
+    fieldEvidence.push({
+      fieldName: 'doseQuantity',
+      source: 'llm',
+      value: null,
+      confidence: llm.doseQuantity.confidence,
+      reasoning: llm.doseQuantity.reasoning,
+      attempts: llm.doseQuantity.attempts,
+    });
   } else {
     fieldEvidence.push({
       fieldName: 'doseQuantity',
@@ -183,7 +201,7 @@ export function aggregate(
     });
   }
 
-  // ---- 5. frequency (LLM only) ----
+  // ---- 5. frequency (LLM only) — samma 3-case-mönster som doseQuantity ----
   if (llm.frequency?.value.code) {
     fieldEvidence.push({
       fieldName: 'frequency',
@@ -194,6 +212,16 @@ export function aggregate(
       attempts: llm.frequency.attempts,
     });
     composition.frequency = { value: llm.frequency.value.code };
+  } else if (llm.frequency != null) {
+    // LLM kallades men returnerade code: null — explicit "vet inte"
+    fieldEvidence.push({
+      fieldName: 'frequency',
+      source: 'llm',
+      value: null,
+      confidence: llm.frequency.confidence,
+      reasoning: llm.frequency.reasoning,
+      attempts: llm.frequency.attempts,
+    });
   } else {
     fieldEvidence.push({
       fieldName: 'frequency',

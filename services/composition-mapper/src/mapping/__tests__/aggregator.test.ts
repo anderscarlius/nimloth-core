@@ -220,6 +220,53 @@ describe('aggregate', () => {
     expect(ev?.source).toBe('llm');
   });
 
+  it('triggar low_confidence när LLM explicit returnerar null+0 för doseQuantity (B22.5.6)', () => {
+    // Scenario: parseDosageText fick fritext-input ("som tidigare") och prompten
+    // instruerade LLM att returnera value:null + confidence:0 vid otolkbar text.
+    // Tidigare bug: aggregatorn klassade null-LLM-fält som source:'unknown' →
+    // utelämnades från min-aggregaten → trigger fyrade inte. Efter fix bidrar
+    // explicit-null-LLM-svar med confidence:0 → aggregat blir 0 → trigger fyrar.
+    const llm: LlmResults = {
+      doseQuantity: llmField<DosageQuantity>(
+        { value: null, unit: null, confidence: 0, reasoning: 'tvetydig fritext' },
+        0,
+      ),
+      frequency: llmField<Frequency>({ code: 'DAILY', confidence: 0.9, reasoning: 'mock' }, 0.9),
+    };
+    const result = aggregate(fullDeterministic(), llm, 'med-X');
+    expect(result.status).toBe('human-review-required');
+    expect(result.reviewPayload?.triggerReason).toBe('low_confidence');
+    expect(result.aggregateConfidence).toBe(0);
+    // doseQuantity-evidence ska ha source 'llm' (inte 'unknown') eftersom LLM
+    // faktiskt anropades och svarade "vet inte"
+    const dq = result.fieldEvidence.find((e) => e.fieldName === 'doseQuantity');
+    expect(dq?.source).toBe('llm');
+    expect(dq?.confidence).toBe(0);
+    expect(dq?.value).toBeNull();
+  });
+
+  it('triggar low_confidence när LLM explicit returnerar code:null+0 för frequency (B22.5.6)', () => {
+    // Spegel-test för frequency-fältet (parseDosageTiming-sidan av samma fix).
+    const llm: LlmResults = {
+      doseQuantity: llmField<DosageQuantity>(
+        { value: 5, unit: 'mg', confidence: 0.9, reasoning: 'mock' },
+        0.9,
+      ),
+      frequency: llmField<Frequency>(
+        { code: null, confidence: 0, reasoning: 'enligt schema bilaga A' },
+        0,
+      ),
+    };
+    const result = aggregate(fullDeterministic(), llm, 'med-X');
+    expect(result.status).toBe('human-review-required');
+    expect(result.reviewPayload?.triggerReason).toBe('low_confidence');
+    expect(result.aggregateConfidence).toBe(0);
+    const freq = result.fieldEvidence.find((e) => e.fieldName === 'frequency');
+    expect(freq?.source).toBe('llm');
+    expect(freq?.confidence).toBe(0);
+    expect(freq?.value).toBeNull();
+  });
+
   it('triggar conflicting_evidence när deterministic.status ≠ LLM.status', () => {
     const det = fullDeterministic();
     // deterministic säger 'active'
