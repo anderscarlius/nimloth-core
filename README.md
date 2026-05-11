@@ -93,8 +93,8 @@ Nimloth Core befinner sig i tidig arkitekturell uppbyggnad. Den nuvarande koden 
 | Sprint | Version | Innehåll | Status |
 |---|---|---|---|
 | 0 | 0.1.0 | Initial import, Nimloth-identitet etablerad | ✅ Klar |
-| 1 | 0.2.0 | Terminologitjänst + Care-unit-edge | 🔄 Pågående |
-| 2 | 0.3.0 | openEHR parallellt kanoniskt lager + AI-mapping | ⏳ Planerad |
+| 1 | 0.2.0 | Terminologitjänst + Care-unit-edge | ✅ Klar |
+| 2 | 0.3.0 | openEHR parallellt kanoniskt lager + AI-mapping (P3-P4) | ✅ Klar (P4 levererad 2026-05-11) |
 | 3 | 0.4.0 | Inera-stacken (SITHS, HSA, PDL, NPÖ, Pascal) | ⏳ Planerad |
 | 4 | 0.5.0 | Lakehouse + OMOP + datakvalitet | ⏳ Planerad |
 | 5 | 0.6.0 | CDS-regler med CQL-motor + portabilitet | ⏳ Planerad |
@@ -103,7 +103,69 @@ Detaljer i [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ---
 
+## Tjänster
+
+Repot är ett pnpm-workspace med tjänster i `services/` och delade paket i `packages/`.
+
+### Kärntjänster
+
+| Tjänst | Port (dev/deploy) | Status | Beskrivning |
+|---|---|:---:|---|
+| [`composition-mapper`](services/composition-mapper/) | 3001 / **11102** | ✅ P4 levererad | FHIR R4 → openEHR `medication_summary.v1`-mappning med LLM-assist. HTTP API `POST /api/v1/map/medication-statement`. Demo-instans aktiv på CarliusFyra:11102 (synthetic-mode). |
+| [`mapping-assistant`](services/mapping-assistant/) | 3009 | 🔄 Sprint 2 | Dev-tids mapper-generator (propose/observe/ask-flöden). Signed prompts, sensitivity-aware routing. |
+| [`fhir-facade`](services/fhir-facade/) | 3003 | ✅ Sprint 1 | FHIR R4 SE-fasad mot kanoniskt lager. Parity-mätning postgres ↔ openEHR. |
+| [`openehr-composer`](services/openehr-composer/) | — | ✅ Sprint 2 (P3) | Composer-pipeline för att skapa openEHR-compositions från event-stream. |
+| [`transform`](services/transform/) | 3002 | ✅ Sprint 1 | CDC → domän-event-transformeringar (7 mappings). |
+| [`ingest`](services/ingest/) | 3001 | ✅ Sprint 1 | Kafka Connect / Debezium-baserad CDC från källsystem. |
+| [`audit`](services/audit/) | 3005 | ✅ Sprint 1 | PDL-audit-spår, outbox-pattern. |
+| [`dashboard`](services/dashboard/) | 3010 | 🔄 Sprint 2 | React-dashboard för operations + parity-trend. |
+| [`care-unit-edge`](services/care-unit-edge/) | — | 🔄 Sprint 1 | SQLite-baserad edge-deploy för vårdcentraler. |
+| [`cds-hooks`](services/cds-hooks/) | 3004 | ⏳ Sprint 5 | CDS Hooks-service för CQL-baserade regler. |
+| [`terminology`](services/terminology/) | — | 🔄 Sprint 1 | SNOMED + ICD-10-SE + LOINC-uppslag via Snowstorm. |
+
+### Delade paket
+
+| Paket | Beskrivning |
+|---|---|
+| [`model-router`](packages/model-router/) | Provider-routing baserat på data-sensitivity (`phi`/`pii`/`synthetic`/`schema-only`/`public`). PHI hard-låst till on-premise. Anthropic + Ollama + Mock-providers. |
+| [`shared`](packages/shared/) | Delade typer och utilities. |
+| [`kafka-utils`](packages/kafka-utils/) | Kafka-konsument/producent-wrappers. |
+| [`kafka-test-producer`](packages/kafka-test-producer/) | CLI-producent för demo/test-events. |
+| [`test-data`](packages/test-data/) | Delade test-fixtures (Fru Andersson m.fl.). |
+
+### Sprint 2 / P4 — composition-mapper levererad
+
+P4 (FHIR R4 → openEHR-mappning med LLM-assist) är levererad 2026-05-11.
+Permanent demo-instans aktiv på CarliusFyra:11102.
+
+**Slutmätningar (mot Anthropic claude-sonnet-4-6, synthetic-mode):**
+- Field-accuracy: **98.9%** (mål ≥85% — uppfyllt)
+- Review-recall: **64.7%** (mål ≥95% — partiellt, B23 Sprint 3-arbete)
+- False-positive-review-rate: 3.0% (mål ≤10% — uppfyllt)
+- Mean latency: 4.5s per anrop
+
+**Demo-instans-test:**
+```bash
+curl http://192.168.1.189:11102/health
+# {"status":"ok","dataMode":"synthetic","audit":{"disabled":true,...},...}
+```
+
+**Deploy via git-pull:**
+```bash
+ssh SkyttenAdmin@192.168.1.189
+cd /volume2/docker/nimloth-core
+git pull origin main
+/volume2/@appstore/ContainerManager/usr/bin/docker-compose \
+  -f docker-compose.deploy.yml up -d --build composition-mapper
+```
+
+Service-detaljer i [`services/composition-mapper/README.md`](services/composition-mapper/README.md). Demo-flöde i [`docs/operations/Demo_Runbook.md`](docs/operations/Demo_Runbook.md).
+
+---
+
 ## Dokumentation
+
+### Arkitektur och vision
 
 | Dokument | Innehåll |
 |---|---|
@@ -115,8 +177,19 @@ Detaljer i [`docs/ROADMAP.md`](docs/ROADMAP.md).
 | [`docs/QUICKDEMO.md`](docs/QUICKDEMO.md) | 3 / 10 / 20-minuters demoguider |
 | [`docs/POSITIONING.md`](docs/POSITIONING.md) | Nimloth-familjens struktur |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Utvecklingsplan sprint för sprint |
+| [`docs/Runbook_Deploy.md`](docs/Runbook_Deploy.md) | Deploy-pipeline + rebuild-procedur |
 | [`docs/prompts/`](docs/prompts/) | Utbyggnadsprompter P1–P7 |
 | [`infra/openehr/`](infra/openehr/) | openEHR-spår: ADL-källor, OPT-templates, batch-compiler |
+
+### Operations (P4-leverans)
+
+| Dokument | Innehåll |
+|---|---|
+| [`docs/operations/Demo_Mode_Configuration.md`](docs/operations/Demo_Mode_Configuration.md) | `NIMLOTH_DATA_MODE`-env, sensitivity-tier, demo vs produktion |
+| [`docs/operations/Human_Review_Pathway_Design.md`](docs/operations/Human_Review_Pathway_Design.md) | Aggregator-design, threshold-kalibrering, P4-mätningar |
+| [`docs/operations/Human_Review_Demo_Talking_Points.md`](docs/operations/Human_Review_Demo_Talking_Points.md) | CIO-frågor och svar inför demo |
+| [`docs/operations/Demo_Runbook.md`](docs/operations/Demo_Runbook.md) | Pre-demo-checklist, demo-flöde, troubleshooting |
+| [`docs/operations/Pre_Public_Demo_Checklista.md`](docs/operations/Pre_Public_Demo_Checklista.md) | Tidigare demo-checklista (B19-leverans) |
 
 ---
 
@@ -154,4 +227,4 @@ Projektet är kopplat till artikelserien *Nästa generations journalsystem* (18+
 
 ## Licens
 
-Specificeras i [`LICENSE`](LICENSE).
+Licensvillkor är ännu inte fastställda. Repot är publikt för granskning och arkitektur-diskussion under utvecklingsfasen; kommersiell användning kräver kontakt med upphovsperson.
