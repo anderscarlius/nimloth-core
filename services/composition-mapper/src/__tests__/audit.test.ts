@@ -229,3 +229,104 @@ describe('AuditPublisher (lazy-connect)', () => {
     expect(db.outboxStats().pending).toBe(1);
   }, 30_000); // 30s timeout — Kafka-connect har egna retries
 });
+
+// ============================================================
+// AuditPublisher disabled-mode (B25 4.10.5)
+// ============================================================
+
+describe('AuditPublisher (disabled-mode, B25 4.10.5)', () => {
+  let dbPath: string;
+  let tempDir: string;
+  let db: CompositionMapperDb;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'cm-disabled-'));
+    dbPath = join(tempDir, 'test.sqlite');
+    db = new CompositionMapperDb(dbPath);
+    db.migrate(join(__dirname, '..', '..', 'migrations'), silentLogger);
+  });
+
+  it('isDisabled() returnerar true när brokers=["disabled"]', () => {
+    const p = new AuditPublisher(
+      {
+        brokers: ['disabled'],
+        clientId: 'x',
+        topic: 'x',
+        drainIntervalMs: 100,
+        batchSize: 10,
+      },
+      db,
+      silentLogger,
+    );
+    expect(p.isDisabled()).toBe(true);
+  });
+
+  it('isDisabled() returnerar true när brokers=[""] (KAFKA_BROKERS= i .env)', () => {
+    const p = new AuditPublisher(
+      {
+        brokers: [''],
+        clientId: 'x',
+        topic: 'x',
+        drainIntervalMs: 100,
+        batchSize: 10,
+      },
+      db,
+      silentLogger,
+    );
+    expect(p.isDisabled()).toBe(true);
+  });
+
+  it('isDisabled() returnerar false när brokers=["localhost:9092"]', () => {
+    const p = new AuditPublisher(
+      {
+        brokers: ['localhost:9092'],
+        clientId: 'x',
+        topic: 'x',
+        drainIntervalMs: 100,
+        batchSize: 10,
+      },
+      db,
+      silentLogger,
+    );
+    expect(p.isDisabled()).toBe(false);
+  });
+
+  it('drain i disabled-mode försöker INTE connecta även med pending events', async () => {
+    const publisher = new AuditPublisher(
+      {
+        brokers: ['disabled'],
+        clientId: 'x',
+        topic: 'core.audit.access',
+        drainIntervalMs: 100,
+        batchSize: 10,
+      },
+      db,
+      silentLogger,
+    );
+    buildAndEmit({ db }, baseMs, 'med-disabled-1', completeResult());
+    publisher.start(); // disabled — registrerar ingen timer
+    const result = await publisher.drain();
+    expect(result.drained).toBe(0);
+    expect(result.pending).toBe(1);
+    expect(publisher.isConnected()).toBe(false);
+    // Event ligger kvar i outbox — kan dräneras senare när Kafka aktiveras
+    expect(db.outboxStats().pending).toBe(1);
+  });
+
+  it('status() rapporterar disabled: true i disabled-mode', () => {
+    const publisher = new AuditPublisher(
+      {
+        brokers: ['disabled'],
+        clientId: 'x',
+        topic: 'x',
+        drainIntervalMs: 100,
+        batchSize: 10,
+      },
+      db,
+      silentLogger,
+    );
+    const s = publisher.status();
+    expect(s.disabled).toBe(true);
+    expect(s.connected).toBe(false);
+  });
+});

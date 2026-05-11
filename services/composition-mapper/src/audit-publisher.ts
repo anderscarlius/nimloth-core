@@ -5,6 +5,11 @@
 // utan Kafka tillgängligt (P4 4.1-beslut, Anders 2026-05-07).
 // Kafka-producer instantieras vid första publish()/drain()-anrop då outbox
 // har minst en pending rad. Boot-tid är därmed Kafka-oberoende.
+//
+// B25 4.10.5 — disabled-mode: när KAFKA_BROKERS=disabled (eller tomt) skip:as
+// drain-loopen helt. Events skrivs fortfarande till SQLite-outbox av
+// emitMappingAudit, men aldrig publicerade till Kafka. Avsedd för demo-
+// instans utan Kafka i nätverket. Logspam undviks.
 
 import { Kafka, type Producer } from 'kafkajs';
 import type { Logger } from 'pino';
@@ -18,11 +23,24 @@ export interface AuditPublisherConfig {
   batchSize: number;
 }
 
+/**
+ * Heuristik för "disabled" — tre former:
+ *  - Tom array (KAFKA_BROKERS saknas helt + ingen default)
+ *  - Första broker är 'disabled' (explicit opt-out)
+ *  - Första broker är tom sträng (KAFKA_BROKERS= i .env)
+ */
+export function isKafkaDisabled(brokers: string[]): boolean {
+  if (brokers.length === 0) return true;
+  const first = (brokers[0] ?? '').trim().toLowerCase();
+  return first === '' || first === 'disabled';
+}
+
 export class AuditPublisher {
   private kafka: Kafka | null = null;
   private producer: Producer | null = null;
   private connected = false;
   private timer: ReturnType<typeof setInterval> | null = null;
+  private readonly disabled: boolean;
 
   public publishedTotal = 0;
   public failedTotal = 0;
@@ -33,13 +51,24 @@ export class AuditPublisher {
     private readonly cfg: AuditPublisherConfig,
     private readonly db: CompositionMapperDb,
     private readonly logger: Logger,
-  ) {}
+  ) {
+    this.disabled = isKafkaDisabled(cfg.brokers);
+  }
 
   /**
    * Startar drain-loopen. Kafka-instans skapas INTE här — bara timer-tick
-   * registreras. Producer instantieras vid behov i drain().
+   * registreras. Producer instantieras vid behov i drain(). I disabled-
+   * mode (B25 4.10.5) registreras ingen timer — events stannar i outbox.
    */
   start(): void {
+    if (this.disabled) {
+      this.logger.warn(
+        { brokers: this.cfg.brokers },
+        'audit-publisher DISABLED (KAFKA_BROKERS=disabled or empty). ' +
+          'Events stannar i SQLite-outbox utan att publiceras till Kafka.',
+      );
+      return;
+    }
     this.timer = setInterval(() => void this.drain(), this.cfg.drainIntervalMs);
     this.logger.info(
       { drainIntervalMs: this.cfg.drainIntervalMs, mode: 'lazy-connect' },
@@ -85,6 +114,11 @@ export class AuditPublisher {
   }
 
   async drain(): Promise<{ drained: number; pending: number }> {
+    if (this.disabled) {
+      // Disabled-mode (B25 4.10.5): outbox-rader stannar pending. Aldrig
+      // försök till Kafka-anslutning. Återkalla pending-count för status-endpoint.
+      return { drained: 0, pending: this.db.outboxStats().pending };
+    }
     const pending = this.db.pendingAudit(this.cfg.batchSize);
     if (pending.length === 0) {
       // Lazy-connect: ingen anledning att skapa Kafka-klient om outbox är tom.
@@ -130,6 +164,7 @@ export class AuditPublisher {
   }
 
   status(): {
+    disabled: boolean;
     connected: boolean;
     publishedTotal: number;
     failedTotal: number;
@@ -138,6 +173,7 @@ export class AuditPublisher {
     outbox: { pending: number; published: number; failed: number };
   } {
     return {
+      disabled: this.disabled,
       connected: this.connected,
       publishedTotal: this.publishedTotal,
       failedTotal: this.failedTotal,
@@ -149,6 +185,10 @@ export class AuditPublisher {
 
   isConnected(): boolean {
     return this.connected;
+  }
+
+  isDisabled(): boolean {
+    return this.disabled;
   }
 
   pending(): OutboxRow[] {
