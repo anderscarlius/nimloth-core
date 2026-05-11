@@ -139,6 +139,8 @@ composition som passar regionens semantik."
 
 ### Steg 3 — Live API-call (happy path) (~3 min)
 
+**Vad du visar:**
+
 ```bash
 curl -X POST http://192.168.1.189:11102/api/v1/map/medication-statement \
   -H "Content-Type: application/json" \
@@ -153,11 +155,18 @@ Förväntat (visa skärmen för publiken):
 - `fieldEvidence`-array som visar varje fält + dess källa (`deterministic` eller
   `llm`) + confidence per fält
 
-**Talking point:** "Detta är ett enkelt fall — vi får komplett mappning på 5
-sekunder. Notera `fieldEvidence`-arrayen: jag kan visa exakt vilket fält
-modellen tolkade, vad den var säker på, och varför."
+**Talking point (detaljerad, för dig själv):** "Detta är ett enkelt fall — vi
+får komplett mappning på 5 sekunder. Notera `fieldEvidence`-arrayen: jag kan
+visa exakt vilket fält modellen tolkade, vad den var säker på, och varför."
+
+**Vad du säger (narrativ-essens, en mening):** "Strukturerade fält in,
+strukturerade fält ut. Detta är basen — inget mystiskt."
+
+**Pausa här om:** publik frågar om mappningstemplate eller openEHR-struktur.
 
 ### Steg 4 — LLM-tolkning av fritext-dosering (~3 min)
+
+**Vad du visar:**
 
 ```bash
 curl -X POST http://192.168.1.189:11102/api/v1/map/medication-statement \
@@ -169,10 +178,19 @@ Förväntat:
 - `composition.doseQuantity.value` → `{value: 500, unit: "mg"}`
 - `composition.frequency.value` → `"BID"` (två gånger om dagen)
 
-**Talking point:** "Här tolkade vi 'två gånger om dagen i samband med måltid' →
-struktur. Det är LLM-arbetet. Den deterministiska delen klarar inte fritext."
+**Talking point (detaljerad, för dig själv):** "Här tolkade vi 'två gånger om
+dagen i samband med måltid' → struktur. Det är LLM-arbetet. Den deterministiska
+delen klarar inte fritext."
+
+**Vad du säger (narrativ-essens, en mening):** "LLM tolkar svensk fritext till
+strukturerad data. Det är värdet AI bidrar med — real-world data-mess som finns
+i alla kliniska system idag."
+
+**Pausa här om:** publik frågar om hallucinationer eller felmarginal.
 
 ### Steg 5 — Review-pathway demonstration (~3 min)
+
+**Vad du visar:**
 
 ```bash
 curl -X POST http://192.168.1.189:11102/api/v1/map/medication-statement \
@@ -185,10 +203,17 @@ Förväntat:
 - `reviewPayload.triggerReason: "low_confidence"`
 - `aggregateConfidence: 0`
 
-**Talking point:** "Här hade vi tvetydig text — 'individanpassad dos enligt
-INR-värde'. Systemet hittar inte en numerisk dos och säger explicit 'jag vet
-inte'. `reviewPayload` ger en kliniker exakt information om vad som behöver
-granskas. Detta är inte ett fel — det är önskat beteende för säker mappning."
+**Talking point (detaljerad, för dig själv):** "Här hade vi tvetydig text —
+'individanpassad dos enligt INR-värde'. Systemet hittar inte en numerisk dos
+och säger explicit 'jag vet inte'. `reviewPayload` ger en kliniker exakt
+information om vad som behöver granskas. Detta är inte ett fel — det är önskat
+beteende för säker mappning."
+
+**Vad du säger (narrativ-essens, en mening):** "Systemet säger inte 'jag gissar
+och kör vidare'. Det säger 'jag är osäker — människa, ta över'. Det är
+skillnaden mellan AI som driftrisk och AI som driftstillgång."
+
+**Pausa här om:** alltid. Detta är poängen.
 
 ### Steg 6 — Mätningar (~1 min)
 
