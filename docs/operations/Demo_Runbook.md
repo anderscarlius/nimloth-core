@@ -27,7 +27,7 @@ Förväntat:
 }
 ```
 
-Om något annat → se §5 Troubleshooting.
+Om något annat → se §6 Troubleshooting.
 
 ### 1.2 Anthropic-routning fungerar?
 
@@ -65,7 +65,48 @@ Om live-demo inte fungerar:
 
 ---
 
-## 2. Demo-flöde (förslag, ~15 min)
+## 2. Access-vägar för demo
+
+Tre möjliga sätt att nå composition-mapper-instansen under inspelning eller live-demo. Välj per situation.
+
+### 2.1 LAN direkt (för demo hemma)
+
+```bash
+curl -X POST http://192.168.1.189:11102/api/v1/map/medication-statement \
+  -H "Content-Type: application/json" \
+  -d @docs/operations/demo-fixtures/waran-basic.json | jq
+```
+
+Funkar när du sitter på samma nät som CarliusFyra. Visar intern IP `192.168.1.189` på skärm — välj annan väg för publik video där intern infrastruktur inte ska synas.
+
+### 2.2 SSH port-forward (default-rekommendation för video)
+
+```bash
+# Terminal 1 — håll öppen under hela inspelningen:
+ssh -L 11102:localhost:11102 SkyttenAdmin@192.168.1.189
+
+# Terminal 2 — för POST-anropen:
+curl -X POST http://localhost:11102/api/v1/map/medication-statement \
+  -H "Content-Type: application/json" \
+  -d @docs/operations/demo-fixtures/waran-basic.json | jq
+```
+
+Visar `localhost:11102` på skärm istället för intern IP. Default-val för publika videor.
+
+### 2.3 Cloudflare-tunnel (`nimloth.carlius.net`)
+
+Cloudflare-tunnel är konfigurerad för `nimloth.carlius.net`, men skyddas av **Cloudflare Zero Trust Access** (MFA + whitelisted emails per `carlius.net`-tunnel-policy). Curl utan auth-cookie returnerar `HTTP 302 → carlius.cloudflareaccess.com/cdn-cgi/access/login/...`.
+
+För publik demo-video utan auth-flöde fungerar inte tunneln direkt. Två sätt att aktivera:
+
+1. **Browser med inloggad Cloudflare Access session** — Anders själv kan navigera direkt. Risk: MFA-login syns i video om någon annan tittar.
+2. **Service-token (för automation)** — kräver separat setup via Cloudflare-dashboard, headers `CF-Access-Client-Id` + `CF-Access-Client-Secret` med varje request.
+
+Cloudflare-tunnel ej aktiverad mot 11102 för opanyad demo-curl i nuläget. Behåll SSH port-forward som default. Eventuell setup av service-token är öppen punkt, åtgärdas separat.
+
+---
+
+## 3. Demo-flöde (förslag, ~15 min)
 
 ### Steg 1 — Architecture overview (~3 min)
 
@@ -170,7 +211,7 @@ route, temporal inkonsekvens) och dokumenterat det som Sprint 3-arbete. Inget
 
 ---
 
-## 3. Demo-fixtures
+## 4. Demo-fixtures
 
 Tre fixtures i `docs/operations/demo-fixtures/`:
 
@@ -184,7 +225,7 @@ Verifierade mot deploy-instans 2026-05-11.
 
 ---
 
-## 4. Sannolika frågor + svar
+## 5. Sannolika frågor + svar
 
 Se [`Human_Review_Demo_Talking_Points.md`](Human_Review_Demo_Talking_Points.md)
 för utförliga svar på:
@@ -199,9 +240,9 @@ för utförliga svar på:
 
 ---
 
-## 5. Troubleshooting
+## 6. Troubleshooting
 
-### 5.1 Container ej responsiv
+### 6.1 Container ej responsiv
 
 ```bash
 ssh SkyttenAdmin@192.168.1.189
@@ -224,13 +265,13 @@ Vanliga problem:
   done
   ```
 
-### 5.2 API-call hänger > 30s
+### 6.2 API-call hänger > 30s
 
 Anthropic är troligen rate-limited eller nere. Kontrollera:
 - https://status.anthropic.com
 - Om OK: kolla container-logs för specifika fel-meddelanden.
 
-### 5.3 Live-anrop returnerar 500
+### 6.3 Live-anrop returnerar 500
 
 ```bash
 ssh SkyttenAdmin@192.168.1.189
@@ -249,7 +290,7 @@ $DOCKER_COMPOSE -f docker-compose.deploy.yml up -d --force-recreate composition-
 
 Kom ihåg att sätta tillbaka `LOG_LEVEL=info` efter felsökning.
 
-### 5.4 Live-anrop returnerar 400 (validation_error)
+### 6.4 Live-anrop returnerar 400 (validation_error)
 
 Request body matchar inte FHIR-MedicationStatement-schemat. Vanliga fel:
 - Saknad `resourceType: "MedicationStatement"`
@@ -261,7 +302,7 @@ Verifiera mot demo-fixtures som mall.
 
 ---
 
-## 6. Restart-procedur (mid-demo)
+## 7. Restart-procedur (mid-demo)
 
 Om något brister mitt under demo:
 
@@ -279,23 +320,23 @@ måste det vara `down + up` eller `up --force-recreate`. Se synology-ops-skill.
 
 ---
 
-## 7. Post-demo
+## 8. Post-demo
 
-### 7.1 Notera frågor som inte kunde besvaras
+### 8.1 Notera frågor som inte kunde besvaras
 Lägg dem i en uppföljnings-fil eller direkt i
 `Human_Review_Demo_Talking_Points.md` för nästa demo.
 
-### 7.2 Granska Anthropic-cost
+### 8.2 Granska Anthropic-cost
 Kontrollera kvarvarande balans på `console.anthropic.com`. En typisk demo
 förbrukar $0.10-0.50.
 
-### 7.3 Uppdatera demo-fixtures
+### 8.3 Uppdatera demo-fixtures
 Om CIO specifikt frågade om en use-case som inte fanns — lägg till en fixture
 i `docs/operations/demo-fixtures/` för nästa gång.
 
 ---
 
-## 8. Referenser
+## 9. Referenser
 
 - [`services/composition-mapper/README.md`](../../services/composition-mapper/README.md) — service-doc + HTTP API
 - [`Human_Review_Pathway_Design.md`](Human_Review_Pathway_Design.md) — aggregator-design + threshold-kalibrering
@@ -307,8 +348,9 @@ i `docs/operations/demo-fixtures/` för nästa gång.
 
 ---
 
-## 9. Revisionslogg
+## 10. Revisionslogg
 
 | Version | Datum | Ändring |
 |---|---|---|
 | v1 | 2026-05-11 | Initial leverans (B25 post-polish). Pre-demo-checklist, 6-stegs demo-flöde, 3 verifierade demo-fixtures, troubleshooting + restart-procedur. |
+| v1.1 | 2026-05-11 | B25.2: Ny §2 "Access-vägar för demo" (LAN, SSH port-forward, Cloudflare-tunnel-not). Renumrering §2→§3 (Demo-flöde), §3→§4 (Fixtures), §4→§5 (Frågor), §5→§6 (Troubleshooting), §6→§7 (Restart), §7→§8 (Post-demo), §8→§9 (Referenser), §9→§10 (Revisionslogg). Internt-referens i §1.1 uppdaterad. |
