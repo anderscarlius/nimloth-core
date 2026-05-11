@@ -1,0 +1,27 @@
+{
+  "resource": {
+    "resourceType": "MedicationStatement",
+    "id": "demo-ambiguous",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        {
+          "system": "http://www.whocc.no/atc",
+          "code": "B01AA03",
+          "display": "Warfarin"
+        }
+      ]
+    },
+    "subject": {
+      "reference": "Patient/demo-003"
+    },
+    "effectiveDateTime": "2026-04-01T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "individanpassad dos enligt INR-värde"
+      }
+    ]
+  },
+  "inputId": "demo-ambiguous-dosage"
+}

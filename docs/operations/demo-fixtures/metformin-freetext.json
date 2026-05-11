@@ -1,0 +1,36 @@
+{
+  "resource": {
+    "resourceType": "MedicationStatement",
+    "id": "demo-metformin",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        {
+          "system": "http://www.whocc.no/atc",
+          "code": "A10BA02",
+          "display": "Metformin"
+        }
+      ]
+    },
+    "subject": {
+      "reference": "Patient/demo-002"
+    },
+    "effectiveDateTime": "2026-04-15T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "500 mg två gånger om dagen i samband med måltid",
+        "route": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "26643006",
+              "display": "Oral"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "inputId": "demo-metformin"
+}

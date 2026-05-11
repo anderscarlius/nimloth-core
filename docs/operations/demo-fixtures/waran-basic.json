@@ -1,0 +1,41 @@
+{
+  "resource": {
+    "resourceType": "MedicationStatement",
+    "id": "demo-waran-basic",
+    "status": "active",
+    "medicationCodeableConcept": {
+      "coding": [
+        {
+          "system": "http://www.whocc.no/atc",
+          "code": "B01AA03",
+          "display": "Warfarin"
+        }
+      ]
+    },
+    "subject": {
+      "reference": "Patient/demo-001"
+    },
+    "effectiveDateTime": "2026-05-01T08:00:00Z",
+    "dosage": [
+      {
+        "sequence": 1,
+        "text": "2.5 mg dagligen",
+        "timing": {
+          "code": {
+            "text": "dagligen"
+          }
+        },
+        "route": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "26643006",
+              "display": "Oral"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "inputId": "demo-waran-basic"
+}
