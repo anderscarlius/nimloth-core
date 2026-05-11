@@ -1,0 +1,44 @@
+# composition-mapper deploy-compose för CarliusFyra demo-instans (B25 4.11.6).
+# Separat fil från dev-compose (docker-compose.yml) — körs med:
+#   docker-compose -f docker-compose.deploy.yml up -d
+#
+# CarliusFyra är permanent demo-instans:
+#   - NIMLOTH_DATA_MODE=synthetic (default — Anthropic-routning tillåten för synthetic data)
+#   - KAFKA_BROKERS=disabled (ingen Kafka i nätverket — audit-events stannar i SQLite-outbox)
+#   - EHRBASE_URL= (tom — AC6 är DEFERRED Väg 3c, ingen template-POST behövs)
+#
+# Port 11102 per Portstrategi.md. Samexisterar med nimloth-docs:11551
+# (separat container, inte i denna compose-fil).
+
+services:
+  composition-mapper:
+    build:
+      context: .
+      dockerfile: services/composition-mapper/Dockerfile
+    container_name: nimloth-composition-mapper
+    restart: unless-stopped
+    ports:
+      - "11102:3001"
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      NIMLOTH_DATA_MODE: ${NIMLOTH_DATA_MODE:-synthetic}
+      KAFKA_BROKERS: ${KAFKA_BROKERS:-disabled}
+      EHRBASE_URL: ${EHRBASE_URL:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      SQLITE_PATH: /data/composition-mapper.sqlite
+    volumes:
+      - composition-mapper-data:/data
+    labels:
+      - "com.nimloth.service=composition-mapper"
+      - "com.nimloth.dataMode=synthetic"
+      - "com.nimloth.demoInstance=true"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  composition-mapper-data:
+    driver: local
