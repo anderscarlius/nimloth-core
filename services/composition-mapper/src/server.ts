@@ -8,6 +8,7 @@ import type { AuditPublisher } from './audit-publisher.js';
 import type { CompositionMapperConfig } from './config.js';
 import type { CompositionMapperDb } from './db.js';
 import { createMapRouter } from './routes/map.js';
+import { renderHtmlIndex } from './templates/serviceIndex.js';
 
 export interface ServerDeps {
   publisher: AuditPublisher;
@@ -27,11 +28,17 @@ export function createApp(deps: ServerDeps): Express {
   const app = express();
   app.use(express.json({ limit: '1mb' }));
 
-  // B25.2.4 — service-index på root för API-discoverability. Ersätter Express
-  // default-404 ("Cannot GET /") med JSON-introduktion till tjänsten + endpoint-
-  // lista. Konsistent med övriga nimloth-core-services som returnerar JSON.
+  // B25.2.4 + B25.2.5 — service-index på root med content negotiation.
+  // JSON för curl/programmatiska klienter (Accept: */* default eller
+  // application/json), HTML för browser (Accept: text/html). Samma data,
+  // två representationer.
+  //
+  // KRITISK ordning i res.format(): 'application/json' MÅSTE listas före
+  // 'text/html'. curl skickar Accept: */* default som Express matchar mot
+  // första registrerade type → JSON. Om HTML är först får curl HTML, vilket
+  // bryter API-discoverability.
   app.get('/', (_req, res) => {
-    res.status(200).json({
+    const data = {
       service: 'composition-mapper',
       description:
         'FHIR R4 → openEHR composition mapping with LLM-assisted normalization and human-review pathway',
@@ -40,6 +47,17 @@ export function createApp(deps: ServerDeps): Express {
       endpoints: {
         health: 'GET /health',
         mapMedicationStatement: 'POST /api/v1/map/medication-statement',
+      },
+    };
+    res.format({
+      'application/json': () => {
+        res.json(data);
+      },
+      'text/html': () => {
+        res.type('html').send(renderHtmlIndex(data));
+      },
+      default: () => {
+        res.json(data);
       },
     });
   });

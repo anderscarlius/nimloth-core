@@ -131,6 +131,74 @@ describe('GET / (service index)', () => {
 });
 
 // ============================================================
+// GET / — content negotiation (B25.2.5)
+// ============================================================
+
+describe('GET / — content negotiation', () => {
+  it('returnerar JSON för Accept: application/json', async () => {
+    const app = createApp(makeDeps({ dataMode: 'synthetic' }));
+    const res = await request(app).get('/').set('Accept', 'application/json');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/application\/json/);
+    expect(res.body.service).toBe('composition-mapper');
+  });
+
+  it('returnerar HTML för Accept: text/html', async () => {
+    const app = createApp(makeDeps({ dataMode: 'synthetic' }));
+    const res = await request(app).get('/').set('Accept', 'text/html');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/text\/html/);
+    expect(res.text).toContain('<!DOCTYPE html>');
+    expect(res.text).toContain('composition-mapper');
+    expect(res.text).toContain('dataMode:');
+    expect(res.text).toContain('/api/v1/map/medication-statement');
+  });
+
+  it('returnerar JSON för Accept: */* (curl default — kritisk regression-skydd)', async () => {
+    const app = createApp(makeDeps({ dataMode: 'synthetic' }));
+    const res = await request(app).get('/').set('Accept', '*/*');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/application\/json/);
+  });
+
+  it('returnerar JSON när Accept-header saknas helt', async () => {
+    const app = createApp(makeDeps({ dataMode: 'synthetic' }));
+    const res = await request(app).get('/');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/application\/json/);
+  });
+
+  it('returnerar HTML för browser-style Accept-header (text/html preferred)', async () => {
+    const app = createApp(makeDeps({ dataMode: 'synthetic' }));
+    const res = await request(app)
+      .get('/')
+      .set(
+        'Accept',
+        'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      );
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/text\/html/);
+  });
+});
+
+describe('GET / — HTML rendering safety', () => {
+  it('escapar HTML-special-tecken i dataMode (defensiv mot framtida värden)', async () => {
+    // Force-cast för att kringgå DataMode-union — verifierar att template
+    // är defensiv även om enum utvidgas eller felaktig data smuger sig in.
+    const deps = makeDeps();
+    const evilConfig = {
+      ...deps.config,
+      dataMode: 'syn<script>alert(1)</script>' as unknown as 'phi' | 'synthetic',
+    };
+    const app = createApp({ ...deps, config: evilConfig });
+    const res = await request(app).get('/').set('Accept', 'text/html');
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('syn&lt;script&gt;');
+    expect(res.text).not.toContain('<script>alert(1)</script>');
+  });
+});
+
+// ============================================================
 // GET /health — täckning saknades tidigare
 // ============================================================
 
