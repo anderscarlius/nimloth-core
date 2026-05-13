@@ -27,6 +27,23 @@ export function createApp(deps: ServerDeps): Express {
   const app = express();
   app.use(express.json({ limit: '1mb' }));
 
+  // B25.2.4 — service-index på root för API-discoverability. Ersätter Express
+  // default-404 ("Cannot GET /") med JSON-introduktion till tjänsten + endpoint-
+  // lista. Konsistent med övriga nimloth-core-services som returnerar JSON.
+  app.get('/', (_req, res) => {
+    res.status(200).json({
+      service: 'composition-mapper',
+      description:
+        'FHIR R4 → openEHR composition mapping with LLM-assisted normalization and human-review pathway',
+      version: VERSION,
+      dataMode: deps.config.dataMode,
+      endpoints: {
+        health: 'GET /health',
+        mapMedicationStatement: 'POST /api/v1/map/medication-statement',
+      },
+    });
+  });
+
   app.get('/health', (_req, res) => {
     res.status(200).json({
       status: 'ok',
