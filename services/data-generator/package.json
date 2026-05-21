@@ -1,0 +1,36 @@
+{
+  "name": "@nimloth-core/data-generator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/cli.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:engine": "vitest run __tests__/engine",
+    "test:composers": "vitest run __tests__/composers",
+    "test:composers:integration": "vitest run __tests__/composers/integration",
+    "test:pathways": "vitest run __tests__/engine/pathways.test.ts",
+    "validate:profiles": "tsx src/scripts/validate-profiles.ts",
+    "openehr:list-templates": "tsx src/scripts/list-templates.ts",
+    "generate:load": "tsx src/cli.ts generate:load",
+    "demo:aql": "tsx src/cli.ts demo:aql"
+  },
+  "dependencies": {
+    "@nimloth-core/shared": "workspace:*",
+    "js-yaml": "^4.1.0",
+    "pino": "^9.0.0",
+    "seedrandom": "^3.0.5",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.12.7",
+    "@types/seedrandom": "^3.0.8",
+    "tsx": "^4.9.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  }
+}
