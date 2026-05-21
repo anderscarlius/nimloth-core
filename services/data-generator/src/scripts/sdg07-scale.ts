@@ -106,9 +106,11 @@ async function main() {
 
   // Step 3: AQL totals
   console.log("\n=== AQL verification ===");
-  const totalEhrs = await runAql<unknown[][]>("SELECT COUNT(e) FROM EHR e");
+  const totalEhrs = await runAql<unknown[][]>(
+    "SELECT COUNT(e/ehr_id/value) FROM EHR e",
+  );
   const totalComps = await runAql<unknown[][]>(
-    "SELECT COUNT(c) FROM EHR e CONTAINS COMPOSITION c",
+    "SELECT COUNT(c/uid/value) FROM EHR e CONTAINS COMPOSITION c",
   );
   const ehrCount = Number(totalEhrs.rows?.[0]?.[0] ?? 0);
   const compCount = Number(totalComps.rows?.[0]?.[0] ?? 0);

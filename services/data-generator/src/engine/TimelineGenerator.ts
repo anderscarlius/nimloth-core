@@ -6,7 +6,52 @@ import seedrandomImport from "seedrandom";
 import type { PatientProfile } from "../types/profiles.js";
 import { sampleClinical, sampleDemographics } from "./ClinicalSampler.js";
 import { loadPathway, runPathway } from "./PathwayEngine.js";
-import type { PatientContext, PatientTimeline } from "./types.js";
+import type { PatientContext, PatientTimeline, TimelineEvent } from "./types.js";
+
+/** Expand single medication_statement events into one per probable drug
+ *  in profile.common_medications, so polyfarmaci queries find signal.
+ *  Drugs are kept if rng() < (med.prob ?? 0.5). */
+function expandMedications(
+  events: TimelineEvent[],
+  profile: PatientProfile,
+  rng: () => number,
+): TimelineEvent[] {
+  const meds = profile.common_medications ?? [];
+  if (meds.length === 0) return events;
+  const out: TimelineEvent[] = [];
+  for (const ev of events) {
+    if (ev.eventType !== "medication_statement") {
+      out.push(ev);
+      continue;
+    }
+    let emitted = 0;
+    for (const med of meds) {
+      const prob = med.prob ?? 0.5;
+      if (rng() < prob) {
+        out.push({
+          ...ev,
+          clinicalData: {
+            ...ev.clinicalData,
+            annotation: `medication_statement | ${med.atc} | ${med.name} ${med.dose ?? ""}`.trim(),
+          },
+        });
+        emitted++;
+      }
+    }
+    if (emitted === 0) {
+      // Always keep at least one so pathway intent isn't lost.
+      const med = meds[0];
+      out.push({
+        ...ev,
+        clinicalData: {
+          ...ev.clinicalData,
+          annotation: `medication_statement | ${med.atc} | ${med.name} ${med.dose ?? ""}`.trim(),
+        },
+      });
+    }
+  }
+  return out;
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = resolve(__dirname, "..", "..");
@@ -55,7 +100,8 @@ export function generateTimelines(opts: GeneratorOptions): PatientTimeline[] {
       clinical,
     };
 
-    const events = runPathway(pathway, ctx, rng);
+    const rawEvents = runPathway(pathway, ctx, rng);
+    const events = expandMedications(rawEvents, profile, rng);
     timelines.push({
       patientId,
       profileId: opts.profileId,

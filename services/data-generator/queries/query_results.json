@@ -1,0 +1,4298 @@
+[
+  {
+    "id": "AQL-01",
+    "title": "Patienter med diagnos diabetes typ 2",
+    "resultCount": 113,
+    "rawRowCount": 113,
+    "executionTimeMs": 92,
+    "results": [
+      [
+        "003d1250-7d9f-425b-87f2-cdb8630beae1"
+      ],
+      [
+        "009b351c-f310-462d-8a88-9460b063fb0b"
+      ],
+      [
+        "01a8c565-65fd-4531-a269-6e7f1bbc3009"
+      ],
+      [
+        "02333708-f2a8-4b5c-a476-194661895ba8"
+      ],
+      [
+        "02437be4-43ab-495a-8d5f-96a0554e800f"
+      ],
+      [
+        "06156592-d068-41dd-82ac-ab2a74859da6"
+      ],
+      [
+        "10ae74dd-71c8-4bc7-a081-00b1e68751cb"
+      ],
+      [
+        "1727547d-e8ae-4af1-ab3f-d19e94b9cba0"
+      ],
+      [
+        "17e0246d-92ff-46b7-9a94-9971fa9d0f9b"
+      ],
+      [
+        "1b021038-6f20-4636-aadb-77b92b2413f9"
+      ],
+      [
+        "1b7c7bd0-e9ca-4d54-9dc4-71b4ba8250d7"
+      ],
+      [
+        "1bc5d431-b23b-487c-90bf-e139c5b9c3a4"
+      ],
+      [
+        "240662c4-1301-4bac-9c8a-40faccca03db"
+      ],
+      [
+        "2a4881a1-bd63-4579-8290-8e3145846663"
+      ],
+      [
+        "2c382fcc-3a5a-4c53-b723-5f248170d8ca"
+      ],
+      [
+        "2d8a8e40-08c1-461c-9141-ccfb4ea543e2"
+      ],
+      [
+        "2eab9c5a-d6a0-4937-95ae-7d306831e90b"
+      ],
+      [
+        "30e7ef78-de7e-4e31-83b1-e3f08e77d6ea"
+      ],
+      [
+        "326bfe67-bcd0-4238-aafb-dcfb985f1159"
+      ],
+      [
+        "3a26fac8-90bf-4287-9512-d218b8d29a17"
+      ],
+      [
+        "42370dfb-d8b1-46ff-968c-95ebb5e4493f"
+      ],
+      [
+        "4654bb97-d316-45e5-b02e-c7b19c9031cc"
+      ],
+      [
+        "47ec47da-350c-4134-82f8-65d11a39ee70"
+      ],
+      [
+        "4d83f459-520c-4c8d-aa16-b0885103e3ea"
+      ],
+      [
+        "4d8f15d8-e182-451e-8609-c28668ec65f8"
+      ],
+      [
+        "4db70029-57a5-4712-a74b-5699b127158e"
+      ],
+      [
+        "51977fa1-3a6c-4a3f-89b1-0d85e0314f0a"
+      ],
+      [
+        "51fc6ff4-510a-4b64-967b-75fe81100038"
+      ],
+      [
+        "53c64580-4efc-4ed3-b4c7-04546c415bf2"
+      ],
+      [
+        "5889fe64-f626-4c08-a5bb-0a9f261bd1ce"
+      ],
+      [
+        "59fbbf60-f52e-4829-8b68-fa9d26a1b6e0"
+      ],
+      [
+        "5c067a84-dc05-4331-bb4a-07d29d40630c"
+      ],
+      [
+        "5df7f9a9-20cf-4466-ab21-c83a2153eaaf"
+      ],
+      [
+        "6207c5f4-2a32-4ff2-89cc-62fdd338cec9"
+      ],
+      [
+        "64c606b8-0e39-4ae2-ad8b-11febc654e55"
+      ],
+      [
+        "68bbb995-7f91-4eeb-89dc-9c26d69e4d26"
+      ],
+      [
+        "6980ea8a-fecc-4b2a-aa89-5be2ba5a421b"
+      ],
+      [
+        "69a7c99a-2221-4da1-b48f-457c9277ace4"
+      ],
+      [
+        "6a1ca757-c678-42e3-80bd-bf7d488d8f4f"
+      ],
+      [
+        "6a5fa307-c040-4a02-bf92-f077a956284f"
+      ],
+      [
+        "6f171ee2-b309-417c-a7d5-1a71b0a0380b"
+      ],
+      [
+        "6f373944-6c1c-4c96-90c9-70633029e37d"
+      ],
+      [
+        "7040c78b-bff6-4220-a95b-a1322fa564f9"
+      ],
+      [
+        "70f7aad1-d8c7-4c13-8605-094a78567a94"
+      ],
+      [
+        "7706bf58-3b2b-40f9-9c36-350b11fa0a40"
+      ],
+      [
+        "770e2af4-2992-45d4-b165-1cfca5d1f52a"
+      ],
+      [
+        "79a4108f-3725-4bed-b3c7-897e2b18a894"
+      ],
+      [
+        "7bd8a282-80a2-4e1d-9ed7-676e95829019"
+      ],
+      [
+        "7d501357-194d-499c-8276-1553bf9d4e95"
+      ],
+      [
+        "8299e5cc-cc81-41d7-9e6e-cac79a784b04"
+      ],
+      [
+        "831c28d2-6948-4c61-a361-7b54526bb7f6"
+      ],
+      [
+        "83b68443-ebda-4f2a-9024-f6ee191c7716"
+      ],
+      [
+        "86635040-17ea-4fad-8784-5af4f76f7c53"
+      ],
+      [
+        "879f72cc-b4f2-4ed3-8022-afc6f4ec59b0"
+      ],
+      [
+        "89aef665-1a70-4eab-949d-854f94da770e"
+      ],
+      [
+        "89c67de3-c1e8-478f-a0e8-28a25816c3da"
+      ],
+      [
+        "8a1b4418-8dcf-4a1e-93d4-f2dec7ba3b55"
+      ],
+      [
+        "907a6a52-a989-409b-9aaa-363792836503"
+      ],
+      [
+        "96adcd70-d5b7-40d3-994e-d60e1696585a"
+      ],
+      [
+        "983cd4dd-3970-4df1-89e4-9c0b0fcf1f52"
+      ],
+      [
+        "98907dba-983e-409c-9379-25adee4bdf44"
+      ],
+      [
+        "998667d9-8d53-4559-b4b8-eef76f4d0e5d"
+      ],
+      [
+        "9a31f222-d63d-4096-bff2-c2d3bf4f3c0c"
+      ],
+      [
+        "9cf5cacb-50b5-44b9-b268-48ab8f37533f"
+      ],
+      [
+        "9f072cd6-fa3f-4db2-8adb-90f16fb3f29d"
+      ],
+      [
+        "9fb54bcf-ab67-498b-8b63-7d0032645a74"
+      ],
+      [
+        "a0a05fbc-e98e-4fad-9838-32e5b1f67f91"
+      ],
+      [
+        "a248dfbf-54d0-475b-ba2c-567582578345"
+      ],
+      [
+        "a5488df0-fe97-469d-bc69-227388f6b628"
+      ],
+      [
+        "ab300e5a-a20a-4e4e-b473-5232ba21ae55"
+      ],
+      [
+        "ab3993d6-a86f-4da7-b164-db4f8ae73f73"
+      ],
+      [
+        "ad52617c-faea-47c0-9550-48ad7320ee27"
+      ],
+      [
+        "ad905eec-ecb4-4977-86dc-c4730b23a031"
+      ],
+      [
+        "ae3ae648-c292-43f6-9530-c75820ce9ea1"
+      ],
+      [
+        "b08a1479-2564-419a-aeca-ea223034e3b2"
+      ],
+      [
+        "b1e46e7c-e07d-4614-bab7-a5464ea723df"
+      ],
+      [
+        "b9084a42-4f29-436c-a29f-4c63f3cee613"
+      ],
+      [
+        "ba37f819-6ead-4206-bdc6-268c0e05ccef"
+      ],
+      [
+        "c0b5840f-9781-4b53-a33d-932ecd87df7e"
+      ],
+      [
+        "c3e9270f-1020-4146-8166-01a21b9643a5"
+      ],
+      [
+        "c483e705-ba63-4555-932f-7355b80e7f03"
+      ],
+      [
+        "c51052b4-5b95-4838-8a76-03fc0d7461a4"
+      ],
+      [
+        "c6c08c67-7f8c-4d27-be55-9c00fee52ef8"
+      ],
+      [
+        "c836d435-dcd6-4d8c-8328-a75b68078fb4"
+      ],
+      [
+        "cab0023c-4322-45bd-a94e-6cd2e8791baf"
+      ],
+      [
+        "caed913a-b921-40b1-8ea0-094be4582368"
+      ],
+      [
+        "cc18a2c3-9b1b-47a1-b7ba-5cd713854539"
+      ],
+      [
+        "cd4c668e-392b-467e-b9a8-dc1411c1f67f"
+      ],
+      [
+        "d24d80ff-4eb7-4864-a79b-1efd276d8010"
+      ],
+      [
+        "d282f4dd-1844-40e5-afa5-b4ef97f3f6ce"
+      ],
+      [
+        "d3cd1651-55d2-49ae-b1cc-34e7311021e6"
+      ],
+      [
+        "d402ed82-7fbe-494e-8a61-2ffd7d9484c4"
+      ],
+      [
+        "d5458a18-be9e-482c-9da8-068fb03bb62d"
+      ],
+      [
+        "d5b04d65-c64c-4cbe-8d3e-b34887507566"
+      ],
+      [
+        "d609e7cd-fcf1-44a6-a8f3-2844ca54efe8"
+      ],
+      [
+        "dbb43aa2-7b0b-4162-bbdb-fccf4ed2ac93"
+      ],
+      [
+        "ded58df8-f1aa-48bf-96a1-627f78e3faf1"
+      ],
+      [
+        "df262a64-61c6-43e1-a888-1362ddc1e423"
+      ],
+      [
+        "e17ffbb2-3a51-445f-928a-f224f0b5f84e"
+      ],
+      [
+        "e2fa7516-86ed-4c33-b786-e94684c408e2"
+      ],
+      [
+        "e4807543-34de-4960-a2e0-a8a94dd3d42a"
+      ],
+      [
+        "e549bdc6-4e0c-469e-89d8-6a638a1d8252"
+      ],
+      [
+        "e679a7ca-1641-428f-84de-b9ba40f149b5"
+      ],
+      [
+        "e899835a-2391-48db-8047-e213bc6a6e67"
+      ],
+      [
+        "ea1a01e9-1d44-424d-a43f-fc7273a5379d"
+      ],
+      [
+        "ea71b746-b78f-4713-b32e-651825e8581f"
+      ],
+      [
+        "ec842127-7ef0-4e34-a1c3-e72c54b07599"
+      ],
+      [
+        "ee70856c-e060-425a-9495-8180a781173d"
+      ],
+      [
+        "f10eae68-4f87-49ba-9380-121cdf7d825c"
+      ],
+      [
+        "fbd4d702-18c6-43c0-925e-8f950c3de61a"
+      ],
+      [
+        "fc932899-c488-468f-8b64-fe39d715da2b"
+      ],
+      [
+        "fcc9fecd-1661-4094-900e-21645cb415e0"
+      ],
+      [
+        "fdafbb66-691a-4806-886a-88f507ae22ef"
+      ]
+    ]
+  },
+  {
+    "id": "AQL-02",
+    "title": "Patienter med HbA1c > 70 (senaste värdet)",
+    "resultCount": 29,
+    "rawRowCount": 232,
+    "executionTimeMs": 106,
+    "results": [
+      {
+        "ehr": "c51052b4-5b95-4838-8a76-03fc0d7461a4",
+        "hba1c": 77.41
+      },
+      {
+        "ehr": "240662c4-1301-4bac-9c8a-40faccca03db",
+        "hba1c": 112.5
+      },
+      {
+        "ehr": "fcc9fecd-1661-4094-900e-21645cb415e0",
+        "hba1c": 70.88
+      },
+      {
+        "ehr": "64c606b8-0e39-4ae2-ad8b-11febc654e55",
+        "hba1c": 74.07
+      },
+      {
+        "ehr": "5df7f9a9-20cf-4466-ab21-c83a2153eaaf",
+        "hba1c": 76.21
+      },
+      {
+        "ehr": "86635040-17ea-4fad-8784-5af4f76f7c53",
+        "hba1c": 100.51
+      },
+      {
+        "ehr": "6f171ee2-b309-417c-a7d5-1a71b0a0380b",
+        "hba1c": 76.08
+      },
+      {
+        "ehr": "fc932899-c488-468f-8b64-fe39d715da2b",
+        "hba1c": 74.31
+      },
+      {
+        "ehr": "f10eae68-4f87-49ba-9380-121cdf7d825c",
+        "hba1c": 92.82
+      },
+      {
+        "ehr": "e899835a-2391-48db-8047-e213bc6a6e67",
+        "hba1c": 88.49
+      },
+      {
+        "ehr": "2c382fcc-3a5a-4c53-b723-5f248170d8ca",
+        "hba1c": 74.16
+      },
+      {
+        "ehr": "998667d9-8d53-4559-b4b8-eef76f4d0e5d",
+        "hba1c": 77.81
+      },
+      {
+        "ehr": "d5458a18-be9e-482c-9da8-068fb03bb62d",
+        "hba1c": 74.29
+      },
+      {
+        "ehr": "7d501357-194d-499c-8276-1553bf9d4e95",
+        "hba1c": 71.98
+      },
+      {
+        "ehr": "17e0246d-92ff-46b7-9a94-9971fa9d0f9b",
+        "hba1c": 71.53
+      },
+      {
+        "ehr": "ded58df8-f1aa-48bf-96a1-627f78e3faf1",
+        "hba1c": 79.27
+      },
+      {
+        "ehr": "fdafbb66-691a-4806-886a-88f507ae22ef",
+        "hba1c": 97.62
+      },
+      {
+        "ehr": "53c64580-4efc-4ed3-b4c7-04546c415bf2",
+        "hba1c": 106.55
+      },
+      {
+        "ehr": "ae3ae648-c292-43f6-9530-c75820ce9ea1",
+        "hba1c": 81.17
+      },
+      {
+        "ehr": "2d8a8e40-08c1-461c-9141-ccfb4ea543e2",
+        "hba1c": 112.64
+      },
+      {
+        "ehr": "e4807543-34de-4960-a2e0-a8a94dd3d42a",
+        "hba1c": 87.95
+      },
+      {
+        "ehr": "c836d435-dcd6-4d8c-8328-a75b68078fb4",
+        "hba1c": 70.69
+      },
+      {
+        "ehr": "96adcd70-d5b7-40d3-994e-d60e1696585a",
+        "hba1c": 102.91
+      },
+      {
+        "ehr": "cab0023c-4322-45bd-a94e-6cd2e8791baf",
+        "hba1c": 82.16
+      },
+      {
+        "ehr": "98907dba-983e-409c-9379-25adee4bdf44",
+        "hba1c": 70.12
+      },
+      {
+        "ehr": "cd4c668e-392b-467e-b9a8-dc1411c1f67f",
+        "hba1c": 92.13
+      },
+      {
+        "ehr": "2a4881a1-bd63-4579-8290-8e3145846663",
+        "hba1c": 108.62
+      },
+      {
+        "ehr": "983cd4dd-3970-4df1-89e4-9c0b0fcf1f52",
+        "hba1c": 76.43
+      },
+      {
+        "ehr": "cc18a2c3-9b1b-47a1-b7ba-5cd713854539",
+        "hba1c": 78.14
+      }
+    ]
+  },
+  {
+    "id": "AQL-03",
+    "title": "Patienter med systoliskt BT > 160 (senaste mätning)",
+    "resultCount": 106,
+    "rawRowCount": 1981,
+    "executionTimeMs": 395,
+    "results": [
+      {
+        "ehr": "ea186fea-2b82-4557-bb29-f13f25b04871",
+        "systolic": 191
+      },
+      {
+        "ehr": "b1a3dc07-0333-476b-a8b7-8362f270071d",
+        "systolic": 183
+      },
+      {
+        "ehr": "93b43b1d-0d1d-4f9d-b27e-d224011332fb",
+        "systolic": 178
+      },
+      {
+        "ehr": "894ec06e-97ee-4992-8549-31aaa162b456",
+        "systolic": 170
+      },
+      {
+        "ehr": "ab922253-eb89-4046-8ef2-236d622ae2c3",
+        "systolic": 188
+      },
+      {
+        "ehr": "1edbf58b-bd53-4f32-b50c-2d6663f62080",
+        "systolic": 164
+      },
+      {
+        "ehr": "95c4e251-96d5-4d1e-8114-f0a63b3d30af",
+        "systolic": 166
+      },
+      {
+        "ehr": "729d78fb-fbb7-4f55-a3f9-c4dcc11a03f8",
+        "systolic": 185
+      },
+      {
+        "ehr": "c3297613-b8f9-4074-bf8e-8f3ea102cd37",
+        "systolic": 197
+      },
+      {
+        "ehr": "e61eadf5-4f21-4863-9634-a9a1d831232c",
+        "systolic": 194
+      },
+      {
+        "ehr": "83cb6f9c-cbcb-4461-be55-b006ead887e1",
+        "systolic": 181
+      },
+      {
+        "ehr": "8323c29c-0b6c-413a-9da5-ce1df2cd25c4",
+        "systolic": 185
+      },
+      {
+        "ehr": "308802fd-0109-4cc4-aeab-2adee202c16d",
+        "systolic": 169
+      },
+      {
+        "ehr": "412fa934-e6be-43c1-8182-f053bdf9614c",
+        "systolic": 172
+      },
+      {
+        "ehr": "f2fd1697-de17-4a78-be1c-6242ca1481f4",
+        "systolic": 193
+      },
+      {
+        "ehr": "3291b930-3e00-4c00-9342-c2d51931cdfb",
+        "systolic": 187
+      },
+      {
+        "ehr": "03d14579-f035-44d5-8f43-2d1e440e4302",
+        "systolic": 180
+      },
+      {
+        "ehr": "923a30b0-9d5b-41c3-936a-647f05d9afa5",
+        "systolic": 179
+      },
+      {
+        "ehr": "4d2db984-3433-4a02-98e1-67d60685a82c",
+        "systolic": 185
+      },
+      {
+        "ehr": "4bea41d9-dacf-4a84-af2d-165d1d35950d",
+        "systolic": 197
+      },
+      {
+        "ehr": "aa14df5d-52e6-4498-ac8c-d0045a3cb18f",
+        "systolic": 179
+      },
+      {
+        "ehr": "63b1273f-b31c-42e8-9d8d-58ea47df20a1",
+        "systolic": 171
+      },
+      {
+        "ehr": "7c54e0dd-d853-4cc5-8b7c-9f06b61ef103",
+        "systolic": 175
+      },
+      {
+        "ehr": "4a9785a4-d7b3-48f1-89c7-e8c7e28fe388",
+        "systolic": 193
+      },
+      {
+        "ehr": "be5e9884-d38f-4832-b79d-6571c87110ba",
+        "systolic": 177
+      },
+      {
+        "ehr": "1cfbfe41-bb90-4682-b65f-01f1b3463fd6",
+        "systolic": 165
+      },
+      {
+        "ehr": "ba296580-b0d4-43c8-b7d3-ccf1d7776712",
+        "systolic": 194
+      },
+      {
+        "ehr": "ce597a02-5495-44a4-991e-3f257eaad4cb",
+        "systolic": 195
+      },
+      {
+        "ehr": "cd324145-1138-4619-8a33-941dcf0367d3",
+        "systolic": 168
+      },
+      {
+        "ehr": "372d0f6c-979f-4e21-bd10-f1a7bfb9c2b7",
+        "systolic": 170
+      },
+      {
+        "ehr": "3c9282b6-2da3-4aa3-8a73-5dac4bbed06c",
+        "systolic": 196
+      },
+      {
+        "ehr": "b0ac54c7-2e30-4f56-8290-930803927aeb",
+        "systolic": 173
+      },
+      {
+        "ehr": "790328f4-b9ce-40bf-8a5f-931d713ffd96",
+        "systolic": 192
+      },
+      {
+        "ehr": "17cdf977-3e5d-4ef6-9018-c4a1ca1497fa",
+        "systolic": 177
+      },
+      {
+        "ehr": "5007969c-682e-4ade-81a7-f7600f16b007",
+        "systolic": 197
+      },
+      {
+        "ehr": "493bb23a-305f-424f-bfa0-c15e38e8bfd6",
+        "systolic": 181
+      },
+      {
+        "ehr": "30674775-3a74-4adc-9c23-5982b816797c",
+        "systolic": 175
+      },
+      {
+        "ehr": "815938db-107e-44bb-989a-4f0b8c8ad17b",
+        "systolic": 165
+      },
+      {
+        "ehr": "0dfffaaf-a49e-4517-a2d3-e711e8c1be6e",
+        "systolic": 186
+      },
+      {
+        "ehr": "20fdfd7d-e879-4c93-b92b-604c4e794c3a",
+        "systolic": 198
+      },
+      {
+        "ehr": "ab6134ff-bd14-4d58-9b04-2c1295d1874e",
+        "systolic": 166
+      },
+      {
+        "ehr": "3d61ad47-1ae0-46a0-9fe1-0f25b4a59276",
+        "systolic": 170
+      },
+      {
+        "ehr": "236cc8b4-f603-4da7-9466-e056d109e15d",
+        "systolic": 167
+      },
+      {
+        "ehr": "116e11bc-4080-4c05-95c0-920610d4f653",
+        "systolic": 184
+      },
+      {
+        "ehr": "176cf233-de69-465d-8d2e-7d3b51974449",
+        "systolic": 185
+      },
+      {
+        "ehr": "78b7bede-c2a1-4bbe-9d11-1fb1f4051de5",
+        "systolic": 168
+      },
+      {
+        "ehr": "3edef008-91ac-48c1-85d2-75ac9b3fbec1",
+        "systolic": 173
+      },
+      {
+        "ehr": "10e524df-a6f7-483a-b732-be53b553665e",
+        "systolic": 174
+      },
+      {
+        "ehr": "90306c1f-d6ae-44f5-a431-22f6f3f617ce",
+        "systolic": 196
+      },
+      {
+        "ehr": "081a5de6-32d6-41d0-bc8a-20da16663674",
+        "systolic": 166
+      },
+      {
+        "ehr": "013cb1ee-1b7e-44dc-9795-c920ac01cc88",
+        "systolic": 165
+      },
+      {
+        "ehr": "2fa02fa4-3620-44d4-ac81-8c492258df0a",
+        "systolic": 163
+      },
+      {
+        "ehr": "a9ff3796-18cf-4718-8d99-9dc6c4d00b95",
+        "systolic": 161
+      },
+      {
+        "ehr": "2bfd5e49-99e6-421c-9dc4-30d78988fec7",
+        "systolic": 162
+      },
+      {
+        "ehr": "c631ed22-45b8-4074-9f58-6562235be228",
+        "systolic": 178
+      },
+      {
+        "ehr": "3d46110c-2174-4ba1-b1fd-72f85330a2d3",
+        "systolic": 167
+      },
+      {
+        "ehr": "74538e67-4500-4b67-963d-f111499fcb32",
+        "systolic": 169
+      },
+      {
+        "ehr": "63a45ce8-eb0c-4fe2-ba1b-2b32d51ba20d",
+        "systolic": 170
+      },
+      {
+        "ehr": "06fbfe32-1d96-4a62-a212-a0e76c278cf4",
+        "systolic": 162
+      },
+      {
+        "ehr": "deeba826-4eee-43bf-8507-a3befe7ac678",
+        "systolic": 178
+      },
+      {
+        "ehr": "f69d5fde-bf95-4e68-8c5d-3d903a3958ee",
+        "systolic": 173
+      },
+      {
+        "ehr": "32facfd0-7b54-473e-8fd6-0d98b0141dc9",
+        "systolic": 184
+      },
+      {
+        "ehr": "b51a19c9-e99c-4b6d-83de-2c421d70e593",
+        "systolic": 194
+      },
+      {
+        "ehr": "3154d1c7-3c93-4b86-bf8a-fe5751de33c2",
+        "systolic": 172
+      },
+      {
+        "ehr": "0f4c510a-bac3-4b48-bd7a-d037397f7c20",
+        "systolic": 174
+      },
+      {
+        "ehr": "c11ceac4-5b32-4656-92dc-bdaacccd45b9",
+        "systolic": 171
+      },
+      {
+        "ehr": "93d3a045-9ae2-484f-9cfa-639219a3b57e",
+        "systolic": 162
+      },
+      {
+        "ehr": "c6e8e037-70d5-44aa-ab21-13ff2073a44a",
+        "systolic": 167
+      },
+      {
+        "ehr": "b43f06b1-94d6-4179-b618-63963717ddbd",
+        "systolic": 168
+      },
+      {
+        "ehr": "9e21b0dc-2436-4725-876e-f1b7433e2c70",
+        "systolic": 178
+      },
+      {
+        "ehr": "f365db6b-0b8f-4c3d-a339-f96dd8b9411a",
+        "systolic": 167
+      },
+      {
+        "ehr": "f30b47dd-640e-45fa-9d17-e8f4302c0eb8",
+        "systolic": 196
+      },
+      {
+        "ehr": "588a4124-2e4a-427f-8c76-c965f1d32667",
+        "systolic": 172
+      },
+      {
+        "ehr": "15474e84-9a89-4a2c-9fae-52fe801c97aa",
+        "systolic": 216
+      },
+      {
+        "ehr": "2a63d22c-a004-477c-9b4b-ab964adbd480",
+        "systolic": 186
+      },
+      {
+        "ehr": "3e9c758e-bc28-4d85-8ad2-65daf3ccf446",
+        "systolic": 196
+      },
+      {
+        "ehr": "9c54d860-12ed-4f9b-8375-641c9762bc3e",
+        "systolic": 190
+      },
+      {
+        "ehr": "d1f2712c-d349-44dd-9309-ef20a1b12c12",
+        "systolic": 162
+      },
+      {
+        "ehr": "f78fde65-40f7-4d92-802d-b20f79126260",
+        "systolic": 165
+      },
+      {
+        "ehr": "75971785-09ec-4df7-aef8-644c5d15c1cc",
+        "systolic": 178
+      },
+      {
+        "ehr": "667161c2-1f5a-4223-9dbd-9631a09cd68d",
+        "systolic": 196
+      },
+      {
+        "ehr": "4444ba6a-c073-4d20-8238-c75d13a6164f",
+        "systolic": 165
+      },
+      {
+        "ehr": "7e800e87-d17e-4996-9f30-fba7a3bde576",
+        "systolic": 165
+      },
+      {
+        "ehr": "53d0824c-fffe-4530-b7d9-12cb1a1f2d30",
+        "systolic": 176
+      },
+      {
+        "ehr": "9788be61-f24a-4cbb-87bf-4c32b0ba92d2",
+        "systolic": 172
+      },
+      {
+        "ehr": "30291d34-9b0e-45ac-bd4c-e4336bbf782f",
+        "systolic": 199
+      },
+      {
+        "ehr": "cf4e3804-603f-4efb-9a33-d676b1f551ab",
+        "systolic": 164
+      },
+      {
+        "ehr": "388171fa-954b-4bde-bf31-b2e8b48fe471",
+        "systolic": 161
+      },
+      {
+        "ehr": "98f2836a-df75-499e-8d9e-1c40e1ca163b",
+        "systolic": 166
+      },
+      {
+        "ehr": "6b277774-903c-46cf-adf8-0fdd37294661",
+        "systolic": 192
+      },
+      {
+        "ehr": "aad3d984-8a86-400e-aa01-36207b375edf",
+        "systolic": 162
+      },
+      {
+        "ehr": "2e42c3d5-7aa7-4b08-b94b-aa05eabf69b9",
+        "systolic": 175
+      },
+      {
+        "ehr": "13267ee0-4d3e-42dc-a0e0-18a36d7c0cb4",
+        "systolic": 175
+      },
+      {
+        "ehr": "ddb74b6d-4858-4bae-91d9-de0bf881bf8d",
+        "systolic": 161
+      },
+      {
+        "ehr": "60692a37-391c-4fb0-9023-d27093d39f97",
+        "systolic": 177
+      },
+      {
+        "ehr": "a482a206-8b70-49e4-91f9-836512d7d83c",
+        "systolic": 165
+      },
+      {
+        "ehr": "5eb62bea-56e6-4975-b546-3892373c0239",
+        "systolic": 162
+      },
+      {
+        "ehr": "99b80447-3628-4f8f-ae52-e253746f2275",
+        "systolic": 206
+      },
+      {
+        "ehr": "1d45fa47-2cfd-4e77-a1e6-e85d7b19143e",
+        "systolic": 175
+      },
+      {
+        "ehr": "8cdc45a3-5407-42a5-92d8-ea3d023a4c93",
+        "systolic": 204
+      },
+      {
+        "ehr": "14a6f0c1-2b08-4068-b25d-6ba68a160174",
+        "systolic": 211
+      },
+      {
+        "ehr": "7fc2a9e1-0335-4e72-8e4d-41aaaaa8cab6",
+        "systolic": 162
+      },
+      {
+        "ehr": "78e3df1d-c208-449e-a52d-fede142c8a32",
+        "systolic": 219
+      },
+      {
+        "ehr": "3dde5d27-f92b-4eee-bf54-39d32917d401",
+        "systolic": 177
+      },
+      {
+        "ehr": "38de1930-a020-435a-90c1-86baac8e97a7",
+        "systolic": 166
+      },
+      {
+        "ehr": "fb57f81f-93d7-423d-bd32-b45975dad8de",
+        "systolic": 172
+      }
+    ]
+  },
+  {
+    "id": "AQL-04",
+    "title": "Patienter med ≥ 5 medication_statement-events (polyfarmaci)",
+    "resultCount": 98,
+    "rawRowCount": 1894,
+    "executionTimeMs": 359,
+    "results": [
+      {
+        "ehr": "7d1eb30e-dcf6-4570-a992-603aa1b95802",
+        "medications": 10
+      },
+      {
+        "ehr": "6e156501-a627-4ec4-8294-caa3f0125297",
+        "medications": 7
+      },
+      {
+        "ehr": "3a2f4b1d-8b5b-4156-b88f-c44186adfe4c",
+        "medications": 7
+      },
+      {
+        "ehr": "a9523216-1f45-4805-9a08-add8b396124b",
+        "medications": 11
+      },
+      {
+        "ehr": "a26ead46-90bd-474f-956d-89af8693846a",
+        "medications": 8
+      },
+      {
+        "ehr": "5224c1d4-57e2-43a5-8a98-8cc0f2452ef0",
+        "medications": 7
+      },
+      {
+        "ehr": "65ef964e-2b5e-406c-ac9f-765e02ca9fea",
+        "medications": 9
+      },
+      {
+        "ehr": "c97f6e14-5ea4-4a98-8d26-a8ae95cf7a52",
+        "medications": 9
+      },
+      {
+        "ehr": "f10029bd-e61e-444f-8d94-e4bfa685fc85",
+        "medications": 6
+      },
+      {
+        "ehr": "81e2c373-695d-4a86-80e0-e1e9b7e3fa19",
+        "medications": 13
+      },
+      {
+        "ehr": "41751514-e8e8-49c2-b5dc-75127f3e9f5a",
+        "medications": 9
+      },
+      {
+        "ehr": "f21f4a03-8f01-4f68-9ec1-9d0dce780ee6",
+        "medications": 6
+      },
+      {
+        "ehr": "ddd29514-1ada-4a9e-8ec2-98891409f6ef",
+        "medications": 7
+      },
+      {
+        "ehr": "b6e5d2ec-c1d2-4472-b203-c59dfd9795be",
+        "medications": 11
+      },
+      {
+        "ehr": "f1e06959-f813-446f-8f8d-7c6992e4fc63",
+        "medications": 9
+      },
+      {
+        "ehr": "1361a747-52fb-4cdc-87b7-5ab9948b6e96",
+        "medications": 8
+      },
+      {
+        "ehr": "a35cccad-9cc9-439e-8535-dd1c2f0bfb35",
+        "medications": 7
+      },
+      {
+        "ehr": "8a18ecdc-dfd7-422e-a1a7-6917e2f3af2e",
+        "medications": 9
+      },
+      {
+        "ehr": "ca731489-9037-4dba-b6d9-da67246d73e3",
+        "medications": 8
+      },
+      {
+        "ehr": "3a63aaf4-ff98-47f0-b458-d5fbcf2464f6",
+        "medications": 12
+      },
+      {
+        "ehr": "6b19c669-64d2-4090-b1fc-7b17d0ca5b89",
+        "medications": 9
+      },
+      {
+        "ehr": "c12b2f53-581b-41e2-a35d-104cb14c4241",
+        "medications": 9
+      },
+      {
+        "ehr": "8628fd13-3848-4a5d-929a-1633239878b5",
+        "medications": 5
+      },
+      {
+        "ehr": "3acc93b1-be3c-4956-9440-4ef0f0ed9618",
+        "medications": 6
+      },
+      {
+        "ehr": "8930801e-d120-4342-8644-96baac0411a2",
+        "medications": 10
+      },
+      {
+        "ehr": "8f0a0436-258e-4a48-a5e5-716a74bab0c1",
+        "medications": 8
+      },
+      {
+        "ehr": "3ebb20f7-16dc-47c1-924f-badd48d0f2b5",
+        "medications": 8
+      },
+      {
+        "ehr": "9639efc8-be83-4a16-a74d-7db4c35329ab",
+        "medications": 5
+      },
+      {
+        "ehr": "7c0a8496-9096-4946-b6aa-a2c4b5998ccf",
+        "medications": 10
+      },
+      {
+        "ehr": "a2a0158b-8294-4fd5-98c1-603bfe109716",
+        "medications": 9
+      },
+      {
+        "ehr": "07ee389e-138e-4fb2-b201-9b8a0540e3eb",
+        "medications": 10
+      },
+      {
+        "ehr": "7407f70c-52a8-4f48-b6f7-f1bd54a369c9",
+        "medications": 7
+      },
+      {
+        "ehr": "a6bfd940-f917-4e2a-9712-d33564131be9",
+        "medications": 5
+      },
+      {
+        "ehr": "7b65ed97-6a2f-40a4-9f21-7839737f6b03",
+        "medications": 7
+      },
+      {
+        "ehr": "870dad7a-8b58-4254-b7ac-99cc7ed15b8e",
+        "medications": 8
+      },
+      {
+        "ehr": "ca110dd2-fd7f-474a-bd3b-e40f313570a8",
+        "medications": 10
+      },
+      {
+        "ehr": "7b9403a9-4259-4077-a161-981f46e4f9d1",
+        "medications": 6
+      },
+      {
+        "ehr": "cfe19664-2d65-4e5e-8bf8-67bbaed5af86",
+        "medications": 9
+      },
+      {
+        "ehr": "63c70423-e77f-4f8d-8a66-8c92728f8732",
+        "medications": 11
+      },
+      {
+        "ehr": "2c2914bc-b9ef-4901-bea2-1da9de5c0781",
+        "medications": 9
+      },
+      {
+        "ehr": "329e6209-a247-4745-ae19-e7a796e49951",
+        "medications": 5
+      },
+      {
+        "ehr": "76f70d53-2073-4c89-86b7-b85975610ca6",
+        "medications": 8
+      },
+      {
+        "ehr": "e6d28965-c48c-4e6c-9c84-c66a693f8877",
+        "medications": 9
+      },
+      {
+        "ehr": "d9b8aa52-8f7a-4e45-b09b-2152868c4493",
+        "medications": 6
+      },
+      {
+        "ehr": "6a9f16c4-69d6-45ee-a346-91469ad1a488",
+        "medications": 8
+      },
+      {
+        "ehr": "4b2c0b7c-4d76-46ba-9857-b95c5abd18c5",
+        "medications": 9
+      },
+      {
+        "ehr": "5b97a691-7a46-424b-8301-dac406193397",
+        "medications": 5
+      },
+      {
+        "ehr": "958c104c-15b1-4954-b3d5-627a409b3764",
+        "medications": 7
+      },
+      {
+        "ehr": "33a0f06b-f0e2-427f-83b2-6b6776f4b2fc",
+        "medications": 9
+      },
+      {
+        "ehr": "cad09ec9-4ebd-4e30-9df2-dacbf9cc49ab",
+        "medications": 5
+      },
+      {
+        "ehr": "f13adf26-60d7-4c5f-9c16-70d76e5e7751",
+        "medications": 5
+      },
+      {
+        "ehr": "4f220e2d-edfd-4fa1-b64e-862c2abf8530",
+        "medications": 10
+      },
+      {
+        "ehr": "394d97ee-26f5-4d46-b12d-baf188915502",
+        "medications": 9
+      },
+      {
+        "ehr": "1ce477a7-25be-4f80-a92f-2c15eae8af3b",
+        "medications": 10
+      },
+      {
+        "ehr": "1cf81b41-9645-4aff-a6cd-14199b5236e7",
+        "medications": 7
+      },
+      {
+        "ehr": "e3d4e6f2-83c4-4061-84ff-f91f25dcbae9",
+        "medications": 7
+      },
+      {
+        "ehr": "ffaa1b98-096e-4071-a6a0-110af325c88d",
+        "medications": 7
+      },
+      {
+        "ehr": "284297f9-78b5-4fdd-ab7b-da267275b60a",
+        "medications": 5
+      },
+      {
+        "ehr": "70b057ea-e2c2-466b-b51d-65a8cdff7c9d",
+        "medications": 9
+      },
+      {
+        "ehr": "022206d1-e877-4c30-974d-d4a11c945d11",
+        "medications": 10
+      },
+      {
+        "ehr": "a49cb4e3-21cc-4a34-b581-b44ebc05d47d",
+        "medications": 6
+      },
+      {
+        "ehr": "da65c2b6-46d1-4cf3-b147-f91f87c2d827",
+        "medications": 7
+      },
+      {
+        "ehr": "f90c46b1-f630-49fc-b67c-d338fc68e3d6",
+        "medications": 7
+      },
+      {
+        "ehr": "0a347861-0c25-423b-a58d-0ffb4498c815",
+        "medications": 8
+      },
+      {
+        "ehr": "06d70bfd-e5d7-4f48-9262-b476129d1f1c",
+        "medications": 9
+      },
+      {
+        "ehr": "b86fea78-c1e8-446a-9933-5f6a243998a5",
+        "medications": 9
+      },
+      {
+        "ehr": "d0db04c9-1ee3-41f1-bcf8-2a4368bb56ba",
+        "medications": 10
+      },
+      {
+        "ehr": "7d9c5722-e33e-4775-85ed-d1f21a9a1896",
+        "medications": 5
+      },
+      {
+        "ehr": "ef7184d2-b1e5-4f19-b7f3-fe6a3751e2ad",
+        "medications": 6
+      },
+      {
+        "ehr": "3e11e1e5-e058-4f68-855b-cff3c007e474",
+        "medications": 7
+      },
+      {
+        "ehr": "79cca13f-312b-4ce1-b073-4c70003525b1",
+        "medications": 10
+      },
+      {
+        "ehr": "b61a2bfa-8676-4d8b-a0ae-e1103209f035",
+        "medications": 8
+      },
+      {
+        "ehr": "d572aae1-02cb-4178-b7a0-101730035b87",
+        "medications": 11
+      },
+      {
+        "ehr": "3466df41-d307-49bc-8dbc-bba68cc9a8f4",
+        "medications": 7
+      },
+      {
+        "ehr": "9ecbeec9-002e-4410-9b49-864b91a87800",
+        "medications": 9
+      },
+      {
+        "ehr": "877140c2-3f1a-434c-ad9e-ad247fd202b8",
+        "medications": 8
+      },
+      {
+        "ehr": "7e8a8f73-83ed-4ae7-8d11-0646db2889b3",
+        "medications": 8
+      },
+      {
+        "ehr": "0a9630cf-ec25-4627-9ef5-1703985eea90",
+        "medications": 8
+      },
+      {
+        "ehr": "48bfa351-d182-412b-bcdc-64eccfe478d3",
+        "medications": 10
+      },
+      {
+        "ehr": "f382934c-9e00-47f5-b509-30fcfead0de9",
+        "medications": 8
+      },
+      {
+        "ehr": "62641094-6916-40f9-a3a1-7ef2e6518667",
+        "medications": 9
+      },
+      {
+        "ehr": "31037b01-346c-48c1-af91-da764cce0a46",
+        "medications": 10
+      },
+      {
+        "ehr": "b513d019-60e9-4aa6-ab9c-f5a4252e4a14",
+        "medications": 10
+      },
+      {
+        "ehr": "a63ea9d3-96ba-4ab3-a509-5c1fbf4c2bb4",
+        "medications": 9
+      },
+      {
+        "ehr": "bedb792c-099c-4ecd-a75f-17690b22ab7d",
+        "medications": 5
+      },
+      {
+        "ehr": "bafc7f30-2bfc-45e2-bdd7-6bc69e60ef6d",
+        "medications": 12
+      },
+      {
+        "ehr": "15cbcb36-0fb7-43e4-8330-1f8fef08c4c6",
+        "medications": 11
+      },
+      {
+        "ehr": "16fef94b-b675-4cc0-97d8-6ab84198d94c",
+        "medications": 10
+      },
+      {
+        "ehr": "75812702-0996-4f71-99ff-a0f359b3942a",
+        "medications": 9
+      },
+      {
+        "ehr": "c8040776-28f8-40f4-964d-30a10f646818",
+        "medications": 8
+      },
+      {
+        "ehr": "3fbc2999-c510-4599-a900-854a8f0893d8",
+        "medications": 8
+      },
+      {
+        "ehr": "9c31ec11-8c84-41ad-b328-3203b0f5c166",
+        "medications": 11
+      },
+      {
+        "ehr": "3539e3a8-1d79-404f-be03-7836cd8da4ed",
+        "medications": 9
+      },
+      {
+        "ehr": "96dc3d78-eb91-4fd3-a0b3-4c6fcd95b8e5",
+        "medications": 9
+      },
+      {
+        "ehr": "d01aa9da-c077-4536-94f5-510be6626b60",
+        "medications": 5
+      },
+      {
+        "ehr": "439e2514-aaf6-416b-97f8-c75de2edf4bd",
+        "medications": 7
+      },
+      {
+        "ehr": "6ae17e4d-17ac-4e08-bfa9-677bd386168e",
+        "medications": 10
+      },
+      {
+        "ehr": "70f90108-5453-49db-9600-a7b473aee976",
+        "medications": 9
+      }
+    ]
+  },
+  {
+    "id": "AQL-05",
+    "title": "Patienter med remiss (referral-event)",
+    "resultCount": 197,
+    "rawRowCount": 197,
+    "executionTimeMs": 93,
+    "results": [
+      [
+        "003c13e1-51db-4606-aa91-a6ec62c1ba8b"
+      ],
+      [
+        "01de3b4d-c60f-469d-9371-66c3b3fbb738"
+      ],
+      [
+        "022206d1-e877-4c30-974d-d4a11c945d11"
+      ],
+      [
+        "02feefcf-ad9b-4ee7-8635-ab632bd940af"
+      ],
+      [
+        "0851c5e6-7fe8-45f6-bba0-089f2c71c0de"
+      ],
+      [
+        "0888779a-5ae8-4055-b1c9-e25bd5ae16fd"
+      ],
+      [
+        "0c147868-f9a3-41a5-bd23-5fcaa76d2977"
+      ],
+      [
+        "0d54c301-1949-4942-93bf-b33e11b1c9b0"
+      ],
+      [
+        "0e41a996-142b-418b-be16-da2d69580658"
+      ],
+      [
+        "0f78458f-8a1e-4ca2-b571-2813f468bee3"
+      ],
+      [
+        "0ff8aaa2-265f-471d-9056-6e49e77a3b3e"
+      ],
+      [
+        "11b3aa7a-d5c1-48f9-a35a-07e3f7da3528"
+      ],
+      [
+        "1425817f-74b5-4e1a-99e7-4fca0b1ad88d"
+      ],
+      [
+        "14a6f0c1-2b08-4068-b25d-6ba68a160174"
+      ],
+      [
+        "14d6df4a-a848-476f-b1a6-0a30a4dce5fb"
+      ],
+      [
+        "150c9b5f-773a-4426-a951-f45ee05e4d7d"
+      ],
+      [
+        "15474e84-9a89-4a2c-9fae-52fe801c97aa"
+      ],
+      [
+        "15a99ad3-4b70-4fa3-847e-aa8b11175f7a"
+      ],
+      [
+        "16b7ff2d-88c4-4cb2-a85c-53c843e7dd71"
+      ],
+      [
+        "16d56b0c-6a8c-445a-8925-9c27872e64e4"
+      ],
+      [
+        "17e0246d-92ff-46b7-9a94-9971fa9d0f9b"
+      ],
+      [
+        "1aaf6ca7-b152-49b8-86bc-a65a76ff7da7"
+      ],
+      [
+        "1b1b2611-5417-49d4-babc-4ae1b6e9d0c5"
+      ],
+      [
+        "1f2e0666-6be0-4a5d-8777-d246b5416438"
+      ],
+      [
+        "20a84667-de05-45d3-b9a4-897293e52be9"
+      ],
+      [
+        "20c03f77-5674-4b49-8dc8-3dcca2236d0c"
+      ],
+      [
+        "20ee156c-d251-4ea8-914d-9f750848b127"
+      ],
+      [
+        "21ccafa2-d3a3-4f39-9ca9-eadbb72f90a6"
+      ],
+      [
+        "21facf1b-a92f-4ef6-a249-a5890539608f"
+      ],
+      [
+        "240662c4-1301-4bac-9c8a-40faccca03db"
+      ],
+      [
+        "24491a3c-93c4-4a5b-be0e-eb602c42b4a8"
+      ],
+      [
+        "2664188b-1d53-4117-a69a-901153a2aa8f"
+      ],
+      [
+        "2861722d-42dd-4d7d-be81-0ee9c9115f2c"
+      ],
+      [
+        "2a4881a1-bd63-4579-8290-8e3145846663"
+      ],
+      [
+        "2a63d22c-a004-477c-9b4b-ab964adbd480"
+      ],
+      [
+        "2b65aa7b-180b-4544-9bbd-37999d43aa90"
+      ],
+      [
+        "2bda487c-09f0-43be-b45e-11f31f07f795"
+      ],
+      [
+        "2c2914bc-b9ef-4901-bea2-1da9de5c0781"
+      ],
+      [
+        "2c382fcc-3a5a-4c53-b723-5f248170d8ca"
+      ],
+      [
+        "2d8a8e40-08c1-461c-9141-ccfb4ea543e2"
+      ],
+      [
+        "2eb3f0e4-d8c7-4938-a7ae-113db3c8763c"
+      ],
+      [
+        "30291d34-9b0e-45ac-bd4c-e4336bbf782f"
+      ],
+      [
+        "309b1bb0-a681-4a3b-aa08-9fcbebcd9cac"
+      ],
+      [
+        "311daed3-49c4-4258-b8fe-c01950aaffb2"
+      ],
+      [
+        "31360284-f6a6-406b-b96d-4871658c37d5"
+      ],
+      [
+        "329cfe00-4474-4300-87c1-1762d22af333"
+      ],
+      [
+        "32facfd0-7b54-473e-8fd6-0d98b0141dc9"
+      ],
+      [
+        "36c4cce2-e935-456f-aac4-05ad8bbd2e29"
+      ],
+      [
+        "390af6ac-52aa-49d2-8260-db65c6d79e01"
+      ],
+      [
+        "3a63aaf4-ff98-47f0-b458-d5fbcf2464f6"
+      ],
+      [
+        "3b377816-d611-4ed4-9b0f-ad7c9dc65e86"
+      ],
+      [
+        "3d06bce2-8095-4e28-91c7-05a526088e48"
+      ],
+      [
+        "3e11e1e5-e058-4f68-855b-cff3c007e474"
+      ],
+      [
+        "3e9c758e-bc28-4d85-8ad2-65daf3ccf446"
+      ],
+      [
+        "3ebb20f7-16dc-47c1-924f-badd48d0f2b5"
+      ],
+      [
+        "3fc38ab8-05bb-463b-af5f-7a1ed3b18a57"
+      ],
+      [
+        "434b9758-ace1-4253-8c9c-dbcbe8eef98f"
+      ],
+      [
+        "439e2514-aaf6-416b-97f8-c75de2edf4bd"
+      ],
+      [
+        "46f55a9f-ae63-471c-9502-c1f7de05d7ca"
+      ],
+      [
+        "484a816d-1b0d-46d4-b7ea-395ebe2b2ef9"
+      ],
+      [
+        "4cb148f5-a47c-412d-b62d-f59391ea1529"
+      ],
+      [
+        "4cf1699f-7c75-4ea9-8e0e-fcb992a01b34"
+      ],
+      [
+        "51c67308-e4fe-4086-9eaf-f7783c987935"
+      ],
+      [
+        "51f52f41-1e17-431f-9db8-fed067d9bf2d"
+      ],
+      [
+        "52474c83-9442-4e57-bcf6-1f8543267a02"
+      ],
+      [
+        "53c64580-4efc-4ed3-b4c7-04546c415bf2"
+      ],
+      [
+        "581324d3-7374-4983-ba68-2ad29f139b40"
+      ],
+      [
+        "594e3d5b-c69b-4152-9d38-7d3470ed423c"
+      ],
+      [
+        "5a44d6bb-4074-4c8e-a1f1-9ac50c0d50b9"
+      ],
+      [
+        "5bdbdd7e-8452-4e23-a048-daa40316f8f6"
+      ],
+      [
+        "5df7f9a9-20cf-4466-ab21-c83a2153eaaf"
+      ],
+      [
+        "62641094-6916-40f9-a3a1-7ef2e6518667"
+      ],
+      [
+        "6455bb9a-f76d-48fe-8193-8669213b413c"
+      ],
+      [
+        "64c606b8-0e39-4ae2-ad8b-11febc654e55"
+      ],
+      [
+        "667161c2-1f5a-4223-9dbd-9631a09cd68d"
+      ],
+      [
+        "67ebfcd5-6f81-4354-a0f5-7370d4c46694"
+      ],
+      [
+        "6b054da9-bbf9-4d05-8d32-5ec27b13476d"
+      ],
+      [
+        "6b277774-903c-46cf-adf8-0fdd37294661"
+      ],
+      [
+        "6f171ee2-b309-417c-a7d5-1a71b0a0380b"
+      ],
+      [
+        "6f401e97-3f03-46c3-83da-b4a3c8330773"
+      ],
+      [
+        "7300d05a-c48f-4f2c-89fb-3740702b1987"
+      ],
+      [
+        "7407f70c-52a8-4f48-b6f7-f1bd54a369c9"
+      ],
+      [
+        "772907fc-eaf9-4092-8b70-c1bb31b52ff5"
+      ],
+      [
+        "78e3df1d-c208-449e-a52d-fede142c8a32"
+      ],
+      [
+        "796ccc79-4257-4322-8d5f-131a04601c3c"
+      ],
+      [
+        "7d062991-d8cd-4453-a68b-2ab1460631a9"
+      ],
+      [
+        "7d501357-194d-499c-8276-1553bf9d4e95"
+      ],
+      [
+        "7ea407d3-6985-4bfc-9b81-7dc061115131"
+      ],
+      [
+        "7eba9e3e-47c8-4167-b8ad-c430d09c32b7"
+      ],
+      [
+        "800f294f-1999-44ea-913b-74ff8c83f08b"
+      ],
+      [
+        "815938db-107e-44bb-989a-4f0b8c8ad17b"
+      ],
+      [
+        "8301d80d-16d5-439b-9d21-ba0c728e8ec6"
+      ],
+      [
+        "8353b9e8-bd89-4b8d-8735-da681f3fb9a3"
+      ],
+      [
+        "83d4cf84-cd19-4219-84e0-be1322af3287"
+      ],
+      [
+        "84033953-6435-4a1c-9e28-2b603476e102"
+      ],
+      [
+        "84225c87-1095-47af-b958-8218a59b81c1"
+      ],
+      [
+        "8628fd13-3848-4a5d-929a-1633239878b5"
+      ],
+      [
+        "86635040-17ea-4fad-8784-5af4f76f7c53"
+      ],
+      [
+        "86fd8993-180d-49b1-adcf-aeb7ba6cf394"
+      ],
+      [
+        "870dad7a-8b58-4254-b7ac-99cc7ed15b8e"
+      ],
+      [
+        "8752a309-baaf-47f7-9b6a-149202af8b99"
+      ],
+      [
+        "87b47dff-705c-4df1-92d2-3f461b9db45c"
+      ],
+      [
+        "8843e6c2-5d3b-4bd2-8900-f8ca5e774670"
+      ],
+      [
+        "88e7c6e2-0d5a-4b56-a07f-23fe68485024"
+      ],
+      [
+        "8aa4d4f4-fb98-44fc-bfbd-75dacd8e5bbb"
+      ],
+      [
+        "8af0f87d-80d8-4f6e-a990-aa9fd88167e7"
+      ],
+      [
+        "8b54b2b4-b4ba-4f8b-a5fa-52c921d50735"
+      ],
+      [
+        "8b800f38-be88-4714-a190-b16944512598"
+      ],
+      [
+        "8cdc45a3-5407-42a5-92d8-ea3d023a4c93"
+      ],
+      [
+        "8e66b77a-04f0-4f8c-a5db-7af63b472d1c"
+      ],
+      [
+        "90306c1f-d6ae-44f5-a431-22f6f3f617ce"
+      ],
+      [
+        "92890d88-fb7d-4a6e-ba49-bbc5d37f512a"
+      ],
+      [
+        "9465312b-d4c6-470f-922f-dabbe2da5179"
+      ],
+      [
+        "9639efc8-be83-4a16-a74d-7db4c35329ab"
+      ],
+      [
+        "96adcd70-d5b7-40d3-994e-d60e1696585a"
+      ],
+      [
+        "97a01b09-52c2-4f1c-b903-e9cb4df26826"
+      ],
+      [
+        "983cd4dd-3970-4df1-89e4-9c0b0fcf1f52"
+      ],
+      [
+        "98907dba-983e-409c-9379-25adee4bdf44"
+      ],
+      [
+        "992acbd9-1f30-4d33-af8f-8fb4a50ff53c"
+      ],
+      [
+        "998667d9-8d53-4559-b4b8-eef76f4d0e5d"
+      ],
+      [
+        "99b80447-3628-4f8f-ae52-e253746f2275"
+      ],
+      [
+        "9c54d860-12ed-4f9b-8375-641c9762bc3e"
+      ],
+      [
+        "9e882681-fbdd-402e-a9f1-794aab5c9bb6"
+      ],
+      [
+        "9ecbeec9-002e-4410-9b49-864b91a87800"
+      ],
+      [
+        "a84e892e-f7b1-467f-ae16-74e1d9fc72d8"
+      ],
+      [
+        "aa591eb8-e83a-40b5-8517-3efd69bb2fcc"
+      ],
+      [
+        "aa8cbd2c-249c-4f0b-ae74-4e093bb761ab"
+      ],
+      [
+        "ad55ece7-323f-4284-88a6-d78f5f67b66f"
+      ],
+      [
+        "ae3ae648-c292-43f6-9530-c75820ce9ea1"
+      ],
+      [
+        "aed878f3-141d-474d-9238-1c9d89742f83"
+      ],
+      [
+        "b0077be5-34ea-4416-b16e-6d6b89c2d809"
+      ],
+      [
+        "b2254ebf-fbe4-4e19-977a-f8be43a1f69a"
+      ],
+      [
+        "b4b746f7-4728-4c7b-9f16-fa330c11eaeb"
+      ],
+      [
+        "b51a19c9-e99c-4b6d-83de-2c421d70e593"
+      ],
+      [
+        "b7ae70d6-ecbe-436c-9211-81352c635af8"
+      ],
+      [
+        "b87e7f55-d10d-4423-ab4c-01f158107f17"
+      ],
+      [
+        "ba296580-b0d4-43c8-b7d3-ccf1d7776712"
+      ],
+      [
+        "baa004b4-6710-4ab1-9d7a-aa372e3b0eb2"
+      ],
+      [
+        "bb381a14-9a9f-4262-873b-2114bf772a69"
+      ],
+      [
+        "bb826803-29fa-4b7e-b6e1-e4c6973fe4b5"
+      ],
+      [
+        "c12b2f53-581b-41e2-a35d-104cb14c4241"
+      ],
+      [
+        "c12bc069-f5f5-4cf9-9ce1-c352e3cd8ce9"
+      ],
+      [
+        "c51052b4-5b95-4838-8a76-03fc0d7461a4"
+      ],
+      [
+        "c6c5ad63-18d8-486e-85ec-886e4a2bc4cd"
+      ],
+      [
+        "c769b077-8ca3-4cce-aae9-e6e969d4d655"
+      ],
+      [
+        "c836d435-dcd6-4d8c-8328-a75b68078fb4"
+      ],
+      [
+        "c8429a28-d54c-485a-8e3a-988f91bed6ef"
+      ],
+      [
+        "c8565a0b-0ccb-4d6f-9b8d-43191ffba7df"
+      ],
+      [
+        "c88b83fb-ebde-4daa-9992-6f8868a68d5c"
+      ],
+      [
+        "cab0023c-4322-45bd-a94e-6cd2e8791baf"
+      ],
+      [
+        "cab00c22-3dba-44d1-b3b7-4c99b33185b3"
+      ],
+      [
+        "caba1f86-3e20-4b7f-b048-5f504764faa7"
+      ],
+      [
+        "cad09ec9-4ebd-4e30-9df2-dacbf9cc49ab"
+      ],
+      [
+        "caef2a2e-22ef-4baf-ae46-8b3c4017072c"
+      ],
+      [
+        "cc18a2c3-9b1b-47a1-b7ba-5cd713854539"
+      ],
+      [
+        "cd2db449-6a9e-431a-84b2-b384a681ca9d"
+      ],
+      [
+        "cd324145-1138-4619-8a33-941dcf0367d3"
+      ],
+      [
+        "cd4c668e-392b-467e-b9a8-dc1411c1f67f"
+      ],
+      [
+        "cdc026d9-3ff2-496d-a8bd-e1ef3bd661d1"
+      ],
+      [
+        "ce8b9710-23d0-4b7e-9668-a3ca12a366b8"
+      ],
+      [
+        "cfc0c3ec-06aa-405a-9716-c12a62c4dfc0"
+      ],
+      [
+        "d027d5ed-2cbf-4bbd-ba97-a55f7a298957"
+      ],
+      [
+        "d043ed5e-036b-4d5d-8a5d-380c9544a952"
+      ],
+      [
+        "d0c66093-839f-4713-8ad9-0c4dccba4d69"
+      ],
+      [
+        "d5453fc5-c043-4fe1-9ec0-ddb92e07f43b"
+      ],
+      [
+        "d5458a18-be9e-482c-9da8-068fb03bb62d"
+      ],
+      [
+        "d5495046-cd2a-4a0b-8a62-b2ee42183fa9"
+      ],
+      [
+        "d58d78e6-f1c1-45f8-aaf5-b0bd2de9075a"
+      ],
+      [
+        "d5ae16c9-4ab1-4ed6-864a-b8c0f2eaa089"
+      ],
+      [
+        "d79f8f0c-64ca-4cf3-8015-6f949c88857e"
+      ],
+      [
+        "d8d8e356-002d-4c8c-96ac-3d1d4c2d4e4a"
+      ],
+      [
+        "dce67c88-8163-4a62-a8d8-886230007fa5"
+      ],
+      [
+        "ded58df8-f1aa-48bf-96a1-627f78e3faf1"
+      ],
+      [
+        "e43d91fd-572c-496a-9a7e-702e5a776361"
+      ],
+      [
+        "e4807543-34de-4960-a2e0-a8a94dd3d42a"
+      ],
+      [
+        "e61eadf5-4f21-4863-9634-a9a1d831232c"
+      ],
+      [
+        "e763a7af-34fd-480a-bf68-a00b308441dd"
+      ],
+      [
+        "e899835a-2391-48db-8047-e213bc6a6e67"
+      ],
+      [
+        "ea186fea-2b82-4557-bb29-f13f25b04871"
+      ],
+      [
+        "eac08588-d881-4712-b4cd-3500615e3fbb"
+      ],
+      [
+        "eb092421-b470-4cb7-a2e4-38102cd55a1a"
+      ],
+      [
+        "f10eae68-4f87-49ba-9380-121cdf7d825c"
+      ],
+      [
+        "f30b47dd-640e-45fa-9d17-e8f4302c0eb8"
+      ],
+      [
+        "f48dd221-2d63-4103-9018-7062507ef5ac"
+      ],
+      [
+        "f725d3e2-cbf5-4371-ac33-15f5413749a1"
+      ],
+      [
+        "f9be3422-deb8-4388-8acf-0ca0ea86d1e0"
+      ],
+      [
+        "f9ce72c4-1dea-437f-970c-0b5a0c4dc21c"
+      ],
+      [
+        "f9f79efe-a988-46df-961f-6853ffe0c4ba"
+      ],
+      [
+        "fc027d9b-6da2-4fa9-9668-c182d213929e"
+      ],
+      [
+        "fc383ffe-7299-4e9e-938f-19ceee3a6d8a"
+      ],
+      [
+        "fc63dda9-748e-4e16-97a7-a58fe8e79ca9"
+      ],
+      [
+        "fc932899-c488-468f-8b64-fe39d715da2b"
+      ],
+      [
+        "fcad67cd-3a68-4548-886e-93355654ed67"
+      ],
+      [
+        "fcc9fecd-1661-4094-900e-21645cb415e0"
+      ],
+      [
+        "fdafbb66-691a-4806-886a-88f507ae22ef"
+      ],
+      [
+        "fe1380fd-5a37-4ea2-9c10-1fc43ee9ea87"
+      ],
+      [
+        "ff6812b2-e642-40e3-9bc4-245c13511d5d"
+      ]
+    ]
+  },
+  {
+    "id": "AQL-06",
+    "title": "Diabetespatienter utan uppföljande HbA1c inom 90 dagar",
+    "resultCount": 0,
+    "rawRowCount": 855,
+    "executionTimeMs": 141,
+    "results": []
+  },
+  {
+    "id": "AQL-07",
+    "title": "HbA1c-trend per patient (första vs senaste värde)",
+    "resultCount": 114,
+    "rawRowCount": 232,
+    "executionTimeMs": 80,
+    "results": [
+      {
+        "ehr": "003d1250-7d9f-425b-87f2-cdb8630beae1",
+        "first": {
+          "date": "2026-05-21T21:54:32.60155509Z",
+          "val": 51.1
+        },
+        "last": {
+          "date": "2026-05-21T21:54:32.842578143Z",
+          "val": 51.1
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "009b351c-f310-462d-8a88-9460b063fb0b",
+        "first": {
+          "date": "2026-05-21T21:54:43.314488615Z",
+          "val": 51.36
+        },
+        "last": {
+          "date": "2026-05-21T21:54:43.540487263Z",
+          "val": 51.36
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "01a8c565-65fd-4531-a269-6e7f1bbc3009",
+        "first": {
+          "date": "2026-05-21T21:54:44.472308032Z",
+          "val": 50.13
+        },
+        "last": {
+          "date": "2026-05-21T21:54:44.665854055Z",
+          "val": 50.13
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "02333708-f2a8-4b5c-a476-194661895ba8",
+        "first": {
+          "date": "2026-05-21T21:54:16.73387484Z",
+          "val": 65.06
+        },
+        "last": {
+          "date": "2026-05-21T21:54:16.954192237Z",
+          "val": 65.06
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "02437be4-43ab-495a-8d5f-96a0554e800f",
+        "first": {
+          "date": "2026-05-21T21:53:44.97148862Z",
+          "val": 59.56
+        },
+        "last": {
+          "date": "2026-05-21T21:53:45.225520034Z",
+          "val": 59.56
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "06156592-d068-41dd-82ac-ab2a74859da6",
+        "first": {
+          "date": "2026-05-21T21:54:34.932944715Z",
+          "val": 48.77
+        },
+        "last": {
+          "date": "2026-05-21T21:54:35.108443441Z",
+          "val": 48.77
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "10ae74dd-71c8-4bc7-a081-00b1e68751cb",
+        "first": {
+          "date": "2026-05-21T21:54:19.447641851Z",
+          "val": 56.85
+        },
+        "last": {
+          "date": "2026-05-21T21:54:19.684440586Z",
+          "val": 56.85
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "1727547d-e8ae-4af1-ab3f-d19e94b9cba0",
+        "first": {
+          "date": "2026-05-21T21:53:34.543495552Z",
+          "val": 55.21
+        },
+        "last": {
+          "date": "2026-05-21T21:53:34.936381119Z",
+          "val": 55.21
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "17e0246d-92ff-46b7-9a94-9971fa9d0f9b",
+        "first": {
+          "date": "2026-05-21T21:54:07.880729385Z",
+          "val": 71.53
+        },
+        "last": {
+          "date": "2026-05-21T21:54:08.162987131Z",
+          "val": 71.53
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "1b021038-6f20-4636-aadb-77b92b2413f9",
+        "first": {
+          "date": "2026-05-21T21:53:30.631213564Z",
+          "val": 50.72
+        },
+        "last": {
+          "date": "2026-05-21T21:53:31.323629258Z",
+          "val": 50.72
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "1b7c7bd0-e9ca-4d54-9dc4-71b4ba8250d7",
+        "first": {
+          "date": "2026-05-21T21:53:20.169144858Z",
+          "val": 52.66
+        },
+        "last": {
+          "date": "2026-05-21T21:53:20.684225156Z",
+          "val": 52.66
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "1bc5d431-b23b-487c-90bf-e139c5b9c3a4",
+        "first": {
+          "date": "2026-05-21T21:54:11.860042893Z",
+          "val": 56.59
+        },
+        "last": {
+          "date": "2026-05-21T21:54:12.04554313Z",
+          "val": 56.59
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "240662c4-1301-4bac-9c8a-40faccca03db",
+        "first": {
+          "date": "2026-05-21T21:54:39.529257009Z",
+          "val": 112.5
+        },
+        "last": {
+          "date": "2026-05-21T21:54:39.974274815Z",
+          "val": 112.5
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "2a4881a1-bd63-4579-8290-8e3145846663",
+        "first": {
+          "date": "2026-05-21T21:53:27.24407345Z",
+          "val": 108.62
+        },
+        "last": {
+          "date": "2026-05-21T21:53:27.79253472Z",
+          "val": 108.62
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "2c382fcc-3a5a-4c53-b723-5f248170d8ca",
+        "first": {
+          "date": "2026-05-21T21:54:14.161412196Z",
+          "val": 74.16
+        },
+        "last": {
+          "date": "2026-05-21T21:54:14.503994948Z",
+          "val": 74.16
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "2d8a8e40-08c1-461c-9141-ccfb4ea543e2",
+        "first": {
+          "date": "2026-05-21T21:53:51.376117958Z",
+          "val": 112.64
+        },
+        "last": {
+          "date": "2026-05-21T21:53:51.765316945Z",
+          "val": 112.64
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "2eab9c5a-d6a0-4937-95ae-7d306831e90b",
+        "first": {
+          "date": "2026-05-21T21:54:43.842839287Z",
+          "val": 59.95
+        },
+        "last": {
+          "date": "2026-05-21T21:54:44.138423236Z",
+          "val": 59.95
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "30e7ef78-de7e-4e31-83b1-e3f08e77d6ea",
+        "first": {
+          "date": "2026-05-21T21:53:54.81129289Z",
+          "val": 51.65
+        },
+        "last": {
+          "date": "2026-05-21T21:53:55.031297929Z",
+          "val": 51.65
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "326bfe67-bcd0-4238-aafb-dcfb985f1159",
+        "first": {
+          "date": "2026-05-21T21:53:40.552490962Z",
+          "val": 62.28
+        },
+        "last": {
+          "date": "2026-05-21T21:53:40.7768828Z",
+          "val": 62.28
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "3a26fac8-90bf-4287-9512-d218b8d29a17",
+        "first": {
+          "date": "2026-05-21T21:54:37.445417514Z",
+          "val": 51.96
+        },
+        "last": {
+          "date": "2026-05-21T21:54:37.64129336Z",
+          "val": 51.96
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "42370dfb-d8b1-46ff-968c-95ebb5e4493f",
+        "first": {
+          "date": "2026-05-21T21:54:24.288706308Z",
+          "val": 51.57
+        },
+        "last": {
+          "date": "2026-05-21T21:54:24.491428277Z",
+          "val": 51.57
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "4654bb97-d316-45e5-b02e-c7b19c9031cc",
+        "first": {
+          "date": "2026-05-21T21:53:49.847791752Z",
+          "val": 50.14
+        },
+        "last": {
+          "date": "2026-05-21T21:53:50.190475808Z",
+          "val": 50.14
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "47ec47da-350c-4134-82f8-65d11a39ee70",
+        "first": {
+          "date": "2026-05-21T21:54:27.155414928Z",
+          "val": 53.73
+        },
+        "last": {
+          "date": "2026-05-21T21:54:27.430491824Z",
+          "val": 53.73
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "4d83f459-520c-4c8d-aa16-b0885103e3ea",
+        "first": {
+          "date": "2026-05-21T21:54:22.341817884Z",
+          "val": 61.02
+        },
+        "last": {
+          "date": "2026-05-21T21:54:22.567037922Z",
+          "val": 61.02
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "4d8f15d8-e182-451e-8609-c28668ec65f8",
+        "first": {
+          "date": "2026-05-21T21:53:28.411606831Z",
+          "val": 57.29
+        },
+        "last": {
+          "date": "2026-05-21T21:53:28.965402494Z",
+          "val": 57.29
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "4db70029-57a5-4712-a74b-5699b127158e",
+        "first": {
+          "date": "2026-05-21T21:54:17.841751013Z",
+          "val": 55.74
+        },
+        "last": {
+          "date": "2026-05-21T21:54:18.051688128Z",
+          "val": 55.74
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "51977fa1-3a6c-4a3f-89b1-0d85e0314f0a",
+        "first": {
+          "date": "2026-05-21T21:53:35.411632028Z",
+          "val": 66.19
+        },
+        "last": {
+          "date": "2026-05-21T21:53:35.708856022Z",
+          "val": 66.19
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "51fc6ff4-510a-4b64-967b-75fe81100038",
+        "first": {
+          "date": "2026-05-21T21:53:43.559071737Z",
+          "val": 60.5
+        },
+        "last": {
+          "date": "2026-05-21T21:53:43.786597079Z",
+          "val": 60.5
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "53c64580-4efc-4ed3-b4c7-04546c415bf2",
+        "first": {
+          "date": "2026-05-21T21:54:00.167773776Z",
+          "val": 106.55
+        },
+        "last": {
+          "date": "2026-05-21T21:54:00.535386483Z",
+          "val": 106.55
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "5889fe64-f626-4c08-a5bb-0a9f261bd1ce",
+        "first": {
+          "date": "2026-05-21T21:53:56.844575662Z",
+          "val": 52.7
+        },
+        "last": {
+          "date": "2026-05-21T21:53:57.054926194Z",
+          "val": 52.7
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "59fbbf60-f52e-4829-8b68-fa9d26a1b6e0",
+        "first": {
+          "date": "2026-05-21T21:54:00.9978229Z",
+          "val": 55.59
+        },
+        "last": {
+          "date": "2026-05-21T21:54:01.29662897Z",
+          "val": 55.59
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "5c067a84-dc05-4331-bb4a-07d29d40630c",
+        "first": {
+          "date": "2026-05-21T21:54:04.389483106Z",
+          "val": 51.74
+        },
+        "last": {
+          "date": "2026-05-21T21:54:04.611269006Z",
+          "val": 51.74
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "5df7f9a9-20cf-4466-ab21-c83a2153eaaf",
+        "first": {
+          "date": "2026-05-21T21:54:33.335225711Z",
+          "val": 76.21
+        },
+        "last": {
+          "date": "2026-05-21T21:54:33.737417874Z",
+          "val": 76.21
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "6207c5f4-2a32-4ff2-89cc-62fdd338cec9",
+        "first": {
+          "date": "2026-05-21T21:54:35.538770494Z",
+          "val": 57.04
+        },
+        "last": {
+          "date": "2026-05-21T21:54:35.917598615Z",
+          "val": 57.04
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "64c606b8-0e39-4ae2-ad8b-11febc654e55",
+        "first": {
+          "date": "2026-05-21T21:54:34.227396067Z",
+          "val": 74.07
+        },
+        "last": {
+          "date": "2026-05-21T21:54:34.606576612Z",
+          "val": 74.07
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "68bbb995-7f91-4eeb-89dc-9c26d69e4d26",
+        "first": {
+          "date": "2026-05-21T21:54:17.260288343Z",
+          "val": 66.84
+        },
+        "last": {
+          "date": "2026-05-21T21:54:17.462217613Z",
+          "val": 66.84
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "6980ea8a-fecc-4b2a-aa89-5be2ba5a421b",
+        "first": {
+          "date": "2026-05-21T21:54:21.134691673Z",
+          "val": 48.47
+        },
+        "last": {
+          "date": "2026-05-21T21:54:21.35745228Z",
+          "val": 48.47
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "69a7c99a-2221-4da1-b48f-457c9277ace4",
+        "first": {
+          "date": "2026-05-21T21:54:41.586324109Z",
+          "val": 55.63
+        },
+        "last": {
+          "date": "2026-05-21T21:54:41.828705226Z",
+          "val": 55.63
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "6a1ca757-c678-42e3-80bd-bf7d488d8f4f",
+        "first": {
+          "date": "2026-05-21T21:53:56.228121332Z",
+          "val": 48.81
+        },
+        "last": {
+          "date": "2026-05-21T21:53:56.4830758Z",
+          "val": 48.81
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "6a5fa307-c040-4a02-bf92-f077a956284f",
+        "first": {
+          "date": "2026-05-21T21:51:42.072728298Z",
+          "val": 57.11
+        },
+        "last": {
+          "date": "2026-05-21T21:51:42.848983068Z",
+          "val": 57.11
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "6f171ee2-b309-417c-a7d5-1a71b0a0380b",
+        "first": {
+          "date": "2026-05-21T21:54:30.321627526Z",
+          "val": 76.08
+        },
+        "last": {
+          "date": "2026-05-21T21:54:30.620374828Z",
+          "val": 76.08
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "6f373944-6c1c-4c96-90c9-70633029e37d",
+        "first": {
+          "date": "2026-05-21T21:53:57.468918444Z",
+          "val": 52.02
+        },
+        "last": {
+          "date": "2026-05-21T21:53:57.67789417Z",
+          "val": 52.02
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "7040c78b-bff6-4220-a95b-a1322fa564f9",
+        "first": {
+          "date": "2026-05-21T21:53:41.949853333Z",
+          "val": 56.18
+        },
+        "last": {
+          "date": "2026-05-21T21:53:42.434818937Z",
+          "val": 56.18
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "70f7aad1-d8c7-4c13-8605-094a78567a94",
+        "first": {
+          "date": "2026-05-21T21:53:54.093223588Z",
+          "val": 57.72
+        },
+        "last": {
+          "date": "2026-05-21T21:53:54.364732106Z",
+          "val": 57.72
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "7706bf58-3b2b-40f9-9c36-350b11fa0a40",
+        "first": {
+          "date": "2026-05-21T21:54:20.004573097Z",
+          "val": 54.97
+        },
+        "last": {
+          "date": "2026-05-21T21:54:20.250424335Z",
+          "val": 54.97
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "770e2af4-2992-45d4-b165-1cfca5d1f52a",
+        "first": {
+          "date": "2026-05-21T21:53:23.919225853Z",
+          "val": 55
+        },
+        "last": {
+          "date": "2026-05-21T21:53:24.344587624Z",
+          "val": 55
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "79a4108f-3725-4bed-b3c7-897e2b18a894",
+        "first": {
+          "date": "2026-05-21T21:54:42.719353078Z",
+          "val": 50.59
+        },
+        "last": {
+          "date": "2026-05-21T21:54:42.898282493Z",
+          "val": 50.59
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "7bd8a282-80a2-4e1d-9ed7-676e95829019",
+        "first": {
+          "date": "2026-05-21T21:54:01.672877896Z",
+          "val": 60.06
+        },
+        "last": {
+          "date": "2026-05-21T21:54:01.933775762Z",
+          "val": 60.06
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "7d501357-194d-499c-8276-1553bf9d4e95",
+        "first": {
+          "date": "2026-05-21T21:54:08.665964387Z",
+          "val": 71.98
+        },
+        "last": {
+          "date": "2026-05-21T21:54:08.98498768Z",
+          "val": 71.98
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "8299e5cc-cc81-41d7-9e6e-cac79a784b04",
+        "first": {
+          "date": "2026-05-21T21:53:47.460167898Z",
+          "val": 68.41
+        },
+        "last": {
+          "date": "2026-05-21T21:53:47.702098966Z",
+          "val": 68.41
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "831c28d2-6948-4c61-a361-7b54526bb7f6",
+        "first": {
+          "date": "2026-05-21T21:54:03.608431841Z",
+          "val": 68.75
+        },
+        "last": {
+          "date": "2026-05-21T21:54:03.974209958Z",
+          "val": 68.75
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "83b68443-ebda-4f2a-9024-f6ee191c7716",
+        "first": {
+          "date": "2026-05-21T21:54:31.686074471Z",
+          "val": 54.84
+        },
+        "last": {
+          "date": "2026-05-21T21:54:31.9768918Z",
+          "val": 54.84
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "86635040-17ea-4fad-8784-5af4f76f7c53",
+        "first": {
+          "date": "2026-05-21T21:54:30.970243863Z",
+          "val": 100.51
+        },
+        "last": {
+          "date": "2026-05-21T21:54:31.353012349Z",
+          "val": 100.51
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "879f72cc-b4f2-4ed3-8022-afc6f4ec59b0",
+        "first": {
+          "date": "2026-05-21T21:54:26.629984957Z",
+          "val": 55.18
+        },
+        "last": {
+          "date": "2026-05-21T21:54:26.798064525Z",
+          "val": 55.18
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "89aef665-1a70-4eab-949d-854f94da770e",
+        "first": {
+          "date": "2026-05-21T21:53:58.068568316Z",
+          "val": 55.82
+        },
+        "last": {
+          "date": "2026-05-21T21:53:58.320083541Z",
+          "val": 55.82
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "89c67de3-c1e8-478f-a0e8-28a25816c3da",
+        "first": {
+          "date": "2026-05-21T21:54:06.645916106Z",
+          "val": 52.6
+        },
+        "last": {
+          "date": "2026-05-21T21:54:06.900323174Z",
+          "val": 52.6
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "8a1b4418-8dcf-4a1e-93d4-f2dec7ba3b55",
+        "first": {
+          "date": "2026-05-21T21:54:21.791232825Z",
+          "val": 51.54
+        },
+        "last": {
+          "date": "2026-05-21T21:54:22.00598457Z",
+          "val": 51.54
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "907a6a52-a989-409b-9aaa-363792836503",
+        "first": {
+          "date": "2026-05-21T21:53:52.125147812Z",
+          "val": 55.86
+        },
+        "last": {
+          "date": "2026-05-21T21:53:52.428182144Z",
+          "val": 55.86
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "96adcd70-d5b7-40d3-994e-d60e1696585a",
+        "first": {
+          "date": "2026-05-21T21:53:41.198989977Z",
+          "val": 102.91
+        },
+        "last": {
+          "date": "2026-05-21T21:53:41.590459796Z",
+          "val": 102.91
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "983cd4dd-3970-4df1-89e4-9c0b0fcf1f52",
+        "first": {
+          "date": "2026-05-21T21:53:26.32027005Z",
+          "val": 76.43
+        },
+        "last": {
+          "date": "2026-05-21T21:53:26.791449295Z",
+          "val": 76.43
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "98907dba-983e-409c-9379-25adee4bdf44",
+        "first": {
+          "date": "2026-05-21T21:53:32.105260928Z",
+          "val": 70.12
+        },
+        "last": {
+          "date": "2026-05-21T21:53:32.782481283Z",
+          "val": 70.12
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "998667d9-8d53-4559-b4b8-eef76f4d0e5d",
+        "first": {
+          "date": "2026-05-21T21:54:12.427159401Z",
+          "val": 77.81
+        },
+        "last": {
+          "date": "2026-05-21T21:54:13.328253682Z",
+          "val": 77.81
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "9a31f222-d63d-4096-bff2-c2d3bf4f3c0c",
+        "first": {
+          "date": "2026-05-21T21:51:38.083071428Z",
+          "val": 62.97
+        },
+        "last": {
+          "date": "2026-05-21T21:51:38.797154553Z",
+          "val": 62.97
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "9cf5cacb-50b5-44b9-b268-48ab8f37533f",
+        "first": {
+          "date": "2026-05-21T21:53:38.980223029Z",
+          "val": 51.5
+        },
+        "last": {
+          "date": "2026-05-21T21:53:39.296585856Z",
+          "val": 51.5
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "9f072cd6-fa3f-4db2-8adb-90f16fb3f29d",
+        "first": {
+          "date": "2026-05-21T21:54:16.067465227Z",
+          "val": 51.17
+        },
+        "last": {
+          "date": "2026-05-21T21:54:16.331171746Z",
+          "val": 51.17
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "9fb54bcf-ab67-498b-8b63-7d0032645a74",
+        "first": {
+          "date": "2026-05-21T21:54:25.398947639Z",
+          "val": 57.49
+        },
+        "last": {
+          "date": "2026-05-21T21:54:25.646456756Z",
+          "val": 57.49
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "a0a05fbc-e98e-4fad-9838-32e5b1f67f91",
+        "first": {
+          "date": "2026-05-21T21:54:42.227340273Z",
+          "val": 54.19
+        },
+        "last": {
+          "date": "2026-05-21T21:54:42.428626968Z",
+          "val": 54.19
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "a248dfbf-54d0-475b-ba2c-567582578345",
+        "first": {
+          "date": "2026-05-21T21:53:42.912161595Z",
+          "val": 51.58
+        },
+        "last": {
+          "date": "2026-05-21T21:53:43.165490123Z",
+          "val": 51.58
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "a5488df0-fe97-469d-bc69-227388f6b628",
+        "first": {
+          "date": "2026-05-21T21:54:14.819478902Z",
+          "val": 49.01
+        },
+        "last": {
+          "date": "2026-05-21T21:54:15.040373343Z",
+          "val": 49.01
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "ab300e5a-a20a-4e4e-b473-5232ba21ae55",
+        "first": {
+          "date": "2026-05-21T21:53:33.45535424Z",
+          "val": 51.41
+        },
+        "last": {
+          "date": "2026-05-21T21:53:33.903169909Z",
+          "val": 51.41
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "ab3993d6-a86f-4da7-b164-db4f8ae73f73",
+        "first": {
+          "date": "2026-05-21T21:54:10.027215608Z",
+          "val": 67.05
+        },
+        "last": {
+          "date": "2026-05-21T21:54:10.263573854Z",
+          "val": 67.05
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "ad52617c-faea-47c0-9550-48ad7320ee27",
+        "first": {
+          "date": "2026-05-21T21:54:37.914080492Z",
+          "val": 48.68
+        },
+        "last": {
+          "date": "2026-05-21T21:54:38.093643239Z",
+          "val": 48.68
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "ad905eec-ecb4-4977-86dc-c4730b23a031",
+        "first": {
+          "date": "2026-05-21T21:53:55.644103724Z",
+          "val": 57.11
+        },
+        "last": {
+          "date": "2026-05-21T21:53:55.904012203Z",
+          "val": 57.11
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "ae3ae648-c292-43f6-9530-c75820ce9ea1",
+        "first": {
+          "date": "2026-05-21T21:53:53.404518411Z",
+          "val": 81.17
+        },
+        "last": {
+          "date": "2026-05-21T21:53:53.735525952Z",
+          "val": 81.17
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "b08a1479-2564-419a-aeca-ea223034e3b2",
+        "first": {
+          "date": "2026-05-21T21:54:05.069503506Z",
+          "val": 59.11
+        },
+        "last": {
+          "date": "2026-05-21T21:54:05.394760397Z",
+          "val": 59.11
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "b1e46e7c-e07d-4614-bab7-a5464ea723df",
+        "first": {
+          "date": "2026-05-21T21:53:59.4803543Z",
+          "val": 55.29
+        },
+        "last": {
+          "date": "2026-05-21T21:53:59.748242148Z",
+          "val": 55.29
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "b9084a42-4f29-436c-a29f-4c63f3cee613",
+        "first": {
+          "date": "2026-05-21T21:54:39.010811368Z",
+          "val": 49.36
+        },
+        "last": {
+          "date": "2026-05-21T21:54:39.209559883Z",
+          "val": 49.36
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "ba37f819-6ead-4206-bdc6-268c0e05ccef",
+        "first": {
+          "date": "2026-05-21T21:54:11.189530828Z",
+          "val": 57.76
+        },
+        "last": {
+          "date": "2026-05-21T21:54:11.535035327Z",
+          "val": 57.76
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "c0b5840f-9781-4b53-a33d-932ecd87df7e",
+        "first": {
+          "date": "2026-05-21T21:53:50.603968167Z",
+          "val": 54.79
+        },
+        "last": {
+          "date": "2026-05-21T21:53:50.886933799Z",
+          "val": 54.79
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "c3e9270f-1020-4146-8166-01a21b9643a5",
+        "first": {
+          "date": "2026-05-21T21:53:44.139252921Z",
+          "val": 69.47
+        },
+        "last": {
+          "date": "2026-05-21T21:53:44.469566882Z",
+          "val": 69.47
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "c483e705-ba63-4555-932f-7355b80e7f03",
+        "first": {
+          "date": "2026-05-21T21:54:18.417542374Z",
+          "val": 49.49
+        },
+        "last": {
+          "date": "2026-05-21T21:54:18.623619992Z",
+          "val": 49.49
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "c51052b4-5b95-4838-8a76-03fc0d7461a4",
+        "first": {
+          "date": "2026-05-21T21:54:40.906612532Z",
+          "val": 77.41
+        },
+        "last": {
+          "date": "2026-05-21T21:54:41.241770617Z",
+          "val": 77.41
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "c6c08c67-7f8c-4d27-be55-9c00fee52ef8",
+        "first": {
+          "date": "2026-05-21T21:53:49.123290773Z",
+          "val": 53.71
+        },
+        "last": {
+          "date": "2026-05-21T21:53:49.417168745Z",
+          "val": 53.71
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "c836d435-dcd6-4d8c-8328-a75b68078fb4",
+        "first": {
+          "date": "2026-05-21T21:53:46.46379818Z",
+          "val": 70.69
+        },
+        "last": {
+          "date": "2026-05-21T21:53:46.948200258Z",
+          "val": 70.69
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "cab0023c-4322-45bd-a94e-6cd2e8791baf",
+        "first": {
+          "date": "2026-05-21T21:53:39.704571823Z",
+          "val": 82.16
+        },
+        "last": {
+          "date": "2026-05-21T21:53:40.146566183Z",
+          "val": 82.16
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "caed913a-b921-40b1-8ea0-094be4582368",
+        "first": {
+          "date": "2026-05-21T21:54:36.903592949Z",
+          "val": 55.24
+        },
+        "last": {
+          "date": "2026-05-21T21:54:37.167354176Z",
+          "val": 55.24
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "cc18a2c3-9b1b-47a1-b7ba-5cd713854539",
+        "first": {
+          "date": "2026-05-21T21:53:22.715990359Z",
+          "val": 78.14
+        },
+        "last": {
+          "date": "2026-05-21T21:53:23.26282517Z",
+          "val": 78.14
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "cd4c668e-392b-467e-b9a8-dc1411c1f67f",
+        "first": {
+          "date": "2026-05-21T21:53:29.58743856Z",
+          "val": 92.13
+        },
+        "last": {
+          "date": "2026-05-21T21:53:30.105444302Z",
+          "val": 92.13
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "cdc026d9-3ff2-496d-a8bd-e1ef3bd661d1",
+        "first": {
+          "date": "2026-05-21T18:36:16.134954386Z",
+          "val": 82
+        },
+        "last": {
+          "date": "2026-05-21T18:38:13.219692244Z",
+          "val": 68
+        },
+        "delta": -14
+      },
+      {
+        "ehr": "d24d80ff-4eb7-4864-a79b-1efd276d8010",
+        "first": {
+          "date": "2026-05-21T21:54:18.938490221Z",
+          "val": 51.52
+        },
+        "last": {
+          "date": "2026-05-21T21:54:19.14637503Z",
+          "val": 51.52
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "d282f4dd-1844-40e5-afa5-b4ef97f3f6ce",
+        "first": {
+          "date": "2026-05-21T21:54:22.924812922Z",
+          "val": 49.03
+        },
+        "last": {
+          "date": "2026-05-21T21:54:23.358363093Z",
+          "val": 49.03
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "d3cd1651-55d2-49ae-b1cc-34e7311021e6",
+        "first": {
+          "date": "2026-05-21T21:54:23.750395737Z",
+          "val": 53.04
+        },
+        "last": {
+          "date": "2026-05-21T21:54:23.951243168Z",
+          "val": 53.04
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "d402ed82-7fbe-494e-8a61-2ffd7d9484c4",
+        "first": {
+          "date": "2026-05-21T21:54:09.288762678Z",
+          "val": 51.06
+        },
+        "last": {
+          "date": "2026-05-21T21:54:09.691575449Z",
+          "val": 51.06
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "d5458a18-be9e-482c-9da8-068fb03bb62d",
+        "first": {
+          "date": "2026-05-21T21:54:10.571181442Z",
+          "val": 74.29
+        },
+        "last": {
+          "date": "2026-05-21T21:54:10.850962002Z",
+          "val": 74.29
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "d5b04d65-c64c-4cbe-8d3e-b34887507566",
+        "first": {
+          "date": "2026-05-21T21:54:29.179234455Z",
+          "val": 51.68
+        },
+        "last": {
+          "date": "2026-05-21T21:54:29.451554334Z",
+          "val": 51.68
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "d609e7cd-fcf1-44a6-a8f3-2844ca54efe8",
+        "first": {
+          "date": "2026-05-21T21:51:40.194066736Z",
+          "val": 55.25
+        },
+        "last": {
+          "date": "2026-05-21T21:51:40.938628929Z",
+          "val": 55.25
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "dbb43aa2-7b0b-4162-bbdb-fccf4ed2ac93",
+        "first": {
+          "date": "2026-05-21T21:54:15.482685467Z",
+          "val": 54.76
+        },
+        "last": {
+          "date": "2026-05-21T21:54:15.728798235Z",
+          "val": 54.76
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "ded58df8-f1aa-48bf-96a1-627f78e3faf1",
+        "first": {
+          "date": "2026-05-21T21:54:05.741151939Z",
+          "val": 79.27
+        },
+        "last": {
+          "date": "2026-05-21T21:54:06.160050895Z",
+          "val": 79.27
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "df262a64-61c6-43e1-a888-1362ddc1e423",
+        "first": {
+          "date": "2026-05-21T21:53:45.600193177Z",
+          "val": 54.85
+        },
+        "last": {
+          "date": "2026-05-21T21:53:45.832427992Z",
+          "val": 54.85
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "e17ffbb2-3a51-445f-928a-f224f0b5f84e",
+        "first": {
+          "date": "2026-05-21T21:53:58.787949169Z",
+          "val": 68.8
+        },
+        "last": {
+          "date": "2026-05-21T21:53:59.00515917Z",
+          "val": 68.8
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "e2fa7516-86ed-4c33-b786-e94684c408e2",
+        "first": {
+          "date": "2026-05-21T21:54:29.760469233Z",
+          "val": 57.71
+        },
+        "last": {
+          "date": "2026-05-21T21:54:29.987171943Z",
+          "val": 57.71
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "e4807543-34de-4960-a2e0-a8a94dd3d42a",
+        "first": {
+          "date": "2026-05-21T21:53:48.096838197Z",
+          "val": 87.95
+        },
+        "last": {
+          "date": "2026-05-21T21:53:48.504182516Z",
+          "val": 87.95
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "e549bdc6-4e0c-469e-89d8-6a638a1d8252",
+        "first": {
+          "date": "2026-05-21T21:54:13.620036251Z",
+          "val": 57.48
+        },
+        "last": {
+          "date": "2026-05-21T21:54:13.79642124Z",
+          "val": 57.48
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "e679a7ca-1641-428f-84de-b9ba40f149b5",
+        "first": {
+          "date": "2026-05-21T21:54:40.327364134Z",
+          "val": 69.34
+        },
+        "last": {
+          "date": "2026-05-21T21:54:40.571873702Z",
+          "val": 69.34
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "e899835a-2391-48db-8047-e213bc6a6e67",
+        "first": {
+          "date": "2026-05-21T21:54:24.779775501Z",
+          "val": 88.49
+        },
+        "last": {
+          "date": "2026-05-21T21:54:25.087150108Z",
+          "val": 88.49
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "ea1a01e9-1d44-424d-a43f-fc7273a5379d",
+        "first": {
+          "date": "2026-05-21T21:54:28.5973159Z",
+          "val": 51.1
+        },
+        "last": {
+          "date": "2026-05-21T21:54:28.82324052Z",
+          "val": 51.1
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "ea71b746-b78f-4713-b32e-651825e8581f",
+        "first": {
+          "date": "2026-05-21T21:54:20.633960546Z",
+          "val": 54.93
+        },
+        "last": {
+          "date": "2026-05-21T21:54:20.828230236Z",
+          "val": 54.93
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "ec842127-7ef0-4e34-a1c3-e72c54b07599",
+        "first": {
+          "date": "2026-05-21T21:54:36.379278311Z",
+          "val": 51.63
+        },
+        "last": {
+          "date": "2026-05-21T21:54:36.60840707Z",
+          "val": 51.63
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "ee70856c-e060-425a-9495-8180a781173d",
+        "first": {
+          "date": "2026-05-21T21:53:52.796139396Z",
+          "val": 60.29
+        },
+        "last": {
+          "date": "2026-05-21T21:53:53.025553121Z",
+          "val": 60.29
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "f10eae68-4f87-49ba-9380-121cdf7d825c",
+        "first": {
+          "date": "2026-05-21T21:54:26.00151488Z",
+          "val": 92.82
+        },
+        "last": {
+          "date": "2026-05-21T21:54:26.328787064Z",
+          "val": 92.82
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "fbd4d702-18c6-43c0-925e-8f950c3de61a",
+        "first": {
+          "date": "2026-05-21T21:54:07.299978128Z",
+          "val": 55.17
+        },
+        "last": {
+          "date": "2026-05-21T21:54:07.537020571Z",
+          "val": 55.17
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "fc932899-c488-468f-8b64-fe39d715da2b",
+        "first": {
+          "date": "2026-05-21T21:54:27.755416385Z",
+          "val": 74.31
+        },
+        "last": {
+          "date": "2026-05-21T21:54:28.262868411Z",
+          "val": 74.31
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "fcc9fecd-1661-4094-900e-21645cb415e0",
+        "first": {
+          "date": "2026-05-21T21:54:38.387340687Z",
+          "val": 70.88
+        },
+        "last": {
+          "date": "2026-05-21T21:54:38.716895522Z",
+          "val": 70.88
+        },
+        "delta": 0
+      },
+      {
+        "ehr": "fdafbb66-691a-4806-886a-88f507ae22ef",
+        "first": {
+          "date": "2026-05-21T21:54:02.573259125Z",
+          "val": 97.62
+        },
+        "last": {
+          "date": "2026-05-21T21:54:03.125416889Z",
+          "val": 97.62
+        },
+        "delta": 0
+      }
+    ]
+  },
+  {
+    "id": "AQL-08",
+    "title": "Median dagar från första kontakt till remiss (per profil)",
+    "resultCount": 11,
+    "rawRowCount": 1306,
+    "executionTimeMs": 122,
+    "results": [
+      {
+        "profile": "hjartsvikt",
+        "n": 43,
+        "median_days": 0
+      },
+      {
+        "profile": "anemi",
+        "n": 22,
+        "median_days": 0
+      },
+      {
+        "profile": "aldre_multisjuk",
+        "n": 27,
+        "median_days": 0
+      },
+      {
+        "profile": "ryggsmarta",
+        "n": 12,
+        "median_days": 0
+      },
+      {
+        "profile": "kol",
+        "n": 9,
+        "median_days": 0
+      },
+      {
+        "profile": "hypertoni",
+        "n": 15,
+        "median_days": 0
+      },
+      {
+        "profile": "depression",
+        "n": 15,
+        "median_days": 0
+      },
+      {
+        "profile": "diabetes_typ",
+        "n": 29,
+        "median_days": 0
+      },
+      {
+        "profile": "uvi",
+        "n": 14,
+        "median_days": 0
+      },
+      {
+        "profile": "brostsmarta",
+        "n": 10,
+        "median_days": 0
+      },
+      {
+        "profile": "endocrinology",
+        "n": 1,
+        "median_days": 0
+      }
+    ]
+  },
+  {
+    "id": "AQL-09",
+    "title": "Patienter med > 3 primary_care_encounter under 90 dagar",
+    "resultCount": 0,
+    "rawRowCount": 1107,
+    "executionTimeMs": 238,
+    "results": []
+  },
+  {
+    "id": "AQL-10",
+    "title": "Patienter med förbättrade labbvärden efter läkemedelsinsättning",
+    "resultCount": 1,
+    "rawRowCount": 2126,
+    "executionTimeMs": 146,
+    "results": [
+      {
+        "ehr": "cdc026d9-3ff2-496d-a8bd-e1ef3bd661d1",
+        "first": {
+          "date": "2026-05-21T18:36:16.134954386Z",
+          "val": 82
+        },
+        "last": {
+          "date": "2026-05-21T18:38:13.219692244Z",
+          "val": 68
+        },
+        "rx_at": "2026-05-21T18:36:16.604018836Z",
+        "delta": -14
+      }
+    ]
+  },
+  {
+    "id": "AQL-11",
+    "title": "Äldre multisjuka patienter (proxy: aldre_multisjuk-profil)",
+    "resultCount": 98,
+    "rawRowCount": 3003,
+    "executionTimeMs": 131,
+    "results": [
+      {
+        "ehr": "7d1eb30e-dcf6-4570-a992-603aa1b95802",
+        "medications": 10
+      },
+      {
+        "ehr": "3a2f4b1d-8b5b-4156-b88f-c44186adfe4c",
+        "medications": 7
+      },
+      {
+        "ehr": "5224c1d4-57e2-43a5-8a98-8cc0f2452ef0",
+        "medications": 7
+      },
+      {
+        "ehr": "65ef964e-2b5e-406c-ac9f-765e02ca9fea",
+        "medications": 9
+      },
+      {
+        "ehr": "41751514-e8e8-49c2-b5dc-75127f3e9f5a",
+        "medications": 9
+      },
+      {
+        "ehr": "f1e06959-f813-446f-8f8d-7c6992e4fc63",
+        "medications": 9
+      },
+      {
+        "ehr": "ca731489-9037-4dba-b6d9-da67246d73e3",
+        "medications": 8
+      },
+      {
+        "ehr": "6b19c669-64d2-4090-b1fc-7b17d0ca5b89",
+        "medications": 9
+      },
+      {
+        "ehr": "c12b2f53-581b-41e2-a35d-104cb14c4241",
+        "medications": 9
+      },
+      {
+        "ehr": "6e156501-a627-4ec4-8294-caa3f0125297",
+        "medications": 7
+      },
+      {
+        "ehr": "a9523216-1f45-4805-9a08-add8b396124b",
+        "medications": 11
+      },
+      {
+        "ehr": "a26ead46-90bd-474f-956d-89af8693846a",
+        "medications": 8
+      },
+      {
+        "ehr": "c97f6e14-5ea4-4a98-8d26-a8ae95cf7a52",
+        "medications": 9
+      },
+      {
+        "ehr": "f21f4a03-8f01-4f68-9ec1-9d0dce780ee6",
+        "medications": 6
+      },
+      {
+        "ehr": "ddd29514-1ada-4a9e-8ec2-98891409f6ef",
+        "medications": 7
+      },
+      {
+        "ehr": "1361a747-52fb-4cdc-87b7-5ab9948b6e96",
+        "medications": 8
+      },
+      {
+        "ehr": "8a18ecdc-dfd7-422e-a1a7-6917e2f3af2e",
+        "medications": 9
+      },
+      {
+        "ehr": "3acc93b1-be3c-4956-9440-4ef0f0ed9618",
+        "medications": 6
+      },
+      {
+        "ehr": "8930801e-d120-4342-8644-96baac0411a2",
+        "medications": 10
+      },
+      {
+        "ehr": "a2a0158b-8294-4fd5-98c1-603bfe109716",
+        "medications": 9
+      },
+      {
+        "ehr": "7b65ed97-6a2f-40a4-9f21-7839737f6b03",
+        "medications": 7
+      },
+      {
+        "ehr": "f10029bd-e61e-444f-8d94-e4bfa685fc85",
+        "medications": 6
+      },
+      {
+        "ehr": "81e2c373-695d-4a86-80e0-e1e9b7e3fa19",
+        "medications": 13
+      },
+      {
+        "ehr": "b6e5d2ec-c1d2-4472-b203-c59dfd9795be",
+        "medications": 11
+      },
+      {
+        "ehr": "a35cccad-9cc9-439e-8535-dd1c2f0bfb35",
+        "medications": 7
+      },
+      {
+        "ehr": "3a63aaf4-ff98-47f0-b458-d5fbcf2464f6",
+        "medications": 12
+      },
+      {
+        "ehr": "8628fd13-3848-4a5d-929a-1633239878b5",
+        "medications": 5
+      },
+      {
+        "ehr": "9639efc8-be83-4a16-a74d-7db4c35329ab",
+        "medications": 5
+      },
+      {
+        "ehr": "7c0a8496-9096-4946-b6aa-a2c4b5998ccf",
+        "medications": 10
+      },
+      {
+        "ehr": "63c70423-e77f-4f8d-8a66-8c92728f8732",
+        "medications": 11
+      },
+      {
+        "ehr": "329e6209-a247-4745-ae19-e7a796e49951",
+        "medications": 5
+      },
+      {
+        "ehr": "76f70d53-2073-4c89-86b7-b85975610ca6",
+        "medications": 8
+      },
+      {
+        "ehr": "5b97a691-7a46-424b-8301-dac406193397",
+        "medications": 5
+      },
+      {
+        "ehr": "f13adf26-60d7-4c5f-9c16-70d76e5e7751",
+        "medications": 5
+      },
+      {
+        "ehr": "4f220e2d-edfd-4fa1-b64e-862c2abf8530",
+        "medications": 10
+      },
+      {
+        "ehr": "8f0a0436-258e-4a48-a5e5-716a74bab0c1",
+        "medications": 8
+      },
+      {
+        "ehr": "3ebb20f7-16dc-47c1-924f-badd48d0f2b5",
+        "medications": 8
+      },
+      {
+        "ehr": "07ee389e-138e-4fb2-b201-9b8a0540e3eb",
+        "medications": 10
+      },
+      {
+        "ehr": "7407f70c-52a8-4f48-b6f7-f1bd54a369c9",
+        "medications": 7
+      },
+      {
+        "ehr": "a6bfd940-f917-4e2a-9712-d33564131be9",
+        "medications": 5
+      },
+      {
+        "ehr": "7b9403a9-4259-4077-a161-981f46e4f9d1",
+        "medications": 6
+      },
+      {
+        "ehr": "2c2914bc-b9ef-4901-bea2-1da9de5c0781",
+        "medications": 9
+      },
+      {
+        "ehr": "e6d28965-c48c-4e6c-9c84-c66a693f8877",
+        "medications": 9
+      },
+      {
+        "ehr": "4b2c0b7c-4d76-46ba-9857-b95c5abd18c5",
+        "medications": 9
+      },
+      {
+        "ehr": "870dad7a-8b58-4254-b7ac-99cc7ed15b8e",
+        "medications": 8
+      },
+      {
+        "ehr": "ca110dd2-fd7f-474a-bd3b-e40f313570a8",
+        "medications": 10
+      },
+      {
+        "ehr": "cfe19664-2d65-4e5e-8bf8-67bbaed5af86",
+        "medications": 9
+      },
+      {
+        "ehr": "d9b8aa52-8f7a-4e45-b09b-2152868c4493",
+        "medications": 6
+      },
+      {
+        "ehr": "6a9f16c4-69d6-45ee-a346-91469ad1a488",
+        "medications": 8
+      },
+      {
+        "ehr": "958c104c-15b1-4954-b3d5-627a409b3764",
+        "medications": 7
+      },
+      {
+        "ehr": "33a0f06b-f0e2-427f-83b2-6b6776f4b2fc",
+        "medications": 9
+      },
+      {
+        "ehr": "cad09ec9-4ebd-4e30-9df2-dacbf9cc49ab",
+        "medications": 5
+      },
+      {
+        "ehr": "394d97ee-26f5-4d46-b12d-baf188915502",
+        "medications": 9
+      },
+      {
+        "ehr": "1ce477a7-25be-4f80-a92f-2c15eae8af3b",
+        "medications": 10
+      },
+      {
+        "ehr": "1cf81b41-9645-4aff-a6cd-14199b5236e7",
+        "medications": 7
+      },
+      {
+        "ehr": "e3d4e6f2-83c4-4061-84ff-f91f25dcbae9",
+        "medications": 7
+      },
+      {
+        "ehr": "284297f9-78b5-4fdd-ab7b-da267275b60a",
+        "medications": 5
+      },
+      {
+        "ehr": "d0db04c9-1ee3-41f1-bcf8-2a4368bb56ba",
+        "medications": 10
+      },
+      {
+        "ehr": "3e11e1e5-e058-4f68-855b-cff3c007e474",
+        "medications": 7
+      },
+      {
+        "ehr": "79cca13f-312b-4ce1-b073-4c70003525b1",
+        "medications": 10
+      },
+      {
+        "ehr": "b61a2bfa-8676-4d8b-a0ae-e1103209f035",
+        "medications": 8
+      },
+      {
+        "ehr": "877140c2-3f1a-434c-ad9e-ad247fd202b8",
+        "medications": 8
+      },
+      {
+        "ehr": "7e8a8f73-83ed-4ae7-8d11-0646db2889b3",
+        "medications": 8
+      },
+      {
+        "ehr": "ffaa1b98-096e-4071-a6a0-110af325c88d",
+        "medications": 7
+      },
+      {
+        "ehr": "70b057ea-e2c2-466b-b51d-65a8cdff7c9d",
+        "medications": 9
+      },
+      {
+        "ehr": "022206d1-e877-4c30-974d-d4a11c945d11",
+        "medications": 10
+      },
+      {
+        "ehr": "a49cb4e3-21cc-4a34-b581-b44ebc05d47d",
+        "medications": 6
+      },
+      {
+        "ehr": "da65c2b6-46d1-4cf3-b147-f91f87c2d827",
+        "medications": 7
+      },
+      {
+        "ehr": "f90c46b1-f630-49fc-b67c-d338fc68e3d6",
+        "medications": 7
+      },
+      {
+        "ehr": "06d70bfd-e5d7-4f48-9262-b476129d1f1c",
+        "medications": 9
+      },
+      {
+        "ehr": "7d9c5722-e33e-4775-85ed-d1f21a9a1896",
+        "medications": 5
+      },
+      {
+        "ehr": "d572aae1-02cb-4178-b7a0-101730035b87",
+        "medications": 11
+      },
+      {
+        "ehr": "9ecbeec9-002e-4410-9b49-864b91a87800",
+        "medications": 9
+      },
+      {
+        "ehr": "48bfa351-d182-412b-bcdc-64eccfe478d3",
+        "medications": 10
+      },
+      {
+        "ehr": "f382934c-9e00-47f5-b509-30fcfead0de9",
+        "medications": 8
+      },
+      {
+        "ehr": "62641094-6916-40f9-a3a1-7ef2e6518667",
+        "medications": 9
+      },
+      {
+        "ehr": "75812702-0996-4f71-99ff-a0f359b3942a",
+        "medications": 9
+      },
+      {
+        "ehr": "c8040776-28f8-40f4-964d-30a10f646818",
+        "medications": 8
+      },
+      {
+        "ehr": "0a347861-0c25-423b-a58d-0ffb4498c815",
+        "medications": 8
+      },
+      {
+        "ehr": "b86fea78-c1e8-446a-9933-5f6a243998a5",
+        "medications": 9
+      },
+      {
+        "ehr": "ef7184d2-b1e5-4f19-b7f3-fe6a3751e2ad",
+        "medications": 6
+      },
+      {
+        "ehr": "3466df41-d307-49bc-8dbc-bba68cc9a8f4",
+        "medications": 7
+      },
+      {
+        "ehr": "0a9630cf-ec25-4627-9ef5-1703985eea90",
+        "medications": 8
+      },
+      {
+        "ehr": "31037b01-346c-48c1-af91-da764cce0a46",
+        "medications": 10
+      },
+      {
+        "ehr": "b513d019-60e9-4aa6-ab9c-f5a4252e4a14",
+        "medications": 10
+      },
+      {
+        "ehr": "bedb792c-099c-4ecd-a75f-17690b22ab7d",
+        "medications": 5
+      },
+      {
+        "ehr": "15cbcb36-0fb7-43e4-8330-1f8fef08c4c6",
+        "medications": 11
+      },
+      {
+        "ehr": "3fbc2999-c510-4599-a900-854a8f0893d8",
+        "medications": 8
+      },
+      {
+        "ehr": "3539e3a8-1d79-404f-be03-7836cd8da4ed",
+        "medications": 9
+      },
+      {
+        "ehr": "96dc3d78-eb91-4fd3-a0b3-4c6fcd95b8e5",
+        "medications": 9
+      },
+      {
+        "ehr": "d01aa9da-c077-4536-94f5-510be6626b60",
+        "medications": 5
+      },
+      {
+        "ehr": "439e2514-aaf6-416b-97f8-c75de2edf4bd",
+        "medications": 7
+      },
+      {
+        "ehr": "70f90108-5453-49db-9600-a7b473aee976",
+        "medications": 9
+      },
+      {
+        "ehr": "a63ea9d3-96ba-4ab3-a509-5c1fbf4c2bb4",
+        "medications": 9
+      },
+      {
+        "ehr": "bafc7f30-2bfc-45e2-bdd7-6bc69e60ef6d",
+        "medications": 12
+      },
+      {
+        "ehr": "16fef94b-b675-4cc0-97d8-6ab84198d94c",
+        "medications": 10
+      },
+      {
+        "ehr": "9c31ec11-8c84-41ad-b328-3203b0f5c166",
+        "medications": 11
+      },
+      {
+        "ehr": "6ae17e4d-17ac-4e08-bfa9-677bd386168e",
+        "medications": 10
+      }
+    ]
+  },
+  {
+    "id": "AQL-12",
+    "title": "Marianne Lindqvists fullständiga journal kronologiskt",
+    "resultCount": 28,
+    "rawRowCount": 28,
+    "executionTimeMs": 54,
+    "results": [
+      [
+        "primary_care_encounter | first_visit | aldre_multisjuk initial contact [careflow=medication_review_visit]",
+        "2026-05-21T21:53:17.376988218Z",
+        "fecb37de-8e5f-457f-97ea-08ceac99c366::local.ehrbase.org::1"
+      ],
+      [
+        "vital_signs | BP | systolic 130 mm[Hg] [unit=mm[Hg]]",
+        "2026-05-21T21:53:17.641298687Z",
+        "1e6a8e1a-4858-436a-b5ff-265706c895ac::local.ehrbase.org::1"
+      ],
+      [
+        "lab_order | aldre_multisjuk | initial workup [careflow=lab_ordered]",
+        "2026-05-21T21:53:17.799955454Z",
+        "8e89464e-ba1a-4b90-8543-8acd7956450f::local.ehrbase.org::1"
+      ],
+      [
+        "lab_result | HEMOGLOBIN | 142.38 g/L [unit=g/L]",
+        "2026-05-21T21:53:18.146978709Z",
+        "5ef9d666-30d2-4e0c-96c4-78b23745205d::local.ehrbase.org::1"
+      ],
+      [
+        "problem_diagnosis | aldre_multisjuk | severity=mild [unit=1]",
+        "2026-05-21T21:53:18.47359865Z",
+        "5cd84bdf-8d0a-4f1d-870f-aa4af2850155::local.ehrbase.org::1"
+      ],
+      [
+        "medication_statement | aldre_multisjuk | initial therapy [unit=rx]",
+        "2026-05-21T21:53:18.688376197Z",
+        "98223d0c-0da8-4143-9c64-9ef2d1196fca::local.ehrbase.org::1"
+      ],
+      [
+        "care_plan | followup | aldre_multisjuk 3-month review [unit=mo]",
+        "2026-05-21T21:53:18.82945065Z",
+        "fdd169dc-e430-44c1-9659-66929d34add8::local.ehrbase.org::1"
+      ],
+      [
+        "medication_statement | aldre_multisjuk | initial therapy [unit=rx]",
+        "2026-05-21T21:53:19.05260234Z",
+        "82e61a99-42e6-4467-9d67-77ff8aff526b::local.ehrbase.org::1"
+      ],
+      [
+        "vital_signs | BP | systolic 130 mm[Hg] [unit=mm[Hg]]",
+        "2026-05-21T21:53:19.22572635Z",
+        "ffd9d17a-f532-4c2d-8d82-2758c6feab64::local.ehrbase.org::1"
+      ],
+      [
+        "lab_result | HEMOGLOBIN | 142.38 g/L [unit=g/L]",
+        "2026-05-21T21:53:19.478431565Z",
+        "fb5dd9b0-db6b-4bc8-8fe7-dc700c1699b6::local.ehrbase.org::1"
+      ],
+      [
+        "care_plan | followup | aldre_multisjuk 3-month review [unit=mo]",
+        "2026-05-21T21:53:19.588077446Z",
+        "93d3952f-7076-41b0-9d19-dcf9233f373a::local.ehrbase.org::1"
+      ],
+      [
+        "primary_care_encounter | first_visit | aldre_multisjuk initial contact [careflow=medication_review_visit]",
+        "2026-05-21T22:10:46.642792143Z",
+        "aa1090bc-a49d-4a3a-8130-dbef2193a960::local.ehrbase.org::1"
+      ],
+      [
+        "vital_signs | BP | systolic 130 mm[Hg] [unit=mm[Hg]]",
+        "2026-05-21T22:10:46.694875578Z",
+        "8c4936fc-0217-4547-93d6-cd25d4717c7d::local.ehrbase.org::1"
+      ],
+      [
+        "lab_order | aldre_multisjuk | initial workup [careflow=lab_ordered]",
+        "2026-05-21T22:10:46.751979876Z",
+        "c6228958-3a79-419b-952b-7e6299782dc0::local.ehrbase.org::1"
+      ],
+      [
+        "lab_result | HEMOGLOBIN | 142.38 g/L [unit=g/L]",
+        "2026-05-21T22:10:46.804192004Z",
+        "da58503e-af9d-47aa-8184-a333f22af01a::local.ehrbase.org::1"
+      ],
+      [
+        "problem_diagnosis | aldre_multisjuk | severity=mild [unit=1]",
+        "2026-05-21T22:10:46.847350845Z",
+        "5a0caa3f-2895-40c7-b90f-d1354d41f693::local.ehrbase.org::1"
+      ],
+      [
+        "medication_statement | C07AB02 | metoprolol 25-100 mg/dag [unit=rx]",
+        "2026-05-21T22:10:46.889494876Z",
+        "16dd0ceb-7e83-4b09-878e-b8a5e260871b::local.ehrbase.org::1"
+      ],
+      [
+        "medication_statement | C10AA05 | atorvastatin 10-40 mg/dag [unit=rx]",
+        "2026-05-21T22:10:46.918421579Z",
+        "6b9906b3-e2e3-4f4c-9f03-43d79262c230::local.ehrbase.org::1"
+      ],
+      [
+        "medication_statement | M04AA01 | allopurinol 100-300 mg/dag [unit=rx]",
+        "2026-05-21T22:10:46.95305463Z",
+        "9ec50337-99ac-4d61-b1b0-4f545e80c305::local.ehrbase.org::1"
+      ],
+      [
+        "medication_statement | N06AB06 | sertraline 50-100 mg/dag [unit=rx]",
+        "2026-05-21T22:10:46.983097082Z",
+        "c210a3b4-60a5-41a1-a734-f40d1c1f8863::local.ehrbase.org::1"
+      ],
+      [
+        "care_plan | followup | aldre_multisjuk 3-month review [unit=mo]",
+        "2026-05-21T22:10:47.017198796Z",
+        "ed913e07-7cf6-4d3f-9e4b-25a66a978768::local.ehrbase.org::1"
+      ],
+      [
+        "medication_statement | C07AB02 | metoprolol 25-100 mg/dag [unit=rx]",
+        "2026-05-21T22:10:47.046691485Z",
+        "3f7a2906-31af-409f-9532-db618ee3b9b5::local.ehrbase.org::1"
+      ],
+      [
+        "medication_statement | B01AA03 | warfarin individuell [unit=rx]",
+        "2026-05-21T22:10:47.082833266Z",
+        "ee3ad8a0-8ac4-4dbd-ab9f-2e59970d16c4::local.ehrbase.org::1"
+      ],
+      [
+        "medication_statement | C08CA01 | amlodipine 5-10 mg/dag [unit=rx]",
+        "2026-05-21T22:10:47.111422008Z",
+        "e319806b-8aa2-4f4a-baf6-b828776f5a05::local.ehrbase.org::1"
+      ],
+      [
+        "medication_statement | C09AA05 | ramipril 2.5-10 mg/dag [unit=rx]",
+        "2026-05-21T22:10:47.147567671Z",
+        "a88097b6-d1e6-4a7f-b2bb-e901b5a80b70::local.ehrbase.org::1"
+      ],
+      [
+        "vital_signs | BP | systolic 130 mm[Hg] [unit=mm[Hg]]",
+        "2026-05-21T22:10:47.175466427Z",
+        "e92f9991-4d49-4f6f-93fa-353d73ebd091::local.ehrbase.org::1"
+      ],
+      [
+        "lab_result | HEMOGLOBIN | 142.38 g/L [unit=g/L]",
+        "2026-05-21T22:10:47.211820218Z",
+        "0ae649da-0f32-4c66-85ec-15b9aa92b158::local.ehrbase.org::1"
+      ],
+      [
+        "care_plan | followup | aldre_multisjuk 3-month review [unit=mo]",
+        "2026-05-21T22:10:47.242442762Z",
+        "bd91f4c6-cc94-43ee-94e5-f4aadc70158a::local.ehrbase.org::1"
+      ]
+    ]
+  },
+  {
+    "id": "AQL-13",
+    "title": "Patienter med >= 7 medication_statement (proxy för läkemedelsinteraktionsrisk)",
+    "resultCount": 80,
+    "rawRowCount": 1894,
+    "executionTimeMs": 366,
+    "results": [
+      {
+        "ehr": "7d1eb30e-dcf6-4570-a992-603aa1b95802",
+        "medications": 10
+      },
+      {
+        "ehr": "6e156501-a627-4ec4-8294-caa3f0125297",
+        "medications": 7
+      },
+      {
+        "ehr": "3a2f4b1d-8b5b-4156-b88f-c44186adfe4c",
+        "medications": 7
+      },
+      {
+        "ehr": "a9523216-1f45-4805-9a08-add8b396124b",
+        "medications": 11
+      },
+      {
+        "ehr": "a26ead46-90bd-474f-956d-89af8693846a",
+        "medications": 8
+      },
+      {
+        "ehr": "5224c1d4-57e2-43a5-8a98-8cc0f2452ef0",
+        "medications": 7
+      },
+      {
+        "ehr": "65ef964e-2b5e-406c-ac9f-765e02ca9fea",
+        "medications": 9
+      },
+      {
+        "ehr": "c97f6e14-5ea4-4a98-8d26-a8ae95cf7a52",
+        "medications": 9
+      },
+      {
+        "ehr": "81e2c373-695d-4a86-80e0-e1e9b7e3fa19",
+        "medications": 13
+      },
+      {
+        "ehr": "41751514-e8e8-49c2-b5dc-75127f3e9f5a",
+        "medications": 9
+      },
+      {
+        "ehr": "ddd29514-1ada-4a9e-8ec2-98891409f6ef",
+        "medications": 7
+      },
+      {
+        "ehr": "b6e5d2ec-c1d2-4472-b203-c59dfd9795be",
+        "medications": 11
+      },
+      {
+        "ehr": "f1e06959-f813-446f-8f8d-7c6992e4fc63",
+        "medications": 9
+      },
+      {
+        "ehr": "1361a747-52fb-4cdc-87b7-5ab9948b6e96",
+        "medications": 8
+      },
+      {
+        "ehr": "a35cccad-9cc9-439e-8535-dd1c2f0bfb35",
+        "medications": 7
+      },
+      {
+        "ehr": "8a18ecdc-dfd7-422e-a1a7-6917e2f3af2e",
+        "medications": 9
+      },
+      {
+        "ehr": "ca731489-9037-4dba-b6d9-da67246d73e3",
+        "medications": 8
+      },
+      {
+        "ehr": "3a63aaf4-ff98-47f0-b458-d5fbcf2464f6",
+        "medications": 12
+      },
+      {
+        "ehr": "6b19c669-64d2-4090-b1fc-7b17d0ca5b89",
+        "medications": 9
+      },
+      {
+        "ehr": "c12b2f53-581b-41e2-a35d-104cb14c4241",
+        "medications": 9
+      },
+      {
+        "ehr": "8930801e-d120-4342-8644-96baac0411a2",
+        "medications": 10
+      },
+      {
+        "ehr": "8f0a0436-258e-4a48-a5e5-716a74bab0c1",
+        "medications": 8
+      },
+      {
+        "ehr": "3ebb20f7-16dc-47c1-924f-badd48d0f2b5",
+        "medications": 8
+      },
+      {
+        "ehr": "7c0a8496-9096-4946-b6aa-a2c4b5998ccf",
+        "medications": 10
+      },
+      {
+        "ehr": "a2a0158b-8294-4fd5-98c1-603bfe109716",
+        "medications": 9
+      },
+      {
+        "ehr": "07ee389e-138e-4fb2-b201-9b8a0540e3eb",
+        "medications": 10
+      },
+      {
+        "ehr": "7407f70c-52a8-4f48-b6f7-f1bd54a369c9",
+        "medications": 7
+      },
+      {
+        "ehr": "7b65ed97-6a2f-40a4-9f21-7839737f6b03",
+        "medications": 7
+      },
+      {
+        "ehr": "870dad7a-8b58-4254-b7ac-99cc7ed15b8e",
+        "medications": 8
+      },
+      {
+        "ehr": "ca110dd2-fd7f-474a-bd3b-e40f313570a8",
+        "medications": 10
+      },
+      {
+        "ehr": "cfe19664-2d65-4e5e-8bf8-67bbaed5af86",
+        "medications": 9
+      },
+      {
+        "ehr": "63c70423-e77f-4f8d-8a66-8c92728f8732",
+        "medications": 11
+      },
+      {
+        "ehr": "2c2914bc-b9ef-4901-bea2-1da9de5c0781",
+        "medications": 9
+      },
+      {
+        "ehr": "76f70d53-2073-4c89-86b7-b85975610ca6",
+        "medications": 8
+      },
+      {
+        "ehr": "e6d28965-c48c-4e6c-9c84-c66a693f8877",
+        "medications": 9
+      },
+      {
+        "ehr": "6a9f16c4-69d6-45ee-a346-91469ad1a488",
+        "medications": 8
+      },
+      {
+        "ehr": "4b2c0b7c-4d76-46ba-9857-b95c5abd18c5",
+        "medications": 9
+      },
+      {
+        "ehr": "958c104c-15b1-4954-b3d5-627a409b3764",
+        "medications": 7
+      },
+      {
+        "ehr": "33a0f06b-f0e2-427f-83b2-6b6776f4b2fc",
+        "medications": 9
+      },
+      {
+        "ehr": "4f220e2d-edfd-4fa1-b64e-862c2abf8530",
+        "medications": 10
+      },
+      {
+        "ehr": "394d97ee-26f5-4d46-b12d-baf188915502",
+        "medications": 9
+      },
+      {
+        "ehr": "1ce477a7-25be-4f80-a92f-2c15eae8af3b",
+        "medications": 10
+      },
+      {
+        "ehr": "1cf81b41-9645-4aff-a6cd-14199b5236e7",
+        "medications": 7
+      },
+      {
+        "ehr": "e3d4e6f2-83c4-4061-84ff-f91f25dcbae9",
+        "medications": 7
+      },
+      {
+        "ehr": "ffaa1b98-096e-4071-a6a0-110af325c88d",
+        "medications": 7
+      },
+      {
+        "ehr": "70b057ea-e2c2-466b-b51d-65a8cdff7c9d",
+        "medications": 9
+      },
+      {
+        "ehr": "022206d1-e877-4c30-974d-d4a11c945d11",
+        "medications": 10
+      },
+      {
+        "ehr": "da65c2b6-46d1-4cf3-b147-f91f87c2d827",
+        "medications": 7
+      },
+      {
+        "ehr": "f90c46b1-f630-49fc-b67c-d338fc68e3d6",
+        "medications": 7
+      },
+      {
+        "ehr": "0a347861-0c25-423b-a58d-0ffb4498c815",
+        "medications": 8
+      },
+      {
+        "ehr": "06d70bfd-e5d7-4f48-9262-b476129d1f1c",
+        "medications": 9
+      },
+      {
+        "ehr": "b86fea78-c1e8-446a-9933-5f6a243998a5",
+        "medications": 9
+      },
+      {
+        "ehr": "d0db04c9-1ee3-41f1-bcf8-2a4368bb56ba",
+        "medications": 10
+      },
+      {
+        "ehr": "3e11e1e5-e058-4f68-855b-cff3c007e474",
+        "medications": 7
+      },
+      {
+        "ehr": "79cca13f-312b-4ce1-b073-4c70003525b1",
+        "medications": 10
+      },
+      {
+        "ehr": "b61a2bfa-8676-4d8b-a0ae-e1103209f035",
+        "medications": 8
+      },
+      {
+        "ehr": "d572aae1-02cb-4178-b7a0-101730035b87",
+        "medications": 11
+      },
+      {
+        "ehr": "3466df41-d307-49bc-8dbc-bba68cc9a8f4",
+        "medications": 7
+      },
+      {
+        "ehr": "9ecbeec9-002e-4410-9b49-864b91a87800",
+        "medications": 9
+      },
+      {
+        "ehr": "877140c2-3f1a-434c-ad9e-ad247fd202b8",
+        "medications": 8
+      },
+      {
+        "ehr": "7e8a8f73-83ed-4ae7-8d11-0646db2889b3",
+        "medications": 8
+      },
+      {
+        "ehr": "0a9630cf-ec25-4627-9ef5-1703985eea90",
+        "medications": 8
+      },
+      {
+        "ehr": "48bfa351-d182-412b-bcdc-64eccfe478d3",
+        "medications": 10
+      },
+      {
+        "ehr": "f382934c-9e00-47f5-b509-30fcfead0de9",
+        "medications": 8
+      },
+      {
+        "ehr": "62641094-6916-40f9-a3a1-7ef2e6518667",
+        "medications": 9
+      },
+      {
+        "ehr": "31037b01-346c-48c1-af91-da764cce0a46",
+        "medications": 10
+      },
+      {
+        "ehr": "b513d019-60e9-4aa6-ab9c-f5a4252e4a14",
+        "medications": 10
+      },
+      {
+        "ehr": "a63ea9d3-96ba-4ab3-a509-5c1fbf4c2bb4",
+        "medications": 9
+      },
+      {
+        "ehr": "bafc7f30-2bfc-45e2-bdd7-6bc69e60ef6d",
+        "medications": 12
+      },
+      {
+        "ehr": "15cbcb36-0fb7-43e4-8330-1f8fef08c4c6",
+        "medications": 11
+      },
+      {
+        "ehr": "16fef94b-b675-4cc0-97d8-6ab84198d94c",
+        "medications": 10
+      },
+      {
+        "ehr": "75812702-0996-4f71-99ff-a0f359b3942a",
+        "medications": 9
+      },
+      {
+        "ehr": "c8040776-28f8-40f4-964d-30a10f646818",
+        "medications": 8
+      },
+      {
+        "ehr": "3fbc2999-c510-4599-a900-854a8f0893d8",
+        "medications": 8
+      },
+      {
+        "ehr": "9c31ec11-8c84-41ad-b328-3203b0f5c166",
+        "medications": 11
+      },
+      {
+        "ehr": "3539e3a8-1d79-404f-be03-7836cd8da4ed",
+        "medications": 9
+      },
+      {
+        "ehr": "96dc3d78-eb91-4fd3-a0b3-4c6fcd95b8e5",
+        "medications": 9
+      },
+      {
+        "ehr": "439e2514-aaf6-416b-97f8-c75de2edf4bd",
+        "medications": 7
+      },
+      {
+        "ehr": "6ae17e4d-17ac-4e08-bfa9-677bd386168e",
+        "medications": 10
+      },
+      {
+        "ehr": "70f90108-5453-49db-9600-a7b473aee976",
+        "medications": 9
+      }
+    ]
+  },
+  {
+    "id": "AQL-14",
+    "title": "Patienter vars labbvärden FÖRSÄMRATS trots läkemedelsinsättning",
+    "resultCount": 0,
+    "rawRowCount": 2126,
+    "executionTimeMs": 136,
+    "results": []
+  },
+  {
+    "id": "AQL-15",
+    "title": "Median-magnitude per diagnosgrupp (proxy för populationsstatistik)",
+    "resultCount": 2,
+    "rawRowCount": 1634,
+    "executionTimeMs": 276,
+    "results": [
+      {
+        "bucket": "HBA1C",
+        "n": 232,
+        "median": 57.11,
+        "min": 48.47,
+        "max": 112.64
+      },
+      {
+        "bucket": "HEMOGLOBIN",
+        "n": 582,
+        "median": 113.95,
+        "min": 62.26,
+        "max": 149.42
+      }
+    ]
+  }
+]
