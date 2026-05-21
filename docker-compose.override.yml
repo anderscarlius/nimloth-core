@@ -106,7 +106,7 @@ services:
   ehrbase:
     container_name: ehrbase-core
     ports: !override
-      - "18088:8080"
+      - "11401:8080"
 
   ehrbase-db:
     container_name: ehrbase-db-core
