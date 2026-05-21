@@ -1,0 +1,45 @@
+pathway_id: hypertoni_pathway
+initial_state: first_visit
+
+states:
+  first_visit:
+    compositions: [primary_care_encounter, vital_signs]
+    day_offset: 0
+    transitions:
+      - to: monitoring
+        condition: always
+        compositions: [lab_order]
+
+  monitoring:
+    compositions: [vital_signs, lab_result]
+    day_offset: { min: 7, max: 21 }
+    transitions:
+      - to: diagnosis
+        condition: always
+
+  diagnosis:
+    compositions: [problem_diagnosis, medication_statement]
+    day_offset: { min: 1, max: 5 }
+    transitions:
+      - to: specialist
+        condition: "severity == severe"
+        compositions: [referral]
+      - to: followup
+        condition: always
+
+  specialist:
+    compositions: [specialist_consultation]
+    day_offset: { min: 14, max: 45 }
+    transitions:
+      - to: followup
+        condition: always
+
+  followup:
+    compositions: [vital_signs, care_plan]
+    day_offset: { min: 60, max: 120 }
+    transitions:
+      - to: terminal
+        condition: always
+
+  terminal:
+    terminal: true

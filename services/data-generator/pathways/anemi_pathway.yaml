@@ -1,0 +1,38 @@
+pathway_id: anemi_pathway
+initial_state: presentation
+
+states:
+  presentation:
+    compositions: [primary_care_encounter, vital_signs]
+    day_offset: 0
+    transitions:
+      - to: workup
+        condition: always
+        compositions: [lab_order]
+
+  workup:
+    compositions: [lab_result, problem_diagnosis, medication_statement]
+    day_offset: { min: 1, max: 5 }
+    transitions:
+      - to: gastro
+        condition: "lab.hemoglobin <= 90 OR severity == severe"
+        compositions: [referral]
+      - to: followup
+        condition: always
+
+  gastro:
+    compositions: [specialist_consultation]
+    day_offset: { min: 14, max: 35 }
+    transitions:
+      - to: followup
+        condition: always
+
+  followup:
+    compositions: [lab_result, care_plan]
+    day_offset: { min: 60, max: 120 }
+    transitions:
+      - to: terminal
+        condition: always
+
+  terminal:
+    terminal: true

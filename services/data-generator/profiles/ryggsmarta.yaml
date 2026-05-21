@@ -1,0 +1,25 @@
+profile_id: ryggsmarta
+display_name: "Ryggsmärta (lumbalt)"
+icd10: M54
+
+demographics:
+  age_range: [25, 70]
+  sex_distribution: { female: 0.52, male: 0.48 }
+  bmi_range: [22, 36]
+
+initial_labs:
+  pain_vas:
+    mild:     { range: [2, 4], referral_prob: 0.02 }
+    moderate: { range: [5, 7], referral_prob: 0.15 }
+    severe:   { range: [8, 10], referral_prob: 0.45 }
+  crp: { range: [1, 30], unit: "mg/L" }
+
+common_medications:
+  - { atc: M01AE01, name: ibuprofen, dose: "400 mg x 3", prob: 0.65 }
+  - { atc: N02BE01, name: paracetamol, dose: "500-1000 mg x 4", prob: 0.85 }
+  - { atc: M03BX01, name: baclofen, dose: "5-20 mg/dag", prob: 0.10 }
+
+comorbidities:
+  - { profile: depression, probability: 0.18 }
+
+care_pathway: ryggsmarta_pathway

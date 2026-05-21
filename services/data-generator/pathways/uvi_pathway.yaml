@@ -1,0 +1,37 @@
+pathway_id: uvi_pathway
+initial_state: acute
+
+states:
+  acute:
+    compositions: [primary_care_encounter, vital_signs, lab_order]
+    day_offset: 0
+    transitions:
+      - to: empirical_treatment
+        condition: always
+
+  empirical_treatment:
+    compositions: [lab_result, problem_diagnosis, medication_statement]
+    day_offset: { min: 0, max: 1 }
+    transitions:
+      - to: hospital
+        condition: "severity == severe"
+        compositions: [referral]
+      - to: resolution
+        condition: always
+
+  hospital:
+    compositions: [specialist_consultation]
+    day_offset: { min: 1, max: 4 }
+    transitions:
+      - to: resolution
+        condition: always
+
+  resolution:
+    compositions: [lab_result, care_plan]
+    day_offset: { min: 7, max: 21 }
+    transitions:
+      - to: terminal
+        condition: always
+
+  terminal:
+    terminal: true

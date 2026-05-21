@@ -1,0 +1,53 @@
+profile_id: aldre_multisjuk
+display_name: "Äldre multisjuk patient"
+icd10: Z87
+
+demographics:
+  age_range: [70, 90]
+  sex_distribution: { female: 0.58, male: 0.42 }
+  bmi_range: [20, 32]
+
+initial_labs:
+  medication_count:
+    mild:     { range: [5, 7], referral_prob: 0.05 }
+    moderate: { range: [8, 10], referral_prob: 0.20 }
+    severe:   { range: [11, 18], referral_prob: 0.45 }
+  creatinine: { range: [80, 220], unit: "umol/L" }
+  hemoglobin: { range: [95, 150], unit: "g/L" }
+  potassium:  { range: [3.4, 5.6], unit: "mmol/L" }
+
+common_medications:
+  - { atc: C03CA01, name: furosemide, dose: "20-80 mg/dag", prob: 0.55 }
+  - { atc: C07AB02, name: metoprolol, dose: "25-100 mg/dag", prob: 0.50 }
+  - { atc: B01AA03, name: warfarin, dose: "individuell", prob: 0.35 }
+  - { atc: C10AA05, name: atorvastatin, dose: "10-40 mg/dag", prob: 0.60 }
+  - { atc: A10BA02, name: metformin, dose: "500-1000 mg/dag", prob: 0.30 }
+  - { atc: A02BC03, name: lansoprazole, dose: "30 mg/dag", prob: 0.45 }
+  - { atc: C08CA01, name: amlodipine, dose: "5-10 mg/dag", prob: 0.40 }
+  - { atc: C09AA05, name: ramipril, dose: "2.5-10 mg/dag", prob: 0.45 }
+  - { atc: M04AA01, name: allopurinol, dose: "100-300 mg/dag", prob: 0.25 }
+  - { atc: N06AB06, name: sertraline, dose: "50-100 mg/dag", prob: 0.20 }
+
+comorbidities:
+  - { profile: hypertoni,       probability: 0.55 }
+  - { profile: diabetes_typ2,   probability: 0.30 }
+  - { profile: hjartsvikt,      probability: 0.30 }
+  - { profile: kol,             probability: 0.15 }
+
+care_pathway: aldre_multisjuk_pathway
+
+seed_patient:
+  name: "Marianne Lindqvist"
+  age: 79
+  medications:
+    - furosemide
+    - metoprolol
+    - warfarin
+    - atorvastatin
+    - metformin
+    - lansoprazole
+    - amlodipine
+    - ramipril
+    - allopurinol
+    - sertraline
+  note: "Befintlig demoprofil — ska existera i samma EHR-register"

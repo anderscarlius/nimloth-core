@@ -1,0 +1,26 @@
+profile_id: uvi
+display_name: "Urinvägsinfektion / pyelonefrit"
+icd10: N39
+
+demographics:
+  age_range: [18, 85]
+  sex_distribution: { female: 0.82, male: 0.18 }
+  bmi_range: [18, 35]
+
+initial_labs:
+  crp:
+    mild:     { range: [10, 40], referral_prob: 0.02 }
+    moderate: { range: [41, 100], referral_prob: 0.10 }
+    severe:   { range: [101, 300], referral_prob: 0.45 }
+  leukocytes: { range: [8, 22], unit: "10^9/L" }
+  temperature: { range: [37.5, 40.0], unit: "Cel" }
+
+common_medications:
+  - { atc: J01XE01, name: nitrofurantoin, dose: "50 mg x 3", prob: 0.55 }
+  - { atc: J01CA08, name: pivmecillinam, dose: "200 mg x 3", prob: 0.35 }
+  - { atc: J01MA02, name: ciprofloxacin, dose: "500 mg x 2", prob: 0.15 }
+
+comorbidities:
+  - { profile: aldre_multisjuk, probability: 0.10, min_age: 70 }
+
+care_pathway: uvi_pathway

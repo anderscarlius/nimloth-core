@@ -1,0 +1,26 @@
+profile_id: depression
+display_name: "Depression / ångest"
+icd10: F32
+
+demographics:
+  age_range: [20, 70]
+  sex_distribution: { female: 0.62, male: 0.38 }
+  bmi_range: [19, 35]
+
+initial_labs:
+  phq9:
+    mild:     { range: [5, 9], referral_prob: 0.05 }
+    moderate: { range: [10, 19], referral_prob: 0.20 }
+    severe:   { range: [20, 27], referral_prob: 0.55 }
+  gad7:    { range: [3, 21], unit: "score" }
+  tsh:     { range: [0.4, 4.5], unit: "mIU/L" }
+
+common_medications:
+  - { atc: N06AB06, name: sertraline, dose: "50-200 mg/dag", prob: 0.55 }
+  - { atc: N06AB10, name: escitalopram, dose: "10-20 mg/dag", prob: 0.30 }
+  - { atc: N06AX16, name: venlafaxine, dose: "75-225 mg/dag", prob: 0.20 }
+
+comorbidities:
+  - { profile: ryggsmarta, probability: 0.15 }
+
+care_pathway: depression_pathway

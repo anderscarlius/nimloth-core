@@ -1,0 +1,37 @@
+pathway_id: hjartsvikt_pathway
+initial_state: presentation
+
+states:
+  presentation:
+    compositions: [primary_care_encounter, vital_signs, lab_order]
+    day_offset: 0
+    transitions:
+      - to: workup
+        condition: always
+
+  workup:
+    compositions: [lab_result, problem_diagnosis, medication_statement]
+    day_offset: { min: 1, max: 4 }
+    transitions:
+      - to: cardiology
+        condition: "lab.ntprobnp >= 900 OR severity == severe"
+        compositions: [referral]
+      - to: outpatient_followup
+        condition: always
+
+  cardiology:
+    compositions: [specialist_consultation, medication_statement]
+    day_offset: { min: 7, max: 28 }
+    transitions:
+      - to: outpatient_followup
+        condition: always
+
+  outpatient_followup:
+    compositions: [vital_signs, lab_result, care_plan]
+    day_offset: { min: 30, max: 90 }
+    transitions:
+      - to: terminal
+        condition: always
+
+  terminal:
+    terminal: true

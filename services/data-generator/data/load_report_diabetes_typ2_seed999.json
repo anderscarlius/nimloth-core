@@ -1,0 +1,66 @@
+{
+  "profile": "diabetes_typ2",
+  "count": 3,
+  "seed": 999,
+  "dryRun": false,
+  "elapsedMs": 14985,
+  "results": [
+    {
+      "patientId": "diabetes_typ2-999-0",
+      "ehrId": "9a31f222-d63d-4096-bff2-c2d3bf4f3c0c",
+      "compositionUids": [
+        "d2566a2c-8756-40dc-a685-64ace0c06fa7",
+        "b271da7a-1ba9-4245-a57c-fb78db1307a6",
+        "166b9070-08eb-4103-85aa-6eeae69314db",
+        "5ddfc21c-05c6-4a3a-a1b1-603913f904a8",
+        "dd4ce4f7-a452-426d-834c-7404a6d6d7b6",
+        "43a4e94b-b6a0-4f66-b796-f3dfa6958009",
+        "29ea8d2a-c9bc-4ec5-b17f-e036377dbba9",
+        "970622e2-4e67-474f-a49c-78957a9d5f64",
+        "1052fb22-5950-445b-bcc7-ad3f11ca7b3c"
+      ],
+      "failed": 0,
+      "errors": [],
+      "startedAt": "2026-05-21T21:51:28.325Z",
+      "finishedAt": "2026-05-21T21:51:39.279Z"
+    },
+    {
+      "patientId": "diabetes_typ2-999-1",
+      "ehrId": "d609e7cd-fcf1-44a6-a8f3-2844ca54efe8",
+      "compositionUids": [
+        "d85f7da0-fbe6-415d-bf31-11cccb91da57",
+        "865dcf7b-f269-47b0-b39a-98dbc288fdef",
+        "359c1285-5636-40b9-b37f-3edac510a6c0",
+        "59a6d570-4883-419f-a9dc-632c75b91916",
+        "9cec0f25-fbf6-4633-9a9a-33f443b86e64",
+        "61b2a7fc-81c7-404c-a2f3-d7da60158745",
+        "0c7117fe-e8bb-4757-828e-a5d4afa3e5cd",
+        "56f4fd46-9318-46ec-b2d3-aab060fee647",
+        "9a17593d-aaca-412f-97fe-941889dcfdd5"
+      ],
+      "failed": 0,
+      "errors": [],
+      "startedAt": "2026-05-21T21:51:39.279Z",
+      "finishedAt": "2026-05-21T21:51:41.324Z"
+    },
+    {
+      "patientId": "diabetes_typ2-999-2",
+      "ehrId": "6a5fa307-c040-4a02-bf92-f077a956284f",
+      "compositionUids": [
+        "c0fe84e1-c692-41eb-a868-8ff023f5097c",
+        "fa932135-b1e8-454b-a433-7034b709709f",
+        "91367400-e1d0-46f3-b03e-641c985ae1e8",
+        "f537cea1-61eb-4cae-b4c5-d073bb9d4fec",
+        "245ad9bf-a261-4dd9-9828-bab3f6452a57",
+        "725d758d-1b0d-4792-b526-d42a50a0896e",
+        "607b8b05-722a-46b6-9b82-9d929a3083bd",
+        "e064af16-40df-4a21-8654-b617f7ea4c3c",
+        "5cf09724-042c-4b84-bd85-ae62f416a073"
+      ],
+      "failed": 0,
+      "errors": [],
+      "startedAt": "2026-05-21T21:51:41.324Z",
+      "finishedAt": "2026-05-21T21:51:43.310Z"
+    }
+  ]
+}

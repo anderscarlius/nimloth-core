@@ -1,0 +1,45 @@
+pathway_id: diabetes_typ2_pathway
+initial_state: first_contact_vc
+
+states:
+  first_contact_vc:
+    compositions: [primary_care_encounter, vital_signs]
+    day_offset: 0
+    transitions:
+      - to: await_lab
+        condition: always
+        compositions: [lab_order]
+
+  await_lab:
+    compositions: [lab_result]
+    day_offset: { min: 1, max: 3 }
+    transitions:
+      - to: diagnosis
+        condition: always
+
+  diagnosis:
+    compositions: [problem_diagnosis, medication_statement]
+    day_offset: { min: 1, max: 5 }
+    transitions:
+      - to: specialist_referral
+        condition: "lab.hba1c >= 70 OR severity == severe"
+        compositions: [referral]
+      - to: followup_plan
+        condition: always
+
+  specialist_referral:
+    compositions: [specialist_consultation]
+    day_offset: { min: 20, max: 60 }
+    transitions:
+      - to: followup_plan
+        condition: always
+
+  followup_plan:
+    compositions: [vital_signs, lab_result, care_plan]
+    day_offset: { min: 60, max: 120 }
+    transitions:
+      - to: terminal
+        condition: always
+
+  terminal:
+    terminal: true

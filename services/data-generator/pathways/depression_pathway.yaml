@@ -1,0 +1,38 @@
+pathway_id: depression_pathway
+initial_state: first_visit
+
+states:
+  first_visit:
+    compositions: [primary_care_encounter, vital_signs]
+    day_offset: 0
+    transitions:
+      - to: assessment
+        condition: always
+        compositions: [lab_order]
+
+  assessment:
+    compositions: [lab_result, problem_diagnosis, medication_statement]
+    day_offset: { min: 1, max: 7 }
+    transitions:
+      - to: psychiatry
+        condition: "lab.phq9 >= 20 OR severity == severe"
+        compositions: [referral]
+      - to: followup
+        condition: always
+
+  psychiatry:
+    compositions: [specialist_consultation]
+    day_offset: { min: 14, max: 60 }
+    transitions:
+      - to: followup
+        condition: always
+
+  followup:
+    compositions: [vital_signs, care_plan]
+    day_offset: { min: 30, max: 90 }
+    transitions:
+      - to: terminal
+        condition: always
+
+  terminal:
+    terminal: true

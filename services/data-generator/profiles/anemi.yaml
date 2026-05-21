@@ -1,0 +1,25 @@
+profile_id: anemi
+display_name: "Järnbristanemi"
+icd10: D50
+
+demographics:
+  age_range: [20, 75]
+  sex_distribution: { female: 0.78, male: 0.22 }
+  bmi_range: [18, 30]
+
+initial_labs:
+  hemoglobin:
+    mild:     { range: [105, 119], referral_prob: 0.05 }
+    moderate: { range: [85, 104], referral_prob: 0.25 }
+    severe:   { range: [60, 84], referral_prob: 0.70 }
+  ferritin:  { range: [3, 35], unit: "ug/L" }
+  mcv:       { range: [65, 84], unit: "fL" }
+
+common_medications:
+  - { atc: B03AA07, name: ferrous_sulfate, dose: "100-200 mg/dag", prob: 0.95 }
+  - { atc: A11CC04, name: cholecalciferol, dose: "800 IE/dag", prob: 0.35 }
+
+comorbidities:
+  - { profile: aldre_multisjuk, probability: 0.20, min_age: 70 }
+
+care_pathway: anemi_pathway

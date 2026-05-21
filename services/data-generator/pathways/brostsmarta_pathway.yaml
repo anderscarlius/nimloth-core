@@ -1,0 +1,45 @@
+pathway_id: brostsmarta_pathway
+initial_state: acute_assessment
+
+states:
+  acute_assessment:
+    compositions: [primary_care_encounter, vital_signs, lab_order]
+    day_offset: 0
+    transitions:
+      - to: workup
+        condition: always
+
+  workup:
+    compositions: [lab_result]
+    day_offset: { min: 0, max: 2 }
+    transitions:
+      - to: cardiology_emerg
+        condition: "lab.troponin >= 50 OR severity == severe"
+        compositions: [problem_diagnosis, medication_statement, referral]
+      - to: outpatient
+        condition: always
+        compositions: [problem_diagnosis]
+
+  cardiology_emerg:
+    compositions: [specialist_consultation]
+    day_offset: { min: 0, max: 5 }
+    transitions:
+      - to: followup
+        condition: always
+
+  outpatient:
+    compositions: [care_plan]
+    day_offset: { min: 14, max: 45 }
+    transitions:
+      - to: terminal
+        condition: always
+
+  followup:
+    compositions: [vital_signs, lab_result, care_plan]
+    day_offset: { min: 30, max: 90 }
+    transitions:
+      - to: terminal
+        condition: always
+
+  terminal:
+    terminal: true

@@ -1,0 +1,27 @@
+profile_id: kol
+display_name: "Kronisk obstruktiv lungsjukdom"
+icd10: J44
+
+demographics:
+  age_range: [50, 80]
+  sex_distribution: { female: 0.45, male: 0.55 }
+  bmi_range: [18, 30]
+
+initial_labs:
+  fev1_pct:
+    mild:     { range: [60, 79], referral_prob: 0.10 }
+    moderate: { range: [40, 59], referral_prob: 0.30 }
+    severe:   { range: [20, 39], referral_prob: 0.70 }
+  o2_saturation: { range: [88, 96], unit: "%" }
+  crp: { range: [3, 80], unit: "mg/L" }
+
+common_medications:
+  - { atc: R03AC18, name: indacaterol, dose: "150 ug/dag", prob: 0.70 }
+  - { atc: R03BB04, name: tiotropium, dose: "18 ug/dag", prob: 0.85 }
+  - { atc: R03AK06, name: salmeterol_fluticasone, dose: "2 inh/dag", prob: 0.50 }
+
+comorbidities:
+  - { profile: hjartsvikt, probability: 0.20, min_age: 65 }
+  - { profile: aldre_multisjuk, probability: 0.25, min_age: 70 }
+
+care_pathway: kol_pathway

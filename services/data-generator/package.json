@@ -15,7 +15,7 @@
     "test:pathways": "vitest run __tests__/engine/pathways.test.ts",
     "validate:profiles": "tsx src/scripts/validate-profiles.ts",
     "openehr:list-templates": "tsx src/scripts/list-templates.ts",
-    "generate:load": "tsx src/cli.ts generate:load",
+    "generate:load": "tsx src/scripts/generate-load.ts",
     "demo:aql": "tsx src/cli.ts demo:aql"
   },
   "dependencies": {

@@ -1,0 +1,28 @@
+profile_id: hypertoni
+display_name: "Essentiell hypertoni"
+icd10: I10
+
+demographics:
+  age_range: [40, 80]
+  sex_distribution: { female: 0.50, male: 0.50 }
+  bmi_range: [22, 35]
+
+initial_labs:
+  systolic_bp:
+    mild:     { range: [140, 159], referral_prob: 0.05 }
+    moderate: { range: [160, 179], referral_prob: 0.15 }
+    severe:   { range: [180, 220], referral_prob: 0.55 }
+  diastolic_bp: { range: [85, 115], unit: "mm[Hg]" }
+  creatinine:   { range: [60, 140], unit: "umol/L" }
+  ldl:          { range: [2.0, 5.0], unit: "mmol/L" }
+
+common_medications:
+  - { atc: C09AA01, name: captopril, dose: "25-100 mg/dag", prob: 0.55 }
+  - { atc: C03AA03, name: hydrochlorothiazide, dose: "12.5-25 mg/dag", prob: 0.4 }
+  - { atc: C07AB02, name: metoprolol, dose: "50-200 mg/dag", prob: 0.3 }
+
+comorbidities:
+  - { profile: diabetes_typ2, probability: 0.25 }
+  - { profile: hjartsvikt, probability: 0.10, min_age: 65 }
+
+care_pathway: hypertoni_pathway

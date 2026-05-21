@@ -1,0 +1,28 @@
+profile_id: diabetes_typ2
+display_name: "Diabetes mellitus typ 2"
+icd10: E11
+
+demographics:
+  age_range: [45, 82]
+  sex_distribution: { female: 0.52, male: 0.48 }
+  bmi_range: [27, 38]
+
+initial_labs:
+  hba1c:
+    mild:     { range: [48, 58], referral_prob: 0.15 }
+    moderate: { range: [59, 80], referral_prob: 0.35 }
+    severe:   { range: [81, 115], referral_prob: 0.75 }
+  glucose:   { range: [7.5, 18.0], unit: "mmol/L" }
+  creatinine: { range: [65, 130], unit: "umol/L" }
+  ldl:       { range: [2.5, 5.5], unit: "mmol/L" }
+
+common_medications:
+  - { atc: A10BA02, name: metformin, dose: "500-2000 mg/dag", prob: 0.95 }
+  - { atc: C10AA05, name: atorvastatin, dose: "10-80 mg/dag", prob: 0.7 }
+  - { atc: C09AA02, name: enalapril, dose: "5-20 mg/dag", prob: 0.4 }
+
+comorbidities:
+  - { profile: hypertoni, probability: 0.55 }
+  - { profile: aldre_multisjuk, probability: 0.20, min_age: 70 }
+
+care_pathway: diabetes_typ2_pathway

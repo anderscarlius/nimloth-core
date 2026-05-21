@@ -1,0 +1,28 @@
+profile_id: brostsmarta
+display_name: "Bröstsmärta (kardio-utredning)"
+icd10: R07
+
+demographics:
+  age_range: [35, 75]
+  sex_distribution: { female: 0.40, male: 0.60 }
+  bmi_range: [22, 35]
+
+initial_labs:
+  troponin:
+    mild:     { range: [5, 14], referral_prob: 0.15 }
+    moderate: { range: [15, 50], referral_prob: 0.55 }
+    severe:   { range: [51, 5000], referral_prob: 0.95 }
+  ldl:       { range: [2.5, 6.0], unit: "mmol/L" }
+  crp:       { range: [1, 30], unit: "mg/L" }
+  systolic_bp: { range: [130, 200], unit: "mm[Hg]" }
+
+common_medications:
+  - { atc: B01AC06, name: acetylsalicylic_acid, dose: "75 mg/dag", prob: 0.60 }
+  - { atc: C10AA05, name: atorvastatin, dose: "40-80 mg/dag", prob: 0.55 }
+  - { atc: C07AB02, name: metoprolol, dose: "50-100 mg/dag", prob: 0.30 }
+
+comorbidities:
+  - { profile: hypertoni, probability: 0.45 }
+  - { profile: diabetes_typ2, probability: 0.20 }
+
+care_pathway: brostsmarta_pathway

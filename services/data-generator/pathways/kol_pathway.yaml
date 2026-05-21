@@ -1,0 +1,45 @@
+pathway_id: kol_pathway
+initial_state: first_visit
+
+states:
+  first_visit:
+    compositions: [primary_care_encounter, vital_signs]
+    day_offset: 0
+    transitions:
+      - to: spirometry
+        condition: always
+        compositions: [lab_order]
+
+  spirometry:
+    compositions: [lab_result]
+    day_offset: { min: 5, max: 21 }
+    transitions:
+      - to: diagnosis
+        condition: always
+
+  diagnosis:
+    compositions: [problem_diagnosis, medication_statement]
+    day_offset: { min: 1, max: 7 }
+    transitions:
+      - to: pulmonology
+        condition: "severity == severe"
+        compositions: [referral]
+      - to: followup
+        condition: always
+
+  pulmonology:
+    compositions: [specialist_consultation]
+    day_offset: { min: 21, max: 60 }
+    transitions:
+      - to: followup
+        condition: always
+
+  followup:
+    compositions: [vital_signs, care_plan]
+    day_offset: { min: 90, max: 180 }
+    transitions:
+      - to: terminal
+        condition: always
+
+  terminal:
+    terminal: true

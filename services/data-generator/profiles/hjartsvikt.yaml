@@ -1,0 +1,30 @@
+profile_id: hjartsvikt
+display_name: "Hjärtsvikt"
+icd10: I50
+
+demographics:
+  age_range: [55, 85]
+  sex_distribution: { female: 0.45, male: 0.55 }
+  bmi_range: [22, 33]
+
+initial_labs:
+  ntprobnp:
+    mild:     { range: [300, 900], referral_prob: 0.40 }
+    moderate: { range: [901, 1800], referral_prob: 0.65 }
+    severe:   { range: [1801, 6000], referral_prob: 0.90 }
+  creatinine: { range: [80, 200], unit: "umol/L" }
+  ejection_fraction: { range: [25, 50], unit: "%" }
+  potassium: { range: [3.5, 5.5], unit: "mmol/L" }
+
+common_medications:
+  - { atc: C07AB07, name: bisoprolol, dose: "1.25-10 mg/dag", prob: 0.85 }
+  - { atc: C09AA05, name: ramipril, dose: "2.5-10 mg/dag", prob: 0.75 }
+  - { atc: C03CA01, name: furosemide, dose: "20-160 mg/dag", prob: 0.65 }
+  - { atc: C03DA01, name: spironolactone, dose: "12.5-50 mg/dag", prob: 0.40 }
+
+comorbidities:
+  - { profile: hypertoni, probability: 0.65 }
+  - { profile: diabetes_typ2, probability: 0.30 }
+  - { profile: aldre_multisjuk, probability: 0.35, min_age: 75 }
+
+care_pathway: hjartsvikt_pathway

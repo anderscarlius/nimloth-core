@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Nimloth SDG Patient Profile",
+  "type": "object",
+  "required": ["profile_id", "display_name", "icd10", "demographics", "care_pathway"],
+  "additionalProperties": false,
+  "properties": {
+    "profile_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]+$" },
+    "display_name": { "type": "string" },
+    "icd10": { "type": "string" },
+    "demographics": {
+      "type": "object",
+      "required": ["age_range", "sex_distribution"],
+      "properties": {
+        "age_range": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+        "sex_distribution": {
+          "type": "object",
+          "properties": {
+            "female": { "type": "number", "minimum": 0, "maximum": 1 },
+            "male":   { "type": "number", "minimum": 0, "maximum": 1 }
+          },
+          "required": ["female", "male"]
+        },
+        "bmi_range": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+      }
+    },
+    "initial_labs": {
+      "type": "object",
+      "additionalProperties": { "type": "object" }
+    },
+    "common_medications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["atc", "name"],
+        "properties": {
+          "atc": { "type": "string" },
+          "name": { "type": "string" },
+          "dose": { "type": "string" },
+          "prob": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "comorbidities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["profile", "probability"],
+        "properties": {
+          "profile": { "type": "string" },
+          "probability": { "type": "number", "minimum": 0, "maximum": 1 },
+          "min_age": { "type": "number" }
+        }
+      }
+    },
+    "care_pathway": { "type": "string" },
+    "seed_patient": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "age": { "type": "number" },
+        "medications": { "type": "array", "items": { "type": "string" } },
+        "note": { "type": "string" }
+      }
+    }
+  }
+}

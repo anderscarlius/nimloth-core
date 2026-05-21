@@ -1,0 +1,31 @@
+pathway_id: ryggsmarta_pathway
+initial_state: first_visit
+
+states:
+  first_visit:
+    compositions: [primary_care_encounter, vital_signs]
+    day_offset: 0
+    transitions:
+      - to: conservative
+        condition: always
+        compositions: [problem_diagnosis, medication_statement]
+
+  conservative:
+    compositions: [care_plan]
+    day_offset: { min: 14, max: 30 }
+    transitions:
+      - to: physio
+        condition: "lab.pain_vas >= 7 OR severity == severe"
+        compositions: [referral]
+      - to: terminal
+        condition: always
+
+  physio:
+    compositions: [specialist_consultation, care_plan]
+    day_offset: { min: 21, max: 60 }
+    transitions:
+      - to: terminal
+        condition: always
+
+  terminal:
+    terminal: true
