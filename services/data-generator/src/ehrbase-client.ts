@@ -21,7 +21,7 @@ export interface EhrbaseFetchOptions {
 export async function ehrbaseFetch<T = unknown>(
   path: string,
   opts: EhrbaseFetchOptions = {},
-): Promise<{ status: number; body: T; raw: string }> {
+): Promise<{ status: number; body: T; raw: string; headers: Headers }> {
   const url = new URL(`${OPENEHR_REST}${path}`);
   for (const [k, v] of Object.entries(opts.query ?? {})) {
     url.searchParams.set(k, v);
@@ -62,7 +62,7 @@ export async function ehrbaseFetch<T = unknown>(
     );
   }
 
-  return { status: res.status, body: parsed, raw };
+  return { status: res.status, body: parsed, raw, headers: res.headers };
 }
 
 export interface TemplateListEntry {
@@ -103,15 +103,39 @@ export async function uploadOpt(optXml: string): Promise<string> {
   return raw;
 }
 
-export async function createEhr(subjectId: string): Promise<string> {
+export async function findEhrBySubject(
+  subjectId: string,
+  namespace = "NIMLOTH",
+): Promise<string | null> {
+  try {
+    const { body } = await ehrbaseFetch<{ ehr_id?: { value: string } }>("/ehr", {
+      query: {
+        subject_id: subjectId,
+        subject_namespace: namespace,
+      },
+    });
+    return body?.ehr_id?.value ?? null;
+  } catch (err) {
+    if (err instanceof EhrbaseError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+export async function createEhr(
+  subjectId: string,
+  namespace = "NIMLOTH",
+): Promise<string> {
+  const existing = await findEhrBySubject(subjectId, namespace);
+  if (existing) return existing;
+
   const payload = {
     _type: "EHR_STATUS",
     archetype_node_id: "openEHR-EHR-EHR_STATUS.generic.v1",
     name: { value: "EHR Status" },
     subject: {
       external_ref: {
-        id: { _type: "GENERIC_ID", value: subjectId, scheme: "NIMLOTH" },
-        namespace: "NIMLOTH",
+        id: { _type: "GENERIC_ID", value: subjectId, scheme: namespace },
+        namespace,
         type: "PERSON",
       },
     },
@@ -137,20 +161,30 @@ export async function postCompositionFlat(
   templateId: string,
   flatJson: Record<string, unknown>,
 ): Promise<string> {
-  const { body, raw } = await ehrbaseFetch<{ uid?: { value: string } }>(
+  const { headers, raw } = await ehrbaseFetch<unknown>(
     `/ehr/${ehrId}/composition`,
     {
       method: "POST",
       query: { format: "FLAT", templateId },
       body: flatJson,
-      headers: { Prefer: "return=representation" },
+      headers: { Prefer: "return=minimal" },
     },
   );
-  const uid = body?.uid?.value;
-  if (!uid) {
-    throw new Error(`Composition POST succeeded but no uid: ${raw.slice(0, 200)}`);
+  // EHRbase returns 204 with UID in Location header and ETag.
+  const loc = headers.get("location") ?? headers.get("Location");
+  if (loc) {
+    const tail = loc.split("/composition/")[1];
+    if (tail) return tail;
   }
-  return uid;
+  const etag = headers.get("etag") ?? headers.get("ETag");
+  if (etag) {
+    const cleaned = etag.replace(/"/g, "");
+    const uid = cleaned.split("::")[0];
+    if (uid) return uid;
+  }
+  throw new Error(
+    `Composition POST succeeded but no uid in headers: ${raw.slice(0, 200)}`,
+  );
 }
 
 export async function runAql<T = unknown>(
