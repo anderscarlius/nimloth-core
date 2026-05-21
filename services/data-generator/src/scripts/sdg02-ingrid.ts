@@ -48,7 +48,6 @@ const EVENTS: Event[] = [
     build: (ctx) =>
       buildMinimalAction(ctx, {
         careflowStep: "first_contact_vc",
-        currentState: "completed",
         annotation:
           "primary_care_encounter | first_visit | Trötthet, törst, dimsyn. BT 158/92, BMI 31.",
         sdgEventType: "primary_care_encounter",
@@ -73,7 +72,6 @@ const EVENTS: Event[] = [
     build: (ctx) =>
       buildMinimalAction(ctx, {
         careflowStep: "lab_ordered",
-        currentState: "active",
         annotation:
           "lab_order | hba1c,glukos,kreatinin,lipider | Beställda prover dag 0",
         sdgEventType: "lab_order",
@@ -125,7 +123,6 @@ const EVENTS: Event[] = [
     build: (ctx) =>
       buildMinimalAction(ctx, {
         careflowStep: "referral_endo",
-        currentState: "active",
         annotation:
           "referral | endocrinology | Remiss endokrinolog pga HbA1c > 80",
         sdgEventType: "referral",
@@ -138,7 +135,6 @@ const EVENTS: Event[] = [
     build: (ctx) =>
       buildMinimalAction(ctx, {
         careflowStep: "specialist_seen",
-        currentState: "completed",
         annotation:
           "specialist_consultation | endocrinology | Justerad behandling, SGLT2 övervägs",
         sdgEventType: "specialist_consultation",
