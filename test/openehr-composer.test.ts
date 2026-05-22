@@ -124,8 +124,8 @@ describe('openehr-composer — body_temperature event end-to-end', () => {
   });
 });
 
-describe('openehr-composer — gap loggning för EVALUATION-events', () => {
-  it('medication.prescribed returnerar status=gap (P3.0b-blocker)', async () => {
+describe('openehr-composer — EVALUATION-events post-P3.0b', () => {
+  it('medication.prescribed → status=ok via medication_summary.v1 (P3.0b Path A)', async () => {
     const r = await fetch(`${COMPOSER_URL}/composer/event`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -139,9 +139,9 @@ describe('openehr-composer — gap loggning för EVALUATION-events', () => {
       }),
     });
     expect(r.status).toBe(202);
-    const body = (await r.json()) as { status: string; reason: string };
-    expect(body.status).toBe('gap');
-    expect(body.reason).toContain('P3.0b');
+    const body = (await r.json()) as { status: string; composition_uid?: string };
+    expect(body.status).toBe('ok');
+    expect(body.composition_uid).toMatch(/^[0-9a-f-]{8,}/);
   });
 
   it('/composer/stats inkluderar constraints_observed med DV_QUANTITY', async () => {

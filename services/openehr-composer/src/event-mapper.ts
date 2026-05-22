@@ -20,7 +20,7 @@ export interface TemplateMapping {
   /** openEHR archetype-id som content-roten refererar. */
   archetypeNodeId: string;
   /** Intern shape composition-builder bygger mot. */
-  compositionShape: 'observation_time_series' | 'action_minimal';
+  compositionShape: 'observation_time_series' | 'action_minimal' | 'evaluation_medication';
   /** True om mapping går via fixture; false när P3.0b producerat egen OPT. */
   viaFixture: boolean;
 }
@@ -52,13 +52,38 @@ const EVENT_TO_TEMPLATE: Record<string, TemplateMapping> = {
     compositionShape: 'action_minimal',
     viaFixture: true,
   },
+  // Medication — P3.0b Path A: medication_summary.v1 (EVALUATION).
+  // viaFixture: false eftersom OPT är bridge-genererad (xmlbuilder2), inte
+  // upstream-fixture.
+  'core.clinical.medication.prescribed': {
+    templateId: 'medication_summary.v1',
+    archetypeNodeId: 'openEHR-EHR-EVALUATION.medication_summary.v1',
+    compositionShape: 'evaluation_medication',
+    viaFixture: false,
+  },
+  'core.clinical.medication.dispensed': {
+    templateId: 'medication_summary.v1',
+    archetypeNodeId: 'openEHR-EHR-EVALUATION.medication_summary.v1',
+    compositionShape: 'evaluation_medication',
+    viaFixture: false,
+  },
+  'core.clinical.medication.renewed': {
+    templateId: 'medication_summary.v1',
+    archetypeNodeId: 'openEHR-EHR-EVALUATION.medication_summary.v1',
+    compositionShape: 'evaluation_medication',
+    viaFixture: false,
+  },
+  'core.clinical.medication.discontinued': {
+    templateId: 'medication_summary.v1',
+    archetypeNodeId: 'openEHR-EHR-EVALUATION.medication_summary.v1',
+    compositionShape: 'evaluation_medication',
+    viaFixture: false,
+  },
 };
 
-/** Fru Andersson-event-typer som blockeras av fixture-täckningen.
- *  P3.0b ska leverera EVALUATION-templates för dessa. */
+/** Event-typer som fortfarande saknar template-mapping efter P3.0b.
+ *  P3.0c/d ska leverera EVALUATION-templates för dessa. */
 export const KNOWN_GAP_EVENT_TYPES: ReadonlySet<string> = new Set([
-  'core.clinical.medication.prescribed',
-  'core.clinical.medication.dispensed',
   'core.clinical.allergy.reported',
   'core.clinical.condition.diagnosed',
 ]);

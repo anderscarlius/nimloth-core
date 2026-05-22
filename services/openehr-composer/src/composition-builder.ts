@@ -38,6 +38,8 @@ export function buildComposition(
       return buildObservationTimeSeries(event, mapping, gaps, opts);
     case 'action_minimal':
       return buildActionMinimal(event, mapping, gaps, opts);
+    case 'evaluation_medication':
+      return buildEvaluationMedication(event, mapping, gaps, opts);
   }
 }
 
@@ -84,6 +86,8 @@ function archetypeIdForTemplate(templateId: string): string {
     case 'time_series.en.v1':
       return 'openEHR-EHR-COMPOSITION.event_series.v1';
     case 'minimal_action.en.v1':
+      return 'openEHR-EHR-COMPOSITION.minimal.v1';
+    case 'medication_summary.v1':
       return 'openEHR-EHR-COMPOSITION.minimal.v1';
     default:
       return `openEHR-EHR-COMPOSITION.${templateId}`;
@@ -238,6 +242,132 @@ function buildActionMinimal(
               value: { _type: 'DV_TEXT', value: description },
             },
           ],
+        },
+      },
+    ],
+  };
+}
+
+// ============================================================
+// Shape 3: evaluation_medication (medication_summary.v1)
+// ============================================================
+// Maps kafka-test-producer payload {drug, dose, atc_code?, route?, start_date?, indication?}
+// to the 6-field EVALUATION archetype produced by the P3.0b Path A bridge.
+// ATC degrades to DV_TEXT-only when missing (Del 0 beslut 6).
+function buildEvaluationMedication(
+  event: ClinicalEvent,
+  mapping: TemplateMapping,
+  gaps: GapTracker,
+  opts: BuildOptions,
+): Record<string, unknown> {
+  const drug = readString(event.payload, 'drug') ?? readString(event.payload, 'medication_name');
+  const dose = readString(event.payload, 'dose') ?? readString(event.payload, 'dose_description');
+  const atcCode = readString(event.payload, 'atc_code') ?? readString(event.payload, 'atc');
+  const route = readString(event.payload, 'route');
+  const startDate = readString(event.payload, 'start_date') ?? event.occurred_at;
+  const indication = readString(event.payload, 'indication') ?? readString(event.payload, 'clinical_indication');
+
+  if (!drug) {
+    gaps.log('unsupported_payload', event.event_type, 'missing payload.drug', ['DV_TEXT.medication_name']);
+  }
+  if (!atcCode) {
+    gaps.log('terminology_missing', event.event_type, 'no ATC — degrading to DV_TEXT in annotation', ['DV_CODED_TEXT.atc_code']);
+  }
+
+  const items: Array<Record<string, unknown>> = [];
+
+  // at0002 medication_name (DV_TEXT, required)
+  items.push({
+    _type: 'ELEMENT',
+    name: { value: 'medication_name' },
+    archetype_node_id: 'at0002',
+    value: { _type: 'DV_TEXT', value: drug ?? 'Unspecified medication' },
+  });
+
+  // at0003 atc_code (DV_CODED_TEXT when present)
+  if (atcCode) {
+    items.push({
+      _type: 'ELEMENT',
+      name: { value: 'atc_code' },
+      archetype_node_id: 'at0003',
+      value: {
+        _type: 'DV_CODED_TEXT',
+        value: atcCode,
+        defining_code: {
+          _type: 'CODE_PHRASE',
+          terminology_id: { value: 'ATC' },
+          code_string: atcCode,
+        },
+      },
+    });
+  }
+
+  // at0004 dose_description (DV_TEXT)
+  if (dose) {
+    items.push({
+      _type: 'ELEMENT',
+      name: { value: 'dose_description' },
+      archetype_node_id: 'at0004',
+      value: { _type: 'DV_TEXT', value: dose },
+    });
+  }
+
+  // at0005 route (DV_CODED_TEXT, openehr-terminology)
+  if (route) {
+    items.push({
+      _type: 'ELEMENT',
+      name: { value: 'route' },
+      archetype_node_id: 'at0005',
+      value: {
+        _type: 'DV_CODED_TEXT',
+        value: route,
+        defining_code: {
+          _type: 'CODE_PHRASE',
+          terminology_id: { value: 'openehr' },
+          code_string: route,
+        },
+      },
+    });
+  }
+
+  // at0006 start_date (DV_DATE_TIME)
+  items.push({
+    _type: 'ELEMENT',
+    name: { value: 'start_date' },
+    archetype_node_id: 'at0006',
+    value: { _type: 'DV_DATE_TIME', value: startDate },
+  });
+
+  // at0007 clinical_indication (DV_TEXT)
+  if (indication) {
+    items.push({
+      _type: 'ELEMENT',
+      name: { value: 'clinical_indication' },
+      archetype_node_id: 'at0007',
+      value: { _type: 'DV_TEXT', value: indication },
+    });
+  }
+
+  return {
+    ...commonHeader(event, mapping, opts, 'Medication summary'),
+    content: [
+      {
+        _type: 'EVALUATION',
+        name: { value: 'Medication summary' },
+        archetype_details: {
+          _type: 'ARCHETYPED',
+          archetype_id: { value: mapping.archetypeNodeId },
+          rm_version: '1.0.4',
+        },
+        archetype_node_id: mapping.archetypeNodeId,
+        language: EN_LANGUAGE,
+        encoding: { terminology_id: { value: 'IANA_character-sets' }, code_string: 'UTF-8' },
+        subject: { _type: 'PARTY_SELF' },
+        data: {
+          _type: 'ITEM_TREE',
+          name: { value: 'Tree' },
+          archetype_node_id: 'at0001',
+          items,
         },
       },
     ],

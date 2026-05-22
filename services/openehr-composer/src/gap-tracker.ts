@@ -12,6 +12,7 @@ export type GapKind =
   | 'no_template_mapping'   // event-typ saknar mapping i event-mapper
   | 'unsupported_payload'   // payload har fält som mapping inte kan hantera
   | 'fixture_limitation'    // fixture-template stödjer inte event-shapen
+  | 'terminology_missing'   // ATC/SNOMED-bind saknas — DV_CODED_TEXT degraderas till DV_TEXT
   | 'composition_rejected'; // EHRbase rejected composition (t.ex. 422)
 
 export interface GapEntry {

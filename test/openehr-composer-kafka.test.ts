@@ -144,10 +144,10 @@ describe('Outbox processor → EHRbase composition', () => {
 });
 
 // ============================================================
-// 4. failed_event_marked_after_max_attempts (gap-events flyttas till skipped)
+// 4. medication.prescribed completes via medication_summary.v1 (post-P3.0b)
 // ============================================================
-describe('Outbox skipped för known gaps', () => {
-  it('medication.prescribed → status=skipped (P3.0b-blocker)', async () => {
+describe('Outbox completed för medication (P3.0b Path A)', () => {
+  it('medication.prescribed → status=completed via medication_summary.v1', async () => {
     const eventId = randomUUID();
     await sendEvent(
       'core.clinical.medication.prescribed',
@@ -159,12 +159,12 @@ describe('Outbox skipped för known gaps', () => {
     const row = await waitFor(
       async () => {
         const r = await fetchOutbox(eventId);
-        return r?.status === 'skipped' ? r : null;
+        return r?.status === 'completed' ? r : null;
       },
-      'outbox skipped för gap-event',
+      'outbox completed för medication-event',
       30_000,
     );
-    expect(row.status).toBe('skipped');
+    expect(row.status).toBe('completed');
   }, 60_000);
 });
 
@@ -172,7 +172,7 @@ describe('Outbox skipped för known gaps', () => {
 // 5. fru_andersson_full_sequence
 // ============================================================
 describe('Fru Andersson full sequence via Kafka', () => {
-  it('6-event akutankomst: 4 composed + 2 skipped', async () => {
+  it('6-event akutankomst: 6 composed (4 vitals/proc + 2 medication via P3.0b)', async () => {
     const startStatsR = await fetch(`${COMPOSER_URL}/composer/outbox/stats`);
     const startStats = (await startStatsR.json()) as { by_status: Array<{ status: string; count: number }> };
     const initialCompleted = startStats.by_status.find((s) => s.status === 'completed')?.count ?? 0;
@@ -202,8 +202,9 @@ describe('Fru Andersson full sequence via Kafka', () => {
     const finalCompleted = finalStats.by_status.find((s) => s.status === 'completed')?.count ?? 0;
     const finalSkipped = finalStats.by_status.find((s) => s.status === 'skipped')?.count ?? 0;
 
-    expect(finalCompleted - initialCompleted).toBeGreaterThanOrEqual(4);
-    expect(finalSkipped - initialSkipped).toBeGreaterThanOrEqual(2);
+    // Post-P3.0b: medication events completes too. 6 events → 6 compositions.
+    expect(finalCompleted - initialCompleted).toBeGreaterThanOrEqual(6);
+    expect(finalSkipped - initialSkipped).toBe(0);
   }, 60_000);
 });
 
