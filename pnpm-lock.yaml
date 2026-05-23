@@ -404,6 +404,9 @@ importers:
 
   services/fhir-facade:
     dependencies:
+      '@nimloth-core/kafka-utils':
+        specifier: workspace:^
+        version: link:../../packages/kafka-utils
       '@nimloth-core/shared':
         specifier: workspace:*
         version: link:../../packages/shared

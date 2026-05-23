@@ -2,6 +2,7 @@
 
 import path from 'node:path';
 import { Kafka } from 'kafkajs';
+import { startWithKafkaRetry } from '@nimloth-core/kafka-utils';
 import { loadConfig } from './config.js';
 import { createLogger } from './logger.js';
 import { createPool, migrate } from './db.js';
@@ -107,12 +108,23 @@ async function main(): Promise<void> {
   });
 
   // Starta materializer (primary-mode)
+  // B14: retry on KRaft consumer-coordinator init lag. If retries exhaust,
+  // log error but keep HTTP server running — the facade's read-path against
+  // EHRbase is independent of Kafka materialization.
   if (config.mode === 'primary') {
     try {
-      await materializer.start();
+      await startWithKafkaRetry(() => materializer.start(), {
+        attempts: 6,
+        initialDelayMs: 1000,
+        maxDelayMs: 15_000,
+        logger,
+        label: 'fhir-facade materializer',
+      });
     } catch (err) {
-      logger.error({ err }, 'Failed to start materializer');
-      process.exit(1);
+      logger.error(
+        { err: String(err) },
+        'Failed to start materializer after retries — facade continues without Kafka materialization',
+      );
     }
   }
 

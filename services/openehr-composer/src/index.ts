@@ -11,6 +11,7 @@ import { GapTracker } from './gap-tracker.js';
 import { OutboxWriter } from './outbox/writer.js';
 import { OutboxProcessor } from './outbox/processor.js';
 import { ComposerKafkaConsumer } from './kafka/consumer.js';
+import { startWithKafkaRetry } from '@nimloth-core/kafka-utils';
 import { createHealthRouter } from './routes/health.js';
 import { createEventRouter } from './routes/event.js';
 import { createTemplatesRouter } from './routes/templates.js';
@@ -62,7 +63,14 @@ async function main(): Promise<void> {
       logger.child({ component: 'kafka-consumer' }),
     );
     try {
-      await kafkaConsumer.start();
+      // B14: retry on KRaft consumer-coordinator init lag (~30s cold-start window).
+      await startWithKafkaRetry(() => kafkaConsumer!.start(), {
+        attempts: 6,
+        initialDelayMs: 1000,
+        maxDelayMs: 15_000,
+        logger: logger.child({ component: 'kafka-consumer' }),
+        label: 'composer kafka consumer',
+      });
     } catch (err) {
       logger.warn({ err: String(err) }, 'kafka consumer failed to start — composer continues without Kafka');
       kafkaConsumer = null;
