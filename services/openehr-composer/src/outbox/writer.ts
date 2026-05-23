@@ -2,6 +2,13 @@
 //
 // Idempotent: ON CONFLICT (event_id) DO NOTHING. Vid konflikt återläser vi
 // existing rad. created-flaggan skiljer "ny" från "redan inne".
+//
+// P3.0b B13-fix: HTTP-route POSTar composition synkront och skulle annars
+// race:a med outbox-processor som pollar 'pending'-rader. När HTTP är källan
+// skapas raden direkt i status='processing' så processor inte plockar den.
+// recoverFromCrash i processor återställer hängande 'processing'-rader vid
+// composer-restart om HTTP-anropet aborterar mitt i. Kafka-källan behåller
+// status='pending' (default) eftersom konsumern är fire-and-forget.
 
 import type { Pool } from 'pg';
 import type { ClinicalEvent } from '../types.js';
@@ -22,11 +29,12 @@ export class OutboxWriter {
     source: 'kafka' | 'http',
     kafkaContext?: KafkaContext,
   ): Promise<{ record: OutboxRecord; created: boolean }> {
+    const initialStatus = source === 'http' ? 'processing' : 'pending';
     const inserted = await this.pool.query<OutboxRow>(
       `INSERT INTO composer_outbox
-         (event_id, event_type, patient_pnr, payload, source,
+         (event_id, event_type, patient_pnr, payload, source, status,
           kafka_topic, kafka_partition, kafka_offset)
-       VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8)
+       VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8, $9)
        ON CONFLICT (event_id) DO NOTHING
        RETURNING *`,
       [
@@ -35,6 +43,7 @@ export class OutboxWriter {
         event.patient_pnr,
         JSON.stringify(event),
         source,
+        initialStatus,
         kafkaContext?.topic ?? null,
         kafkaContext?.partition ?? null,
         kafkaContext?.offset ?? null,
