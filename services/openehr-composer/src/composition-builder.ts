@@ -284,7 +284,10 @@ function buildEvaluationMedication(
     value: { _type: 'DV_TEXT', value: drug ?? 'Unspecified medication' },
   });
 
-  // at0003 atc_code (DV_CODED_TEXT when present)
+  // at0003 atc_code (DV_CODED_TEXT). Terminology is bound to 'local' rather
+  // than 'ATC' because EHRbase doesn't ship ATC and its terminology validator
+  // NPEs on unresolved rubrics. The ATC code is preserved in code_string —
+  // downstream consumers can re-bind once a real ATC terminology is loaded.
   if (atcCode) {
     items.push({
       _type: 'ELEMENT',
@@ -295,7 +298,7 @@ function buildEvaluationMedication(
         value: atcCode,
         defining_code: {
           _type: 'CODE_PHRASE',
-          terminology_id: { value: 'ATC' },
+          terminology_id: { value: 'local' },
           code_string: atcCode,
         },
       },
@@ -312,7 +315,8 @@ function buildEvaluationMedication(
     });
   }
 
-  // at0005 route (DV_CODED_TEXT, openehr-terminology)
+  // at0005 route (DV_CODED_TEXT). 'local' terminology for same reason as
+  // atc_code — EHRbase validator NPEs on unknown rubrics.
   if (route) {
     items.push({
       _type: 'ELEMENT',
@@ -323,7 +327,7 @@ function buildEvaluationMedication(
         value: route,
         defining_code: {
           _type: 'CODE_PHRASE',
-          terminology_id: { value: 'openehr' },
+          terminology_id: { value: 'local' },
           code_string: route,
         },
       },
