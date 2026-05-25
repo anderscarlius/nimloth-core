@@ -554,7 +554,7 @@ services:
       OUTBOX_POLL_INTERVAL_MS: "1000"
       OUTBOX_BATCH_SIZE: "10"
       OUTBOX_MAX_ATTEMPTS: "5"
-      EXPECTED_TEMPLATES: "time_series.en.v1,minimal_action.en.v1,medication_summary.v1,problem_diagnosis.v1"
+      EXPECTED_TEMPLATES: "time_series.en.v1,minimal_action.en.v1,medication_summary.v1,problem_diagnosis.v1,adverse_reaction_risk.v2"
     ports:
       - "3015:3015"
     depends_on:

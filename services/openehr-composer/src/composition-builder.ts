@@ -42,6 +42,8 @@ export function buildComposition(
       return buildEvaluationMedication(event, mapping, gaps, opts);
     case 'evaluation_diagnosis':
       return buildEvaluationDiagnosis(event, mapping, gaps, opts);
+    case 'evaluation_allergy':
+      return buildEvaluationAllergy(event, mapping, gaps, opts);
   }
 }
 
@@ -92,6 +94,8 @@ function archetypeIdForTemplate(templateId: string): string {
     case 'medication_summary.v1':
       return 'openEHR-EHR-COMPOSITION.minimal.v1';
     case 'problem_diagnosis.v1':
+      return 'openEHR-EHR-COMPOSITION.minimal.v1';
+    case 'adverse_reaction_risk.v2':
       return 'openEHR-EHR-COMPOSITION.minimal.v1';
     default:
       return `openEHR-EHR-COMPOSITION.${templateId}`;
@@ -505,6 +509,147 @@ function buildEvaluationDiagnosis(
       {
         _type: 'EVALUATION',
         name: { value: 'Problem diagnosis' },
+        archetype_details: {
+          _type: 'ARCHETYPED',
+          archetype_id: { value: mapping.archetypeNodeId },
+          rm_version: '1.0.4',
+        },
+        archetype_node_id: mapping.archetypeNodeId,
+        language: EN_LANGUAGE,
+        encoding: { terminology_id: { value: 'IANA_character-sets' }, code_string: 'UTF-8' },
+        subject: { _type: 'PARTY_SELF' },
+        data: {
+          _type: 'ITEM_TREE',
+          name: { value: 'Tree' },
+          archetype_node_id: 'at0001',
+          items,
+        },
+      },
+    ],
+  };
+}
+
+// ============================================================
+// Shape 5: evaluation_allergy (adverse_reaction_risk.v2) — P3.0d
+// ============================================================
+// Maps payload {substance|substance_name, substance_code?, criticality?,
+// manifestation?, onset_date?, reaction_type?} to the 6-field EVALUATION
+// archetype produced by P3.0d Path A. Coded fields bound to 'local'.
+function buildEvaluationAllergy(
+  event: ClinicalEvent,
+  mapping: TemplateMapping,
+  gaps: GapTracker,
+  opts: BuildOptions,
+): Record<string, unknown> {
+  const substance =
+    readString(event.payload, 'substance_name') ??
+    readString(event.payload, 'substance') ??
+    readString(event.payload, 'allergen');
+  const substanceCode =
+    readString(event.payload, 'substance_code') ??
+    readString(event.payload, 'atc') ??
+    readString(event.payload, 'snomed');
+  const criticality = readString(event.payload, 'criticality');
+  const manifestation =
+    readString(event.payload, 'manifestation') ?? readString(event.payload, 'reaction');
+  const onset =
+    readString(event.payload, 'onset_date') ?? event.occurred_at;
+  const reactionType =
+    readString(event.payload, 'reaction_type') ?? readString(event.payload, 'category');
+
+  if (!substance) {
+    gaps.log('unsupported_payload', event.event_type, 'missing payload.substance_name', [
+      'DV_TEXT.substance_name',
+    ]);
+  }
+  if (!substanceCode) {
+    gaps.log('terminology_missing', event.event_type, 'no ATC/SNOMED code — coded field omitted', [
+      'DV_CODED_TEXT.substance_code',
+    ]);
+  }
+
+  const items: Array<Record<string, unknown>> = [];
+
+  items.push({
+    _type: 'ELEMENT',
+    name: { value: 'substance_name' },
+    archetype_node_id: 'at0002',
+    value: { _type: 'DV_TEXT', value: substance ?? 'Unspecified substance' },
+  });
+
+  if (substanceCode) {
+    items.push({
+      _type: 'ELEMENT',
+      name: { value: 'substance_code' },
+      archetype_node_id: 'at0003',
+      value: {
+        _type: 'DV_CODED_TEXT',
+        value: substanceCode,
+        defining_code: {
+          _type: 'CODE_PHRASE',
+          terminology_id: { value: 'local' },
+          code_string: substanceCode,
+        },
+      },
+    });
+  }
+
+  if (criticality) {
+    items.push({
+      _type: 'ELEMENT',
+      name: { value: 'criticality' },
+      archetype_node_id: 'at0004',
+      value: {
+        _type: 'DV_CODED_TEXT',
+        value: criticality,
+        defining_code: {
+          _type: 'CODE_PHRASE',
+          terminology_id: { value: 'local' },
+          code_string: criticality,
+        },
+      },
+    });
+  }
+
+  if (manifestation) {
+    items.push({
+      _type: 'ELEMENT',
+      name: { value: 'manifestation' },
+      archetype_node_id: 'at0005',
+      value: { _type: 'DV_TEXT', value: manifestation },
+    });
+  }
+
+  items.push({
+    _type: 'ELEMENT',
+    name: { value: 'onset_date' },
+    archetype_node_id: 'at0006',
+    value: { _type: 'DV_DATE_TIME', value: onset },
+  });
+
+  if (reactionType) {
+    items.push({
+      _type: 'ELEMENT',
+      name: { value: 'reaction_type' },
+      archetype_node_id: 'at0007',
+      value: {
+        _type: 'DV_CODED_TEXT',
+        value: reactionType,
+        defining_code: {
+          _type: 'CODE_PHRASE',
+          terminology_id: { value: 'local' },
+          code_string: reactionType,
+        },
+      },
+    });
+  }
+
+  return {
+    ...commonHeader(event, mapping, opts, 'Adverse reaction risk'),
+    content: [
+      {
+        _type: 'EVALUATION',
+        name: { value: 'Adverse reaction risk' },
         archetype_details: {
           _type: 'ARCHETYPED',
           archetype_id: { value: mapping.archetypeNodeId },

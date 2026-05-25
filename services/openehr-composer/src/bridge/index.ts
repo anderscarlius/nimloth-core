@@ -17,6 +17,15 @@ export {
 } from "./problem-diagnosis-opt.js";
 
 export {
+  buildAdverseReactionRiskOpt,
+  ARR_DEFAULT_TEMPLATE_ID,
+  ARR_DEFAULT_CONCEPT,
+  ARR_DEFAULT_UID,
+  ADVERSE_REACTION_RISK_ELEMENTS,
+  type AdverseReactionRiskOptOpts,
+} from "./adverse-reaction-risk-opt.js";
+
+export {
   createBridgeAuditPublisher,
   buildAuditEvent,
   isKafkaDisabled,

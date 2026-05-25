@@ -19,9 +19,11 @@
 
 import pino from "pino";
 import {
+  buildAdverseReactionRiskOpt,
   buildMedicationSummaryOpt,
   buildProblemDiagnosisOpt,
   createBridgeAuditPublisher,
+  ARR_DEFAULT_TEMPLATE_ID,
   DEFAULT_TEMPLATE_ID,
   PD_DEFAULT_TEMPLATE_ID,
 } from "../index.js";
@@ -53,6 +55,7 @@ interface TemplateSpec {
 const TEMPLATES: TemplateSpec[] = [
   { templateId: DEFAULT_TEMPLATE_ID, build: () => buildMedicationSummaryOpt() },
   { templateId: PD_DEFAULT_TEMPLATE_ID, build: () => buildProblemDiagnosisOpt() },
+  { templateId: ARR_DEFAULT_TEMPLATE_ID, build: () => buildAdverseReactionRiskOpt() },
 ];
 
 async function ensureEhrbaseUp(): Promise<void> {

@@ -24,7 +24,8 @@ export interface TemplateMapping {
     | 'observation_time_series'
     | 'action_minimal'
     | 'evaluation_medication'
-    | 'evaluation_diagnosis';
+    | 'evaluation_diagnosis'
+    | 'evaluation_allergy';
   /** True om mapping går via fixture; false när P3.0b producerat egen OPT. */
   viaFixture: boolean;
 }
@@ -102,13 +103,32 @@ const EVENT_TO_TEMPLATE: Record<string, TemplateMapping> = {
     compositionShape: 'evaluation_diagnosis',
     viaFixture: false,
   },
+  // Adverse-reaction / allergy — P3.0d Path A: adverse_reaction_risk.v2 (EVALUATION).
+  'core.clinical.allergy.reported': {
+    templateId: 'adverse_reaction_risk.v2',
+    archetypeNodeId: 'openEHR-EHR-EVALUATION.adverse_reaction_risk.v2',
+    compositionShape: 'evaluation_allergy',
+    viaFixture: false,
+  },
+  'core.clinical.allergy.updated': {
+    templateId: 'adverse_reaction_risk.v2',
+    archetypeNodeId: 'openEHR-EHR-EVALUATION.adverse_reaction_risk.v2',
+    compositionShape: 'evaluation_allergy',
+    viaFixture: false,
+  },
+  'core.clinical.allergy.resolved': {
+    templateId: 'adverse_reaction_risk.v2',
+    archetypeNodeId: 'openEHR-EHR-EVALUATION.adverse_reaction_risk.v2',
+    compositionShape: 'evaluation_allergy',
+    viaFixture: false,
+  },
 };
 
-/** Event-typer som fortfarande saknar template-mapping efter P3.0c.
- *  P3.0d ska leverera EVALUATION-templates för dessa. */
-export const KNOWN_GAP_EVENT_TYPES: ReadonlySet<string> = new Set([
-  'core.clinical.allergy.reported',
-]);
+/** Event-typer som fortfarande saknar template-mapping efter P3.0d.
+ *  Listan är tom — alla Fru Andersson-scenariots EVALUATION-events
+ *  hanteras nu av medication_summary.v1, problem_diagnosis.v1 och
+ *  adverse_reaction_risk.v2. */
+export const KNOWN_GAP_EVENT_TYPES: ReadonlySet<string> = new Set([]);
 
 export function mapEventToTemplate(event: ClinicalEvent): TemplateMapping | null {
   return EVENT_TO_TEMPLATE[event.event_type] ?? null;
