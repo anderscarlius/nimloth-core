@@ -40,6 +40,8 @@ export function buildComposition(
       return buildActionMinimal(event, mapping, gaps, opts);
     case 'evaluation_medication':
       return buildEvaluationMedication(event, mapping, gaps, opts);
+    case 'evaluation_diagnosis':
+      return buildEvaluationDiagnosis(event, mapping, gaps, opts);
   }
 }
 
@@ -88,6 +90,8 @@ function archetypeIdForTemplate(templateId: string): string {
     case 'minimal_action.en.v1':
       return 'openEHR-EHR-COMPOSITION.minimal.v1';
     case 'medication_summary.v1':
+      return 'openEHR-EHR-COMPOSITION.minimal.v1';
+    case 'problem_diagnosis.v1':
       return 'openEHR-EHR-COMPOSITION.minimal.v1';
     default:
       return `openEHR-EHR-COMPOSITION.${templateId}`;
@@ -358,6 +362,149 @@ function buildEvaluationMedication(
       {
         _type: 'EVALUATION',
         name: { value: 'Medication summary' },
+        archetype_details: {
+          _type: 'ARCHETYPED',
+          archetype_id: { value: mapping.archetypeNodeId },
+          rm_version: '1.0.4',
+        },
+        archetype_node_id: mapping.archetypeNodeId,
+        language: EN_LANGUAGE,
+        encoding: { terminology_id: { value: 'IANA_character-sets' }, code_string: 'UTF-8' },
+        subject: { _type: 'PARTY_SELF' },
+        data: {
+          _type: 'ITEM_TREE',
+          name: { value: 'Tree' },
+          archetype_node_id: 'at0001',
+          items,
+        },
+      },
+    ],
+  };
+}
+
+// ============================================================
+// Shape 4: evaluation_diagnosis (problem_diagnosis.v1) — P3.0c
+// ============================================================
+// Maps payload {diagnosis_name|name, diagnosis_code|icd10|snomed?,
+// severity?, date_of_onset?, status?, clinical_description|description?}
+// to the 6-field EVALUATION archetype produced by P3.0c Path A.
+// All coded fields use 'local' terminology — see ccf62a4 for the
+// EHRbase ItemValidator NPE workaround.
+function buildEvaluationDiagnosis(
+  event: ClinicalEvent,
+  mapping: TemplateMapping,
+  gaps: GapTracker,
+  opts: BuildOptions,
+): Record<string, unknown> {
+  const name =
+    readString(event.payload, 'diagnosis_name') ?? readString(event.payload, 'name');
+  const code =
+    readString(event.payload, 'diagnosis_code') ??
+    readString(event.payload, 'icd10') ??
+    readString(event.payload, 'snomed');
+  const severity = readString(event.payload, 'severity');
+  const onset =
+    readString(event.payload, 'date_of_onset') ?? event.occurred_at;
+  const status = readString(event.payload, 'status');
+  const description =
+    readString(event.payload, 'clinical_description') ??
+    readString(event.payload, 'description');
+
+  if (!name) {
+    gaps.log('unsupported_payload', event.event_type, 'missing payload.diagnosis_name', ['DV_TEXT.diagnosis_name']);
+  }
+  if (!code) {
+    gaps.log('terminology_missing', event.event_type, 'no ICD/SNOMED code — coded field omitted', ['DV_CODED_TEXT.diagnosis_code']);
+  }
+
+  const items: Array<Record<string, unknown>> = [];
+
+  // at0002 diagnosis_name (required)
+  items.push({
+    _type: 'ELEMENT',
+    name: { value: 'diagnosis_name' },
+    archetype_node_id: 'at0002',
+    value: { _type: 'DV_TEXT', value: name ?? 'Unspecified diagnosis' },
+  });
+
+  // at0003 diagnosis_code (optional, DV_CODED_TEXT bound to 'local')
+  if (code) {
+    items.push({
+      _type: 'ELEMENT',
+      name: { value: 'diagnosis_code' },
+      archetype_node_id: 'at0003',
+      value: {
+        _type: 'DV_CODED_TEXT',
+        value: code,
+        defining_code: {
+          _type: 'CODE_PHRASE',
+          terminology_id: { value: 'local' },
+          code_string: code,
+        },
+      },
+    });
+  }
+
+  // at0004 severity (optional)
+  if (severity) {
+    items.push({
+      _type: 'ELEMENT',
+      name: { value: 'severity' },
+      archetype_node_id: 'at0004',
+      value: {
+        _type: 'DV_CODED_TEXT',
+        value: severity,
+        defining_code: {
+          _type: 'CODE_PHRASE',
+          terminology_id: { value: 'local' },
+          code_string: severity,
+        },
+      },
+    });
+  }
+
+  // at0005 date_of_onset (DV_DATE_TIME — always populated, fallback to event time)
+  items.push({
+    _type: 'ELEMENT',
+    name: { value: 'date_of_onset' },
+    archetype_node_id: 'at0005',
+    value: { _type: 'DV_DATE_TIME', value: onset },
+  });
+
+  // at0006 status (optional)
+  if (status) {
+    items.push({
+      _type: 'ELEMENT',
+      name: { value: 'status' },
+      archetype_node_id: 'at0006',
+      value: {
+        _type: 'DV_CODED_TEXT',
+        value: status,
+        defining_code: {
+          _type: 'CODE_PHRASE',
+          terminology_id: { value: 'local' },
+          code_string: status,
+        },
+      },
+    });
+  }
+
+  // at0007 clinical_description (optional)
+  if (description) {
+    items.push({
+      _type: 'ELEMENT',
+      name: { value: 'clinical_description' },
+      archetype_node_id: 'at0007',
+      value: { _type: 'DV_TEXT', value: description },
+    });
+  }
+
+  return {
+    ...commonHeader(event, mapping, opts, 'Problem diagnosis'),
+    content: [
+      {
+        _type: 'EVALUATION',
+        name: { value: 'Problem diagnosis' },
         archetype_details: {
           _type: 'ARCHETYPED',
           archetype_id: { value: mapping.archetypeNodeId },

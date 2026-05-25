@@ -20,8 +20,10 @@
 import pino from "pino";
 import {
   buildMedicationSummaryOpt,
+  buildProblemDiagnosisOpt,
   createBridgeAuditPublisher,
   DEFAULT_TEMPLATE_ID,
+  PD_DEFAULT_TEMPLATE_ID,
 } from "../index.js";
 
 const EHRBASE_URL = process.env.EHRBASE_URL ?? "http://localhost:8088";
@@ -50,6 +52,7 @@ interface TemplateSpec {
 
 const TEMPLATES: TemplateSpec[] = [
   { templateId: DEFAULT_TEMPLATE_ID, build: () => buildMedicationSummaryOpt() },
+  { templateId: PD_DEFAULT_TEMPLATE_ID, build: () => buildProblemDiagnosisOpt() },
 ];
 
 async function ensureEhrbaseUp(): Promise<void> {

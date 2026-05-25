@@ -20,7 +20,11 @@ export interface TemplateMapping {
   /** openEHR archetype-id som content-roten refererar. */
   archetypeNodeId: string;
   /** Intern shape composition-builder bygger mot. */
-  compositionShape: 'observation_time_series' | 'action_minimal' | 'evaluation_medication';
+  compositionShape:
+    | 'observation_time_series'
+    | 'action_minimal'
+    | 'evaluation_medication'
+    | 'evaluation_diagnosis';
   /** True om mapping går via fixture; false när P3.0b producerat egen OPT. */
   viaFixture: boolean;
 }
@@ -79,13 +83,31 @@ const EVENT_TO_TEMPLATE: Record<string, TemplateMapping> = {
     compositionShape: 'evaluation_medication',
     viaFixture: false,
   },
+  // Condition/diagnosis — P3.0c Path A: problem_diagnosis.v1 (EVALUATION).
+  'core.clinical.condition.diagnosed': {
+    templateId: 'problem_diagnosis.v1',
+    archetypeNodeId: 'openEHR-EHR-EVALUATION.problem_diagnosis.v1',
+    compositionShape: 'evaluation_diagnosis',
+    viaFixture: false,
+  },
+  'core.clinical.condition.updated': {
+    templateId: 'problem_diagnosis.v1',
+    archetypeNodeId: 'openEHR-EHR-EVALUATION.problem_diagnosis.v1',
+    compositionShape: 'evaluation_diagnosis',
+    viaFixture: false,
+  },
+  'core.clinical.condition.resolved': {
+    templateId: 'problem_diagnosis.v1',
+    archetypeNodeId: 'openEHR-EHR-EVALUATION.problem_diagnosis.v1',
+    compositionShape: 'evaluation_diagnosis',
+    viaFixture: false,
+  },
 };
 
-/** Event-typer som fortfarande saknar template-mapping efter P3.0b.
- *  P3.0c/d ska leverera EVALUATION-templates för dessa. */
+/** Event-typer som fortfarande saknar template-mapping efter P3.0c.
+ *  P3.0d ska leverera EVALUATION-templates för dessa. */
 export const KNOWN_GAP_EVENT_TYPES: ReadonlySet<string> = new Set([
   'core.clinical.allergy.reported',
-  'core.clinical.condition.diagnosed',
 ]);
 
 export function mapEventToTemplate(event: ClinicalEvent): TemplateMapping | null {

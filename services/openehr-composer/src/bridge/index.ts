@@ -8,6 +8,15 @@ export {
 } from "./medication-summary-opt.js";
 
 export {
+  buildProblemDiagnosisOpt,
+  PD_DEFAULT_TEMPLATE_ID,
+  PD_DEFAULT_CONCEPT,
+  PD_DEFAULT_UID,
+  PROBLEM_DIAGNOSIS_ELEMENTS,
+  type ProblemDiagnosisOptOpts,
+} from "./problem-diagnosis-opt.js";
+
+export {
   createBridgeAuditPublisher,
   buildAuditEvent,
   isKafkaDisabled,
