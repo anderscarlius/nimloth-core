@@ -37,37 +37,48 @@ wait_healthy() {
 }
 
 # 1. Central infrastruktur
-echo -e "${GREEN}📦 [1/7]${NC} Central infrastruktur (DB + Kafka + Schema Registry + Keycloak)..."
-docker compose up -d melior-db asynja-db core-db kafka schema-registry kafka-ui keycloak >/dev/null
+echo -e "${GREEN}📦 [1/8]${NC} Central infrastruktur (DB + Kafka + EHRbase + Schema Registry + Keycloak)..."
+docker compose up -d melior-db asynja-db core-db ehrbase-db ehrbase kafka schema-registry kafka-ui keycloak >/dev/null
 wait_healthy kafka 90
+wait_healthy ehrbase 90
 
 # 2. Kafka topics (inkl. core.shared.* och core.system.edge.heartbeat)
-echo -e "${GREEN}📨 [2/7]${NC} Skapar Kafka topics..."
+echo -e "${GREEN}📨 [2/8]${NC} Skapar Kafka topics..."
 docker compose exec -T kafka bash /opt/kafka/create-topics.sh 2>&1 | tail -1
 
 # 3. Kafka Connect + Debezium
-echo -e "${GREEN}🔌 [3/7]${NC} Startar Kafka Connect + registrerar connectors..."
+echo -e "${GREEN}🔌 [3/8]${NC} Startar Kafka Connect + registrerar connectors..."
 docker compose up -d kafka-connect >/dev/null
 wait_healthy kafka-connect 90
 ./infra/debezium/register-connectors.sh 2>&1 | tail -4
 
 # 4. Seed testdata
-echo -e "${GREEN}🌱 [4/7]${NC} Seedar testdata (Fru Andersson + 10 patienter)..."
+echo -e "${GREEN}🌱 [4/8]${NC} Seedar testdata (Fru Andersson + 10 patienter)..."
 pnpm --filter @nimloth-core/test-data seed:all 2>&1 | tail -4
 
-# 5. Centrala applikationstjänster
+# 5. OpenEHR-templates (fixtures + P3.0b bridge)
+# Idempotent: 201 vid första laddning, 409 vid omkörning (BRIDGE_RELOAD-audit).
+echo -e "${GREEN}🧬 [5/8]${NC} Laddar openEHR-templates till EHRbase..."
+EHRBASE_HOST_PORT=$(docker compose port ehrbase 8080 2>/dev/null | sed 's/.*://')
+EHRBASE_URL="http://localhost:${EHRBASE_HOST_PORT:-8088}" \
+  pnpm openehr:load-templates 2>&1 | tail -4
+EHRBASE_URL="http://localhost:${EHRBASE_HOST_PORT:-8088}" \
+  KAFKA_BROKERS=disabled \
+  pnpm openehr:load-bridge-templates 2>&1 | tail -4
+
+# 6. Centrala applikationstjänster
 # --build krävs för att kod-ändringar ska propagera till körande containers.
 # Se scripts/start.sh + Sprint 2.5 B2 för bakgrund.
-echo -e "${GREEN}🚀 [5/7]${NC} Startar centrala applikationstjänster (rebuild via --build)..."
-docker compose up -d --build terminology ingest transform fhir-facade cds-hooks audit dashboard >/dev/null
+echo -e "${GREEN}🚀 [6/8]${NC} Startar centrala applikationstjänster (rebuild via --build)..."
+docker compose up -d --build openehr-composer terminology ingest transform fhir-facade cds-hooks audit dashboard >/dev/null
 
-# 6. Edge-nod SU + replication-tjänst (profil edge-su startar båda)
-echo -e "${GREEN}🏥 [6/7]${NC} Startar edge-nod SU + replikeringstjänst..."
+# 7. Edge-nod SU + replication-tjänst (profil edge-su startar båda)
+echo -e "${GREEN}🏥 [7/8]${NC} Startar edge-nod SU + replikeringstjänst..."
 $COMPOSE --profile edge-su up -d --build edge-kafka-su edge-su replication >/dev/null 2>&1
 wait_healthy edge-kafka-su 60
 
-# 7. Vänta på att edge hydrerar cachen
-echo -e "${GREEN}⏳ [7/7]${NC} Väntar på edge-hydrering (HTTP bootstrap + Kafka inbound)..."
+# 8. Vänta på att edge hydrerar cachen
+echo -e "${GREEN}⏳ [8/8]${NC} Väntar på edge-hydrering (HTTP bootstrap + Kafka inbound)..."
 sleep 15
 
 echo ""

@@ -40,20 +40,21 @@ wait_healthy() {
   return 1
 }
 
-# 1. Infrastruktur (databaser + Kafka)
-echo -e "${GREEN}📦 [1/6]${NC} Startar infrastruktur (DB + Kafka + Schema Registry + Keycloak + UI)..."
-docker compose up -d melior-db asynja-db core-db kafka schema-registry kafka-ui keycloak >/dev/null
+# 1. Infrastruktur (databaser + Kafka + EHRbase)
+echo -e "${GREEN}📦 [1/7]${NC} Startar infrastruktur (DB + Kafka + EHRbase + Schema Registry + Keycloak + UI)..."
+docker compose up -d melior-db asynja-db core-db ehrbase-db ehrbase kafka schema-registry kafka-ui keycloak >/dev/null
 wait_healthy kafka 90
+wait_healthy ehrbase 90
 
 # 2. Kafka topics
-echo -e "${GREEN}📨 [2/6]${NC} Skapar Kafka topics..."
+echo -e "${GREEN}📨 [2/7]${NC} Skapar Kafka topics..."
 docker compose exec -T kafka bash /opt/kafka/create-topics.sh 2>&1 | tail -1
 
 # 3. Kafka Connect + Debezium-connectors
-echo -e "${GREEN}🔌 [3/6]${NC} Startar Kafka Connect..."
+echo -e "${GREEN}🔌 [3/7]${NC} Startar Kafka Connect..."
 docker compose up -d kafka-connect >/dev/null
 wait_healthy kafka-connect 90
-echo -e "${GREEN}🔗 [3/6]${NC} Registrerar Debezium-connectors..."
+echo -e "${GREEN}🔗 [3/7]${NC} Registrerar Debezium-connectors..."
 # Auto-detektera kafka-connect host-port (override.yml flyttar 8083→13083 vid
 # parallelldrift med nimloth-flow). Faller tillbaka på 8083 om port 13083 inte
 # är publicerad.
@@ -62,7 +63,7 @@ CONNECT_URL="${CONNECT_URL:-http://localhost:${CONNECT_HOST_PORT:-8083}}" \
   ./infra/debezium/register-connectors.sh 2>&1 | tail -4
 
 # 4. Seed testdata (idempotent — TRUNCATE CASCADE + INSERT)
-echo -e "${GREEN}🌱 [4/6]${NC} Seedar testdata (Fru Andersson + 10 patienter)..."
+echo -e "${GREEN}🌱 [4/7]${NC} Seedar testdata (Fru Andersson + 10 patienter)..."
 # Auto-detektera DB host-portar (override.yml flyttar 5433/5434 → 10433/10434
 # vid parallelldrift med nimloth-flow). Faller tillbaka på defaults om
 # portarna inte är publicerade.
@@ -72,22 +73,33 @@ MELIOR_DB_PORT="${MELIOR_PORT:-5433}" \
   ASYNJA_DB_PORT="${ASYNJA_PORT:-5434}" \
   pnpm --filter @nimloth-core/test-data seed:all 2>&1 | tail -6
 
-# 5. Applikationstjänster
+# 5. OpenEHR-templates (fixtures + P3.0b bridge)
+# Idempotent: 201 vid första laddning, 409 vid omkörning (BRIDGE_RELOAD-audit).
+# KAFKA_BROKERS=disabled gör att bridge-audit log:ar lokalt utan Kafka-anrop.
+echo -e "${GREEN}🧬 [5/7]${NC} Laddar openEHR-templates till EHRbase..."
+EHRBASE_HOST_PORT=$(docker compose port ehrbase 8080 2>/dev/null | sed 's/.*://')
+EHRBASE_URL="http://localhost:${EHRBASE_HOST_PORT:-8088}" \
+  pnpm openehr:load-templates 2>&1 | tail -4
+EHRBASE_URL="http://localhost:${EHRBASE_HOST_PORT:-8088}" \
+  KAFKA_BROKERS=disabled \
+  pnpm openehr:load-bridge-templates 2>&1 | tail -4
+
+# 6. Applikationstjänster
 # --build krävs så att kod-ändringar sedan senaste start propagerar till
 # körande containers. Utan flaggan återanvänder docker compose cachad image
 # och nya commits stannar i image-cachen (P3.4 4.7-incidenten — Sprint 2.5 B2).
 # Buildx-cache gör att oförändrade tjänster rebuildar på <5s, så kostnaden
 # är låg jämfört med risken att köra gammal kod.
-echo -e "${GREEN}🚀 [5/6]${NC} Startar applikationstjänster (rebuild via --build)..."
-docker compose up -d --build terminology ingest transform fhir-facade cds-hooks audit dashboard mapping-assistant >/dev/null
+echo -e "${GREEN}🚀 [6/7]${NC} Startar applikationstjänster (rebuild via --build)..."
+docker compose up -d --build openehr-composer terminology ingest transform fhir-facade cds-hooks audit dashboard mapping-assistant >/dev/null
 
-# 6. Distribuerade edge-noder (om aktiverat)
+# 7. Distribuerade edge-noder (om aktiverat)
 if [ "$DISTRIBUTED" = true ]; then
-  echo -e "${GREEN}🌍 [6/6]${NC} Startar distribuerade edge-noder (profil: edge-su)..."
+  echo -e "${GREEN}🌍 [7/7]${NC} Startar distribuerade edge-noder (profil: edge-su)..."
   docker compose -f docker-compose.yml -f docker-compose.distributed.yml --profile edge-su up -d --build >/dev/null 2>&1 || \
     echo -e "  ${YELLOW}⚠️  edge-profil finns som skelett — fylls i Prompt 13${NC}"
 else
-  echo -e "${GREEN}✅ [6/6]${NC} Single-node klar."
+  echo -e "${GREEN}✅ [7/7]${NC} Single-node klar."
 fi
 
 echo ""
