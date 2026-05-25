@@ -23,7 +23,7 @@ const OPENEHR_TERM = (code: string) => ({ terminology_id: { value: 'openehr' }, 
 
 export interface BuildOptions {
   composerName?: string;
-  /** ISO datetime — default = event.occurred_at. */
+  /** ISO datetime — default = event.timestamp. */
   startTime?: string;
 }
 
@@ -74,7 +74,7 @@ function commonHeader(event: ClinicalEvent, mapping: TemplateMapping, opts: Buil
     },
     context: {
       _type: 'EVENT_CONTEXT',
-      start_time: { value: opts.startTime ?? event.occurred_at },
+      start_time: { value: opts.startTime ?? event.timestamp },
       setting: {
         _type: 'DV_CODED_TEXT',
         value: 'other care',
@@ -113,7 +113,7 @@ function buildObservationTimeSeries(
 ): Record<string, unknown> {
   const magnitude = readNumber(event.payload, 'value');
   const requestedUnits = readString(event.payload, 'units') ?? unitsForEventType(event.event_type);
-  const time = readString(event.payload, 'time') ?? event.occurred_at;
+  const time = readString(event.payload, 'time') ?? event.timestamp;
 
   if (magnitude == null) {
     gaps.log('unsupported_payload', event.event_type, 'missing payload.value (number)', ['DV_QUANTITY.magnitude']);
@@ -203,7 +203,7 @@ function buildActionMinimal(
   opts: BuildOptions,
 ): Record<string, unknown> {
   const description = readString(event.payload, 'description') ?? readString(event.payload, 'name') ?? 'Unspecified action';
-  const time = readString(event.payload, 'time') ?? event.occurred_at;
+  const time = readString(event.payload, 'time') ?? event.timestamp;
 
   gaps.countConstraint('DV_TEXT');
   gaps.countConstraint('ISM_TRANSITION');
@@ -272,7 +272,7 @@ function buildEvaluationMedication(
   const dose = readString(event.payload, 'dose') ?? readString(event.payload, 'dose_description');
   const atcCode = readString(event.payload, 'atc_code') ?? readString(event.payload, 'atc');
   const route = readString(event.payload, 'route');
-  const startDate = readString(event.payload, 'start_date') ?? event.occurred_at;
+  const startDate = readString(event.payload, 'start_date') ?? event.timestamp;
   const indication = readString(event.payload, 'indication') ?? readString(event.payload, 'clinical_indication');
 
   if (!drug) {
@@ -408,7 +408,7 @@ function buildEvaluationDiagnosis(
     readString(event.payload, 'snomed');
   const severity = readString(event.payload, 'severity');
   const onset =
-    readString(event.payload, 'date_of_onset') ?? event.occurred_at;
+    readString(event.payload, 'date_of_onset') ?? event.timestamp;
   const status = readString(event.payload, 'status');
   const description =
     readString(event.payload, 'clinical_description') ??
@@ -553,7 +553,7 @@ function buildEvaluationAllergy(
   const manifestation =
     readString(event.payload, 'manifestation') ?? readString(event.payload, 'reaction');
   const onset =
-    readString(event.payload, 'onset_date') ?? event.occurred_at;
+    readString(event.payload, 'onset_date') ?? event.timestamp;
   const reactionType =
     readString(event.payload, 'reaction_type') ?? readString(event.payload, 'category');
 

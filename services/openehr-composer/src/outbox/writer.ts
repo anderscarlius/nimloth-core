@@ -40,7 +40,7 @@ export class OutboxWriter {
       [
         event.event_id,
         event.event_type,
-        event.patient_pnr,
+        event.patient_id,
         JSON.stringify(event),
         source,
         initialStatus,

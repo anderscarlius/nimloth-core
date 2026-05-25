@@ -38,22 +38,39 @@ export interface EventDeps {
 export function createEventRouter(deps: EventDeps): Router {
   const r = Router();
   r.post('/', async (req: Request, res: Response) => {
-    const event = req.body as Partial<ClinicalEvent> | undefined;
+    const wire = req.body as Partial<import('../types.js').ClinicalEventWire> | undefined;
     if (
-      !event ||
-      typeof event.event_id !== 'string' ||
-      typeof event.event_type !== 'string' ||
-      typeof event.patient_pnr !== 'string' ||
-      typeof event.occurred_at !== 'string' ||
-      !event.payload ||
-      typeof event.payload !== 'object'
+      !wire ||
+      typeof wire.event_id !== 'string' ||
+      typeof wire.event_type !== 'string' ||
+      !wire.payload ||
+      typeof wire.payload !== 'object' ||
+      // accept either new or deprecated field-names
+      (typeof wire.patient_id !== 'string' && typeof wire.patient_pnr !== 'string') ||
+      (typeof wire.timestamp !== 'string' && typeof wire.occurred_at !== 'string')
     ) {
       res.status(400).json({
-        error: 'expected ClinicalEvent { event_id, event_type, patient_pnr, occurred_at, payload, ... }',
+        error: 'expected ClinicalEvent { event_id, event_type, patient_id, timestamp, payload, ... }',
       });
       return;
     }
-    const e = event as ClinicalEvent;
+    // B10: normalize deprecated aliases (patient_pnr → patient_id, occurred_at → timestamp).
+    let e: ClinicalEvent;
+    try {
+      const norm = (await import('../types.js')).normalizeClinicalEvent(
+        wire as import('../types.js').ClinicalEventWire,
+      );
+      e = norm.event;
+      if (norm.deprecatedFields.length > 0) {
+        deps.logger.warn(
+          { event_id: e.event_id, deprecated: norm.deprecatedFields },
+          'event uses deprecated field names — B10 alias path',
+        );
+      }
+    } catch (err) {
+      res.status(400).json({ error: String(err) });
+      return;
+    }
     deps.stats.events_received += 1;
 
     // 0. Skriv till outbox FÖRST — idempotent på event_id.
@@ -84,7 +101,7 @@ export function createEventRouter(deps: EventDeps): Router {
     // 1. Resolva EHR
     let ehrId: string;
     try {
-      ehrId = await deps.cache.getOrCreate(e.patient_pnr);
+      ehrId = await deps.cache.getOrCreate(e.patient_id);
     } catch (err) {
       deps.stats.events_failed += 1;
       deps.logger.error({ err: String(err), event_id: e.event_id }, 'ehr resolve failed');

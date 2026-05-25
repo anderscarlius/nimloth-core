@@ -132,7 +132,11 @@ export class OutboxProcessor {
   }
 
   private async processOne(record: OutboxRecord): Promise<'completed' | 'skipped'> {
-    const event = record.payload;
+    // B10: outbox-rader kan ha skrivits före B10-cutover med patient_pnr/
+    // occurred_at i payload. Normalisera så processor alltid arbetar mot
+    // canonical patient_id/timestamp.
+    const { normalizeClinicalEvent } = await import('../types.js');
+    const event = normalizeClinicalEvent(record.payload as Parameters<typeof normalizeClinicalEvent>[0]).event;
 
     const mapping = mapEventToTemplate(event);
     if (!mapping) {
@@ -144,7 +148,7 @@ export class OutboxProcessor {
       return 'skipped';
     }
 
-    const ehrId = await this.ehrCache.getOrCreate(event.patient_pnr);
+    const ehrId = await this.ehrCache.getOrCreate(event.patient_id);
     const composition = buildComposition(event, mapping, this.gaps);
     const uid = await this.ehrbase.postComposition(ehrId, mapping.templateId, composition);
 

@@ -33,7 +33,7 @@ async function send(events: ClinicalEvent[]): Promise<void> {
         topic,
         messages: [
           {
-            key: event.patient_pnr,
+            key: event.patient_id,
             value: JSON.stringify(event),
             headers: { event_type: event.event_type, source_system: event.source_system },
           },

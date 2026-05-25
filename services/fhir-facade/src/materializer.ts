@@ -6,34 +6,30 @@ import { Kafka, type Consumer } from 'kafkajs';
 import type pg from 'pg';
 import type { FhirFacadeConfig } from './config.js';
 
-/** Kafka-events med `core.clinical.*`-topics produceras av två källor:
- *  - `transform/` (production-flöde) — skickar `patient_id` (PNR-string) +
- *    `timestamp`. Detta var ursprungligt design.
- *  - `kafka-test-producer/` (P3.2-fixture) — skickar `patient_pnr` +
- *    `occurred_at`. Designat för composer-konsumtion (`openehr-composer/`
- *    läser `patient_pnr` direkt) — men materializer som ursprungligen
- *    bara läste `patient_id` failade på NOT NULL-violation (Sprint 2.5 B1).
+/** Kafka-events med `core.clinical.*`-topics följer canonical wire-format
+ *  efter B10-konvergensen (2026-05-25): patient_id + timestamp.
  *
- *  Dual-key-läsning bevarar bakåtkompatibilitet med båda producenterna:
- *  extractPnr/extractTimestamp läser primär-fält först, fallback om saknas. */
+ *  Sprint 2.5 B1:s dual-key-läsning (?? patient_pnr, ?? occurred_at) togs
+ *  bort när alla producenter (transform/, kafka-test-producer/) hade
+ *  konvergerats till canonical format. Composer-sidan accepterar fortfarande
+ *  deprecated aliases vid in-flödet via normalizeClinicalEvent och loggar
+ *  warn — materializer förlitar sig på att den normaliseringen körts. */
 type BaseEventLike = {
   event_id: string;
   event_type: string;
   timestamp?: string;
-  occurred_at?: string;
   source_system?: string;
   source_instance?: string;
   patient_id?: string;
-  patient_pnr?: string;
   payload?: Record<string, unknown>;
 };
 
 function extractPnr(event: BaseEventLike): string | null {
-  return event.patient_id ?? event.patient_pnr ?? null;
+  return event.patient_id ?? null;
 }
 
 function extractTimestamp(event: BaseEventLike): string | null {
-  return event.timestamp ?? event.occurred_at ?? null;
+  return event.timestamp ?? null;
 }
 
 /** Debezium-unwrap-flat payload — fält direkt på roten + __op/__deleted metadata. */
@@ -143,13 +139,13 @@ export class Materializer {
   // Clinical dispatch
   // ============================================================
   private async dispatchClinical(topic: string, event: BaseEventLike): Promise<void> {
-    // Sprint 2.5 B1: skipp event utan PNR med warning istället för att låta
-    // det bryta NOT NULL-constraint i FHIR-tabellen. Producent-fixet är
-    // `patient_pnr` ELLER `patient_id` (extractPnr accepterar båda).
+    // Sprint 2.5 B1 + B10: skipp event utan patient_id med warning istället
+    // för att låta det bryta NOT NULL-constraint i FHIR-tabellen. Efter
+    // B10 är dual-key-fallback borttagen — wire-format är canonical.
     if (!extractPnr(event)) {
       this.logger.warn(
         { event_id: event.event_id, topic, event_type: event.event_type },
-        'Materialize skipped: event saknar patient_id/patient_pnr',
+        'Materialize skipped: event saknar patient_id',
       );
       return;
     }

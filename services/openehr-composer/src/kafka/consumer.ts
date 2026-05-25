@@ -82,7 +82,18 @@ export class ComposerKafkaConsumer {
 
     let event: ClinicalEvent;
     try {
-      event = JSON.parse(message.value.toString()) as ClinicalEvent;
+      // B10: accept both new (patient_id/timestamp) and deprecated
+      // (patient_pnr/occurred_at) wire-format names; normalize to canonical.
+      const { normalizeClinicalEvent } = await import('../types.js');
+      const wire = JSON.parse(message.value.toString());
+      const norm = normalizeClinicalEvent(wire);
+      event = norm.event;
+      if (norm.deprecatedFields.length > 0) {
+        this.logger.warn(
+          { event_id: event.event_id, deprecated: norm.deprecatedFields, topic },
+          'kafka event uses deprecated field names — B10 alias path',
+        );
+      }
     } catch (err) {
       this.metrics.parseFailedTotal += 1;
       this.metrics.lastError = String(err);
@@ -95,7 +106,7 @@ export class ComposerKafkaConsumer {
       return;
     }
 
-    if (!event.event_id || !event.event_type || !event.patient_pnr) {
+    if (!event.event_id || !event.event_type || !event.patient_id) {
       this.metrics.parseFailedTotal += 1;
       this.logger.warn(
         { topic, partition, offset: message.offset, event_id: event.event_id },

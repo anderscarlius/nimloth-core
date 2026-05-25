@@ -3,8 +3,8 @@
 // Each event har:
 //   - event_id (UUID)
 //   - event_type (specifik vad composer event-mapper förstår)
-//   - patient_pnr (Fru Andersson)
-//   - source_system, occurred_at, payload
+//   - patient_id (Fru Andersson — B10 wire-format)
+//   - source_system, timestamp (B10 — bytte namn från occurred_at), payload
 //
 // Topics härleds från event_type via prefix-match. Vitals → observation.vitals
 // (alla sub-events delar topic). Procedure → procedure.completed.
@@ -16,9 +16,9 @@ export const FRU_ANDERSSON_PNR = '19500315-2384';
 export interface ClinicalEvent {
   event_id: string;
   event_type: string;
-  patient_pnr: string;
+  patient_id: string;
   source_system: string;
-  occurred_at: string;
+  timestamp: string;
   payload: Record<string, unknown>;
 }
 
@@ -32,9 +32,9 @@ export function bodyTemperatureEvent(value: number, units = '°C', offsetMin = 0
   return {
     event_id: randomUUID(),
     event_type: 'core.clinical.observation.vitals.body_temperature',
-    patient_pnr: FRU_ANDERSSON_PNR,
+    patient_id: FRU_ANDERSSON_PNR,
     source_system: 'kafka-test-producer',
-    occurred_at: now(offsetMin),
+    timestamp: now(offsetMin),
     payload: { value, units, observation_method: 'tympanic' },
   };
 }
@@ -45,9 +45,9 @@ export function bloodPressureEvent(systolic: number, _diastolic: number, offsetM
   return {
     event_id: randomUUID(),
     event_type: 'core.clinical.observation.vitals.blood_pressure',
-    patient_pnr: FRU_ANDERSSON_PNR,
+    patient_id: FRU_ANDERSSON_PNR,
     source_system: 'kafka-test-producer',
-    occurred_at: now(offsetMin),
+    timestamp: now(offsetMin),
     payload: { value: systolic, units: 'mm[Hg]', position: 'sitting' },
   };
 }
@@ -56,9 +56,9 @@ export function pulseEvent(bpm: number, offsetMin = 0): ClinicalEvent {
   return {
     event_id: randomUUID(),
     event_type: 'core.clinical.observation.vitals.pulse',
-    patient_pnr: FRU_ANDERSSON_PNR,
+    patient_id: FRU_ANDERSSON_PNR,
     source_system: 'kafka-test-producer',
-    occurred_at: now(offsetMin),
+    timestamp: now(offsetMin),
     payload: { value: bpm, units: '/min' },
   };
 }
@@ -67,9 +67,9 @@ export function procedureCompletedEvent(description: string, offsetMin = 0): Cli
   return {
     event_id: randomUUID(),
     event_type: 'core.clinical.procedure.completed',
-    patient_pnr: FRU_ANDERSSON_PNR,
+    patient_id: FRU_ANDERSSON_PNR,
     source_system: 'kafka-test-producer',
-    occurred_at: now(offsetMin),
+    timestamp: now(offsetMin),
     payload: { description },
   };
 }
@@ -79,9 +79,9 @@ export function medicationPrescribedEvent(drug: string, dose: string, offsetMin 
   return {
     event_id: randomUUID(),
     event_type: 'core.clinical.medication.prescribed',
-    patient_pnr: FRU_ANDERSSON_PNR,
+    patient_id: FRU_ANDERSSON_PNR,
     source_system: 'kafka-test-producer',
-    occurred_at: now(offsetMin),
+    timestamp: now(offsetMin),
     payload: { drug, dose },
   };
 }
