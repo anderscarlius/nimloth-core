@@ -48,6 +48,11 @@ export interface PathwayState {
   day_offset?: number | { min: number; max: number };
   transitions?: PathwayTransition[];
   terminal?: boolean;
+  /** SDG-09: multiplikator för primary-lab-värde när detta state emittas.
+   *  Used by responder/nonresponder-followup states i diabetes-pathwayen
+   *  så lastHBA1C < firstHBA1C (responder, AQL-10) eller > firstHBA1C
+   *  (nonresponder, AQL-14). Default 1.0 (oförändrat värde). */
+  lab_factor?: number;
 }
 
 export interface PathwayTransition {

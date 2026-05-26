@@ -66,6 +66,7 @@ function clinicalAnnotation(
   eventType: SdgEventType,
   ctx: PatientContext,
   state: string,
+  labFactor = 1.0,
 ): { magnitude?: number; realUnit?: string; careflowStep?: string; annotation: string } {
   // Map event type to "interesting" clinical payload by event-type.
   switch (eventType) {
@@ -99,7 +100,12 @@ function clinicalAnnotation(
               : labs.hemoglobin !== undefined
                 ? "hemoglobin"
                 : Object.keys(labs)[0];
-      const m = key ? labs[key] : 0;
+      const rawM = key ? labs[key] : 0;
+      // SDG-09: state.lab_factor modulerar follow-up-värdet när !=1.0.
+      // labFactor < 1.0 → responder (sjunkande), > 1.0 → non-responder (stigande).
+      // labFactor === 1.0 (default) → returnera rå värde oförändrat så
+      // baseline-snapshot för Marianne och övriga oberörda pathways bevaras.
+      const m = labFactor === 1.0 ? rawM : Math.round(rawM * labFactor * 10) / 10;
       const realUnit =
         key === "hba1c" ? "mmol/mol" : key === "hemoglobin" ? "g/L" : "1";
       return {
@@ -163,11 +169,12 @@ export function runPathway(
 
     day += resolveDayOffset(state.day_offset, rng);
 
+    const labFactor = state.lab_factor ?? 1.0;
     for (const eventType of state.compositions ?? []) {
       events.push({
         dayOffset: day,
         eventType,
-        clinicalData: clinicalAnnotation(eventType, ctx, stateName),
+        clinicalData: clinicalAnnotation(eventType, ctx, stateName, labFactor),
       });
     }
 
@@ -179,7 +186,7 @@ export function runPathway(
       events.push({
         dayOffset: day,
         eventType,
-        clinicalData: clinicalAnnotation(eventType, ctx, stateName),
+        clinicalData: clinicalAnnotation(eventType, ctx, stateName, labFactor),
       });
     }
 

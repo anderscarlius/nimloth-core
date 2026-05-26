@@ -1,0 +1,89 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SDG-09 baseline characterization (S1 regression guard) > Marianne Lindqvist (seed=42) timeline fingerprint stable 1`] = `
+{
+  "eventCount": 17,
+  "eventTypes": [
+    "primary_care_encounter",
+    "vital_signs",
+    "lab_order",
+    "lab_result",
+    "problem_diagnosis",
+    "medication_statement",
+    "medication_statement",
+    "medication_statement",
+    "medication_statement",
+    "care_plan",
+    "medication_statement",
+    "medication_statement",
+    "medication_statement",
+    "medication_statement",
+    "vital_signs",
+    "lab_result",
+    "care_plan",
+  ],
+  "fingerprint": "589f26ef070bae4b6e6283fa09c14d6f63f1a1f65f330cd87358d2bcd799392e",
+  "patientId": "marianne-lindqvist-syn-001",
+  "profileId": "aldre_multisjuk",
+  "seed": 42,
+}
+`;
+
+exports[`SDG-09 baseline characterization (S1 regression guard) > frozen event-count + clinical-seed per profile 1`] = `
+[
+  {
+    "count": 10,
+    "profile": "diabetes_typ2",
+    "seed": 100,
+    "severities": {
+      "mild": 5,
+      "moderate": 3,
+      "severe": 2,
+    },
+    "totalEvents": 114,
+  },
+  {
+    "count": 10,
+    "profile": "hypertoni",
+    "seed": 200,
+    "severities": {
+      "mild": 4,
+      "moderate": 4,
+      "severe": 2,
+    },
+    "totalEvents": 102,
+  },
+  {
+    "count": 10,
+    "profile": "hjartsvikt",
+    "seed": 300,
+    "severities": {
+      "mild": 6,
+      "moderate": 2,
+      "severe": 2,
+    },
+    "totalEvents": 126,
+  },
+  {
+    "count": 10,
+    "profile": "uvi",
+    "seed": 600,
+    "severities": {
+      "mild": 6,
+      "moderate": 4,
+    },
+    "totalEvents": 89,
+  },
+  {
+    "count": 10,
+    "profile": "aldre_multisjuk",
+    "seed": 1000,
+    "severities": {
+      "mild": 6,
+      "moderate": 3,
+      "severe": 1,
+    },
+    "totalEvents": 167,
+  },
+]
+`;

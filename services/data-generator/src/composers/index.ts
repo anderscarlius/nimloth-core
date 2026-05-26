@@ -26,13 +26,19 @@ export interface CompositionContext {
 function rootCtx(prefix: string, ctx: CompositionContext): FlatJson {
   // EHRbase 2.x FLAT input does NOT accept root /setting, /start_time, /_end_time
   // or /_health_care_facility — these are auto-populated server-side.
-  // ctx.time is therefore only used for per-event timestamps inside the archetype.
+  // SDG-09 fix (Path B): composition-level context.start_time IS settable via
+  // the ctx/-prefix in FLAT input. Empirically verified: ctx/time → lands in
+  // c/context/start_time/value via AQL. Without this, all events for one patient
+  // share the EHRbase receive-time and temporal AQL queries (AQL-06/09/10/14)
+  // collapse to ~0 dygn-skillnad. With this, ctx.time (= DAY0 + pathway day_offset)
+  // is honoured per composition.
   return {
     [`${prefix}/language|code`]: ctx.language,
     [`${prefix}/language|terminology`]: "ISO_639-1",
     [`${prefix}/territory|code`]: ctx.territory,
     [`${prefix}/territory|terminology`]: "ISO_3166-1",
     [`${prefix}/composer|name`]: ctx.composerName,
+    "ctx/time": ctx.time.toISOString(),
   };
 }
 

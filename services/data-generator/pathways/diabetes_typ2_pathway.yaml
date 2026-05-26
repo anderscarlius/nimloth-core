@@ -21,20 +21,56 @@ states:
     compositions: [problem_diagnosis, medication_statement]
     day_offset: { min: 1, max: 5 }
     transitions:
+      # Allvarlig hba1c → specialist (oberoende av nedanstående grenar)
       - to: specialist_referral
         condition: "lab.hba1c >= 70 OR severity == severe"
         compositions: [referral]
-      - to: followup_plan
+      # SDG-09 AQL-06: ~18% tappas i uppföljning (no follow-up HBA1C)
+      - to: dropout
+        condition: "random < 0.18"
+      # SDG-09 AQL-10: ~45% av icke-dropouts svarar på metformin (HbA1c sjunker)
+      - to: responder_followup
+        condition: "random < 0.45"
+      # SDG-09 AQL-14: ~30% av återstående är non-responders (HbA1c stiger)
+      - to: nonresponder_followup
+        condition: "random < 0.30"
+      # Övriga ~25% har stabil följning
+      - to: standard_followup
         condition: always
 
   specialist_referral:
     compositions: [specialist_consultation]
     day_offset: { min: 20, max: 60 }
     transitions:
-      - to: followup_plan
+      - to: standard_followup
         condition: always
 
-  followup_plan:
+  # SDG-09: tappad-bort-patient — diagnostiserad + medicinerad men ingen
+  # uppföljning. Triggar AQL-06 (diabetes utan uppföljande HbA1c inom 90 d).
+  dropout:
+    terminal: true
+
+  # SDG-09: responder — HbA1c sjunker till ~70% av initialvärdet.
+  # Triggar AQL-10 (förbättrade labbvärden efter läkemedelsinsättning).
+  responder_followup:
+    compositions: [vital_signs, lab_result, care_plan]
+    day_offset: { min: 60, max: 120 }
+    lab_factor: 0.7
+    transitions:
+      - to: terminal
+        condition: always
+
+  # SDG-09: non-responder — HbA1c stiger till ~115% av initialvärdet.
+  # Triggar AQL-14 (försämrade labbvärden trots läkemedelsinsättning).
+  nonresponder_followup:
+    compositions: [vital_signs, lab_result, care_plan]
+    day_offset: { min: 60, max: 120 }
+    lab_factor: 1.15
+    transitions:
+      - to: terminal
+        condition: always
+
+  standard_followup:
     compositions: [vital_signs, lab_result, care_plan]
     day_offset: { min: 60, max: 120 }
     transitions:

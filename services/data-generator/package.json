@@ -8,7 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "clean": "rm -rf dist",
     "dev": "tsx src/cli.ts",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:engine": "vitest run __tests__/engine",
     "test:composers": "vitest run __tests__/composers",
     "test:composers:integration": "vitest run __tests__/composers/integration",

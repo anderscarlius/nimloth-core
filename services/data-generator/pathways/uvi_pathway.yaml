@@ -30,6 +30,39 @@ states:
     compositions: [lab_result, care_plan]
     day_offset: { min: 7, max: 21 }
     transitions:
+      # SDG-09 AQL-09: ~20% av UVI-patienter får recidiv-kedja inom 90 dygn.
+      # Tre konsekutiva recidiv (var och en med eget vårdcentralsbesök) → 4
+      # primary_care_encounter totalt → rullande 90-dygnsfönster fångas.
+      - to: recurrence_1
+        condition: "random < 0.20"
+      - to: terminal
+        condition: always
+
+  # SDG-09: UVI-recidiv (vanligt hos äldre kvinnor och vid avvikande
+  # antibiotika-följsamhet). Day_offsets tighta (5-20 d) så worst-case
+  # 4-encounter-span håller sig under 90 d.
+  recurrence_1:
+    compositions: [primary_care_encounter, medication_statement]
+    day_offset: { min: 5, max: 18 }
+    transitions:
+      - to: recurrence_2
+        condition: "random < 0.60"
+      - to: terminal
+        condition: always
+
+  recurrence_2:
+    compositions: [primary_care_encounter, vital_signs]
+    day_offset: { min: 5, max: 18 }
+    transitions:
+      - to: recurrence_3
+        condition: "random < 0.50"
+      - to: terminal
+        condition: always
+
+  recurrence_3:
+    compositions: [primary_care_encounter, lab_order, lab_result]
+    day_offset: { min: 5, max: 18 }
+    transitions:
       - to: terminal
         condition: always
 
