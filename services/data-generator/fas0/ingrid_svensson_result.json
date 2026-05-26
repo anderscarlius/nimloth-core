@@ -1,5 +1,5 @@
 {
-  "ehrId": "cdc026d9-3ff2-496d-a8bd-e1ef3bd661d1",
+  "ehrId": "80350b69-e864-43cb-98a3-5573d789529c",
   "results": [
     {
       "id": "C01",
@@ -7,7 +7,7 @@
       "eventType": "primary_care_encounter",
       "templateId": "minimal_action.en.v1",
       "status": "OK",
-      "compositionUid": "47133e51-a398-4765-b5bf-cc94e088c0aa"
+      "compositionUid": "d1c9dcf2-db1f-4b2c-8db3-477d485dd33e"
     },
     {
       "id": "C02",
@@ -15,7 +15,7 @@
       "eventType": "vital_signs",
       "templateId": "time_series.en.v1",
       "status": "OK",
-      "compositionUid": "74b1c51a-b275-4c9d-87b9-ef0d88caaeba"
+      "compositionUid": "9b5990e3-f49f-4169-8a00-c745107a1e3f"
     },
     {
       "id": "C03",
@@ -23,7 +23,7 @@
       "eventType": "lab_order",
       "templateId": "minimal_action.en.v1",
       "status": "OK",
-      "compositionUid": "2fff98ba-88d6-4b44-bb5f-a485fe8b2a2e"
+      "compositionUid": "e7eaedb9-5d89-43cc-be9a-8bf6c4e554c4"
     },
     {
       "id": "C04",
@@ -31,7 +31,7 @@
       "eventType": "lab_result",
       "templateId": "time_series.en.v1",
       "status": "OK",
-      "compositionUid": "66f86afa-2dc1-4aee-8991-d7c4001ed5b6"
+      "compositionUid": "53e6c773-6233-4baa-ace8-f6aa15fd9b68"
     },
     {
       "id": "C05",
@@ -39,7 +39,7 @@
       "eventType": "problem_diagnosis",
       "templateId": "minimal_evaluation.en.v1",
       "status": "OK",
-      "compositionUid": "c678cbd3-325d-409a-be28-d137a6f120c6"
+      "compositionUid": "5363db3f-a771-4c82-a49a-8b4c84754224"
     },
     {
       "id": "C06",
@@ -47,7 +47,7 @@
       "eventType": "medication_statement",
       "templateId": "minimal_evaluation.en.v1",
       "status": "OK",
-      "compositionUid": "2c4ee4c1-2d5d-4247-bee5-142e063812a5"
+      "compositionUid": "bb11d797-70fd-47cb-996c-deef6e242b13"
     },
     {
       "id": "C07",
@@ -55,7 +55,7 @@
       "eventType": "referral",
       "templateId": "minimal_action.en.v1",
       "status": "OK",
-      "compositionUid": "7035ad70-60b5-4b52-9a5c-d426f5621252"
+      "compositionUid": "09222166-8c5c-4c2e-b9a0-82a323b48131"
     },
     {
       "id": "C08",
@@ -63,7 +63,7 @@
       "eventType": "specialist_consultation",
       "templateId": "minimal_action.en.v1",
       "status": "OK",
-      "compositionUid": "a27e995d-c8fa-43df-b656-e05f929a7d88"
+      "compositionUid": "e5ea5442-f8c8-432a-bed6-59757b6c7f39"
     },
     {
       "id": "C09",
@@ -71,7 +71,7 @@
       "eventType": "lab_result",
       "templateId": "time_series.en.v1",
       "status": "OK",
-      "compositionUid": "c639242f-1b9b-444b-b5b8-57d465a68531"
+      "compositionUid": "4b0bd438-1497-4d97-a32c-03d701141b82"
     },
     {
       "id": "C10",
@@ -79,7 +79,7 @@
       "eventType": "care_plan",
       "templateId": "minimal_evaluation.en.v1",
       "status": "OK",
-      "compositionUid": "b9d21efc-7ffd-4819-9ffe-841627bf58a4"
+      "compositionUid": "b48f021b-3e0b-4fd4-8ec7-e86a33156977"
     }
   ],
   "aqlResults": {
@@ -87,11 +87,11 @@
       "meta": {
         "_type": "RESULTSET",
         "_schema_version": "1.0.3",
-        "_created": "2026-05-21T18:38:13.476228836Z",
-        "_executed_aql": "SELECT COUNT(c) FROM EHR e[ehr_id/value='cdc026d9-3ff2-496d-a8bd-e1ef3bd661d1'] CONTAINS COMPOSITION c",
+        "_created": "2026-05-26T19:52:16.153070735Z",
+        "_executed_aql": "SELECT COUNT(c) FROM EHR e[ehr_id/value='80350b69-e864-43cb-98a3-5573d789529c'] CONTAINS COMPOSITION c",
         "resultsize": 1
       },
-      "q": "SELECT COUNT(c) FROM EHR e CONTAINS COMPOSITION c WHERE e/ehr_id/value = 'cdc026d9-3ff2-496d-a8bd-e1ef3bd661d1'",
+      "q": "SELECT COUNT(c) FROM EHR e CONTAINS COMPOSITION c WHERE e/ehr_id/value = '80350b69-e864-43cb-98a3-5573d789529c'",
       "columns": [
         {
           "name": "#0"
@@ -99,7 +99,7 @@
       ],
       "rows": [
         [
-          33
+          10
         ]
       ]
     },
@@ -107,11 +107,11 @@
       "meta": {
         "_type": "RESULTSET",
         "_schema_version": "1.0.3",
-        "_created": "2026-05-21T18:38:13.546295365Z",
-        "_executed_aql": "SELECT c/uid/value, c/composer/name, c/context/start_time/value FROM EHR e[ehr_id/value='cdc026d9-3ff2-496d-a8bd-e1ef3bd661d1'] CONTAINS COMPOSITION c ORDER BY c/context/start_time/value ASC",
-        "resultsize": 33
+        "_created": "2026-05-26T19:52:16.698423295Z",
+        "_executed_aql": "SELECT c/uid/value, c/composer/name, c/context/start_time/value FROM EHR e[ehr_id/value='80350b69-e864-43cb-98a3-5573d789529c'] CONTAINS COMPOSITION c ORDER BY c/context/start_time/value ASC",
+        "resultsize": 10
       },
-      "q": "SELECT c/uid/value, c/composer/name, c/context/start_time/value FROM EHR e CONTAINS COMPOSITION c WHERE e/ehr_id/value = 'cdc026d9-3ff2-496d-a8bd-e1ef3bd661d1' ORDER BY c/context/start_time/value",
+      "q": "SELECT c/uid/value, c/composer/name, c/context/start_time/value FROM EHR e CONTAINS COMPOSITION c WHERE e/ehr_id/value = '80350b69-e864-43cb-98a3-5573d789529c' ORDER BY c/context/start_time/value",
       "columns": [
         {
           "path": "c/uid/value",
@@ -128,169 +128,54 @@
       ],
       "rows": [
         [
-          "c624fd0b-1816-4d9b-896a-81d23a963864::local.ehrbase.org::1",
-          "Max Mustermann",
-          "2026-05-21T18:32:49.87927896Z"
-        ],
-        [
-          "1fdd76f2-fc11-400e-8909-25c23636d920::local.ehrbase.org::1",
-          "Max Mustermann",
-          "2026-05-21T18:33:05.244917054Z"
-        ],
-        [
-          "c4ce6f03-dc49-4cba-8fb3-5560f6be30cd::local.ehrbase.org::1",
-          "Max Mustermann",
-          "2026-05-21T18:33:25.695830041Z"
-        ],
-        [
-          "f6ced4e6-f008-4ee4-a0a3-85b91d1da989::local.ehrbase.org::1",
+          "d1c9dcf2-db1f-4b2c-8db3-477d485dd33e::local.ehrbase.org::1",
           "primary_care_encounter | first_visit | Trötthet, törst, dimsyn. BT 158/92, BMI 31. [careflow=first_contact_vc]",
-          "2026-05-21T18:36:15.579508853Z"
+          "2026-01-08T08:30:00Z"
         ],
         [
-          "c38312e9-c7f0-47d8-933d-db4bfa469d08::local.ehrbase.org::1",
+          "9b5990e3-f49f-4169-8a00-c745107a1e3f::local.ehrbase.org::1",
           "vital_signs | BP | BT 158/92, puls 84, vikt 87 kg, temp 36.8 [unit=mm[Hg]]",
-          "2026-05-21T18:36:15.766254268Z"
+          "2026-01-08T08:30:00Z"
         ],
         [
-          "32d5dfb5-26dc-4229-b4f3-ff67ae4103c4::local.ehrbase.org::1",
+          "e7eaedb9-5d89-43cc-be9a-8bf6c4e554c4::local.ehrbase.org::1",
           "lab_order | hba1c,glukos,kreatinin,lipider | Beställda prover dag 0 [careflow=lab_ordered]",
-          "2026-05-21T18:36:15.922104885Z"
+          "2026-01-08T08:30:00Z"
         ],
         [
-          "71befe41-c754-498e-a51f-3dc88e11554e::local.ehrbase.org::1",
+          "53e6c773-6233-4baa-ace8-f6aa15fd9b68::local.ehrbase.org::1",
           "lab_result | HBA1C | HbA1c 82 mmol/mol (förhöjt) [unit=mmol/mol]",
-          "2026-05-21T18:36:16.134954386Z"
+          "2026-01-09T08:30:00Z"
         ],
         [
-          "a7f4e3d0-569a-40cc-8980-67e83580fc46::local.ehrbase.org::1",
+          "5363db3f-a771-4c82-a49a-8b4c84754224::local.ehrbase.org::1",
           "problem_diagnosis | E11 | Diabetes mellitus typ 2 [unit=1]",
-          "2026-05-21T18:36:16.322595829Z"
+          "2026-01-11T08:30:00Z"
         ],
         [
-          "f00ca6d6-d932-456b-a996-69fb93ec43b2::local.ehrbase.org::1",
+          "bb11d797-70fd-47cb-996c-deef6e242b13::local.ehrbase.org::1",
           "medication_statement | A10BA02 | Metformin 500 mg x 2 insatt [unit=mg/d]",
-          "2026-05-21T18:36:16.604018836Z"
+          "2026-01-11T08:30:00Z"
         ],
         [
-          "8e19bbbb-a058-43c2-b919-dac5f68472b6::local.ehrbase.org::1",
+          "09222166-8c5c-4c2e-b9a0-82a323b48131::local.ehrbase.org::1",
           "referral | endocrinology | Remiss endokrinolog pga HbA1c > 80 [careflow=referral_endo]",
-          "2026-05-21T18:36:16.782846904Z"
+          "2026-01-11T08:30:00Z"
         ],
         [
-          "3aa4a6e2-90ce-4bd8-83e8-37279d476423::local.ehrbase.org::1",
+          "e5ea5442-f8c8-432a-bed6-59757b6c7f39::local.ehrbase.org::1",
           "specialist_consultation | endocrinology | Justerad behandling, SGLT2 övervägs [careflow=specialist_seen]",
-          "2026-05-21T18:36:16.977047378Z"
+          "2026-02-25T08:30:00Z"
         ],
         [
-          "cdcb766a-7a9d-4f16-9d37-7a21dbc38803::local.ehrbase.org::1",
+          "4b0bd438-1497-4d97-a32c-03d701141b82::local.ehrbase.org::1",
           "lab_result | HBA1C | HbA1c 68 mmol/mol (förbättring) [unit=mmol/mol]",
-          "2026-05-21T18:36:17.144789457Z"
+          "2026-04-13T08:30:00Z"
         ],
         [
-          "9a691930-5bbe-4e70-8e61-00a47483124e::local.ehrbase.org::1",
+          "b48f021b-3e0b-4fd4-8ec7-e86a33156977::local.ehrbase.org::1",
           "care_plan | followup | Fortsatt metformin, livsstil, kontroll om 3 månader [unit=mo]",
-          "2026-05-21T18:36:17.266863828Z"
-        ],
-        [
-          "a15b0c5c-5822-4bcf-ab59-8a0deff3e241::local.ehrbase.org::1",
-          "primary_care_encounter | first_visit | Trötthet, törst, dimsyn. BT 158/92, BMI 31. [careflow=first_contact_vc]",
-          "2026-05-21T18:37:13.892105443Z"
-        ],
-        [
-          "5957c13f-9b1a-48f4-b0b2-de4adeb471d6::local.ehrbase.org::1",
-          "vital_signs | BP | BT 158/92, puls 84, vikt 87 kg, temp 36.8 [unit=mm[Hg]]",
-          "2026-05-21T18:37:14.190337364Z"
-        ],
-        [
-          "f3874b9c-e8f4-4fe0-992b-222bebacc7ea::local.ehrbase.org::1",
-          "lab_order | hba1c,glukos,kreatinin,lipider | Beställda prover dag 0 [careflow=lab_ordered]",
-          "2026-05-21T18:37:14.341896383Z"
-        ],
-        [
-          "c367c31e-8012-4acf-bd75-a54e2d146701::local.ehrbase.org::1",
-          "lab_result | HBA1C | HbA1c 82 mmol/mol (förhöjt) [unit=mmol/mol]",
-          "2026-05-21T18:37:14.460050063Z"
-        ],
-        [
-          "6bebb418-fa7e-4fd8-980f-d20a1910bb49::local.ehrbase.org::1",
-          "problem_diagnosis | E11 | Diabetes mellitus typ 2 [unit=1]",
-          "2026-05-21T18:37:14.626199551Z"
-        ],
-        [
-          "00ef1f2d-c5a9-4b47-baff-69161c0bfc78::local.ehrbase.org::1",
-          "medication_statement | A10BA02 | Metformin 500 mg x 2 insatt [unit=mg/d]",
-          "2026-05-21T18:37:14.822171791Z"
-        ],
-        [
-          "e9f3bebb-2ce1-4ea2-8897-7140f1060493::local.ehrbase.org::1",
-          "referral | endocrinology | Remiss endokrinolog pga HbA1c > 80 [careflow=referral_endo]",
-          "2026-05-21T18:37:14.992348345Z"
-        ],
-        [
-          "b2bb665f-19c9-4201-9587-701afe91df5c::local.ehrbase.org::1",
-          "specialist_consultation | endocrinology | Justerad behandling, SGLT2 övervägs [careflow=specialist_seen]",
-          "2026-05-21T18:37:15.166244452Z"
-        ],
-        [
-          "fa0b933e-b88e-4755-8762-956d7cf15ddf::local.ehrbase.org::1",
-          "lab_result | HBA1C | HbA1c 68 mmol/mol (förbättring) [unit=mmol/mol]",
-          "2026-05-21T18:37:15.302735105Z"
-        ],
-        [
-          "02844bab-4c7a-475e-93a9-039d0372e21d::local.ehrbase.org::1",
-          "care_plan | followup | Fortsatt metformin, livsstil, kontroll om 3 månader [unit=mo]",
-          "2026-05-21T18:37:15.406294993Z"
-        ],
-        [
-          "47133e51-a398-4765-b5bf-cc94e088c0aa::local.ehrbase.org::1",
-          "primary_care_encounter | first_visit | Trötthet, törst, dimsyn. BT 158/92, BMI 31. [careflow=first_contact_vc]",
-          "2026-05-21T18:38:12.168139077Z"
-        ],
-        [
-          "74b1c51a-b275-4c9d-87b9-ef0d88caaeba::local.ehrbase.org::1",
-          "vital_signs | BP | BT 158/92, puls 84, vikt 87 kg, temp 36.8 [unit=mm[Hg]]",
-          "2026-05-21T18:38:12.323150655Z"
-        ],
-        [
-          "2fff98ba-88d6-4b44-bb5f-a485fe8b2a2e::local.ehrbase.org::1",
-          "lab_order | hba1c,glukos,kreatinin,lipider | Beställda prover dag 0 [careflow=lab_ordered]",
-          "2026-05-21T18:38:12.478708631Z"
-        ],
-        [
-          "66f86afa-2dc1-4aee-8991-d7c4001ed5b6::local.ehrbase.org::1",
-          "lab_result | HBA1C | HbA1c 82 mmol/mol (förhöjt) [unit=mmol/mol]",
-          "2026-05-21T18:38:12.58873447Z"
-        ],
-        [
-          "c678cbd3-325d-409a-be28-d137a6f120c6::local.ehrbase.org::1",
-          "problem_diagnosis | E11 | Diabetes mellitus typ 2 [unit=1]",
-          "2026-05-21T18:38:12.722197376Z"
-        ],
-        [
-          "2c4ee4c1-2d5d-4247-bee5-142e063812a5::local.ehrbase.org::1",
-          "medication_statement | A10BA02 | Metformin 500 mg x 2 insatt [unit=mg/d]",
-          "2026-05-21T18:38:12.841483103Z"
-        ],
-        [
-          "7035ad70-60b5-4b52-9a5c-d426f5621252::local.ehrbase.org::1",
-          "referral | endocrinology | Remiss endokrinolog pga HbA1c > 80 [careflow=referral_endo]",
-          "2026-05-21T18:38:12.93262282Z"
-        ],
-        [
-          "a27e995d-c8fa-43df-b656-e05f929a7d88::local.ehrbase.org::1",
-          "specialist_consultation | endocrinology | Justerad behandling, SGLT2 övervägs [careflow=specialist_seen]",
-          "2026-05-21T18:38:13.09033574Z"
-        ],
-        [
-          "c639242f-1b9b-444b-b5b8-57d465a68531::local.ehrbase.org::1",
-          "lab_result | HBA1C | HbA1c 68 mmol/mol (förbättring) [unit=mmol/mol]",
-          "2026-05-21T18:38:13.219692244Z"
-        ],
-        [
-          "b9d21efc-7ffd-4819-9ffe-841627bf58a4::local.ehrbase.org::1",
-          "care_plan | followup | Fortsatt metformin, livsstil, kontroll om 3 månader [unit=mo]",
-          "2026-05-21T18:38:13.358150422Z"
+          "2026-04-13T08:30:00Z"
         ]
       ]
     },
@@ -298,11 +183,11 @@
       "meta": {
         "_type": "RESULTSET",
         "_schema_version": "1.0.3",
-        "_created": "2026-05-21T18:38:13.596559404Z",
-        "_executed_aql": "SELECT c/composer/name, c/context/start_time/value FROM EHR e[ehr_id/value='cdc026d9-3ff2-496d-a8bd-e1ef3bd661d1'] CONTAINS COMPOSITION c WHERE (c/composer/name LIKE '*HbA1c*') ORDER BY c/context/start_time/value ASC",
-        "resultsize": 9
+        "_created": "2026-05-26T19:52:16.836507721Z",
+        "_executed_aql": "SELECT c/composer/name, c/context/start_time/value FROM EHR e[ehr_id/value='80350b69-e864-43cb-98a3-5573d789529c'] CONTAINS COMPOSITION c WHERE (c/composer/name LIKE '*HbA1c*') ORDER BY c/context/start_time/value ASC",
+        "resultsize": 3
       },
-      "q": "SELECT c/composer/name, c/context/start_time/value FROM EHR e CONTAINS COMPOSITION c WHERE e/ehr_id/value = 'cdc026d9-3ff2-496d-a8bd-e1ef3bd661d1' AND c/composer/name LIKE '*HbA1c*' ORDER BY c/context/start_time/value",
+      "q": "SELECT c/composer/name, c/context/start_time/value FROM EHR e CONTAINS COMPOSITION c WHERE e/ehr_id/value = '80350b69-e864-43cb-98a3-5573d789529c' AND c/composer/name LIKE '*HbA1c*' ORDER BY c/context/start_time/value",
       "columns": [
         {
           "path": "c/composer/name",
@@ -316,39 +201,15 @@
       "rows": [
         [
           "lab_result | HBA1C | HbA1c 82 mmol/mol (förhöjt) [unit=mmol/mol]",
-          "2026-05-21T18:36:16.134954386Z"
+          "2026-01-09T08:30:00Z"
         ],
         [
           "referral | endocrinology | Remiss endokrinolog pga HbA1c > 80 [careflow=referral_endo]",
-          "2026-05-21T18:36:16.782846904Z"
+          "2026-01-11T08:30:00Z"
         ],
         [
           "lab_result | HBA1C | HbA1c 68 mmol/mol (förbättring) [unit=mmol/mol]",
-          "2026-05-21T18:36:17.144789457Z"
-        ],
-        [
-          "lab_result | HBA1C | HbA1c 82 mmol/mol (förhöjt) [unit=mmol/mol]",
-          "2026-05-21T18:37:14.460050063Z"
-        ],
-        [
-          "referral | endocrinology | Remiss endokrinolog pga HbA1c > 80 [careflow=referral_endo]",
-          "2026-05-21T18:37:14.992348345Z"
-        ],
-        [
-          "lab_result | HBA1C | HbA1c 68 mmol/mol (förbättring) [unit=mmol/mol]",
-          "2026-05-21T18:37:15.302735105Z"
-        ],
-        [
-          "lab_result | HBA1C | HbA1c 82 mmol/mol (förhöjt) [unit=mmol/mol]",
-          "2026-05-21T18:38:12.58873447Z"
-        ],
-        [
-          "referral | endocrinology | Remiss endokrinolog pga HbA1c > 80 [careflow=referral_endo]",
-          "2026-05-21T18:38:12.93262282Z"
-        ],
-        [
-          "lab_result | HBA1C | HbA1c 68 mmol/mol (förbättring) [unit=mmol/mol]",
-          "2026-05-21T18:38:13.219692244Z"
+          "2026-04-13T08:30:00Z"
         ]
       ]
     },
@@ -356,11 +217,11 @@
       "meta": {
         "_type": "RESULTSET",
         "_schema_version": "1.0.3",
-        "_created": "2026-05-21T18:38:13.66160037Z",
-        "_executed_aql": "SELECT c/composer/name FROM EHR e[ehr_id/value='cdc026d9-3ff2-496d-a8bd-e1ef3bd661d1'] CONTAINS COMPOSITION c WHERE (c/composer/name LIKE '*problem_diagnosis*')",
-        "resultsize": 3
+        "_created": "2026-05-26T19:52:16.913210185Z",
+        "_executed_aql": "SELECT c/composer/name FROM EHR e[ehr_id/value='80350b69-e864-43cb-98a3-5573d789529c'] CONTAINS COMPOSITION c WHERE (c/composer/name LIKE '*problem_diagnosis*')",
+        "resultsize": 1
       },
-      "q": "SELECT c/composer/name FROM EHR e CONTAINS COMPOSITION c WHERE e/ehr_id/value = 'cdc026d9-3ff2-496d-a8bd-e1ef3bd661d1' AND c/composer/name LIKE '*problem_diagnosis*'",
+      "q": "SELECT c/composer/name FROM EHR e CONTAINS COMPOSITION c WHERE e/ehr_id/value = '80350b69-e864-43cb-98a3-5573d789529c' AND c/composer/name LIKE '*problem_diagnosis*'",
       "columns": [
         {
           "path": "c/composer/name",
@@ -368,12 +229,6 @@
         }
       ],
       "rows": [
-        [
-          "problem_diagnosis | E11 | Diabetes mellitus typ 2 [unit=1]"
-        ],
-        [
-          "problem_diagnosis | E11 | Diabetes mellitus typ 2 [unit=1]"
-        ],
         [
           "problem_diagnosis | E11 | Diabetes mellitus typ 2 [unit=1]"
         ]

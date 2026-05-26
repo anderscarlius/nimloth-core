@@ -35,16 +35,36 @@ export async function ehrbaseFetch<T = unknown>(
     headers["Content-Type"] = headers["Content-Type"] ?? "application/json";
   }
 
-  const res = await fetch(url, {
-    method: opts.method ?? "GET",
-    headers,
-    body:
-      opts.body === undefined
-        ? undefined
-        : typeof opts.body === "string"
-          ? opts.body
-          : JSON.stringify(opts.body),
-  });
+  // SDG-09: explicit timeout (30s) så Node's fetch inte hänger för evigt
+  // på flaky LAN-anslutningar (har observerats efter ~3 batches under reload).
+  const controller = new AbortController();
+  const timeoutMs = Number(process.env.EHRBASE_REQUEST_TIMEOUT_MS ?? 30_000);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: opts.method ?? "GET",
+      headers,
+      body:
+        opts.body === undefined
+          ? undefined
+          : typeof opts.body === "string"
+            ? opts.body
+            : JSON.stringify(opts.body),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (controller.signal.aborted) {
+      throw new EhrbaseError(
+        `EHRbase ${opts.method ?? "GET"} ${path} timed out after ${timeoutMs}ms`,
+        0,
+        "",
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const raw = await res.text();
   let parsed: T;

@@ -1,27 +1,27 @@
 # SDG-08 — AQL-demofrågor
 
-Genererad: 2026-05-21T22:12:16.570Z
+Genererad: 2026-05-26T20:42:56.659Z
 EHRbase: http://192.168.1.189:11401/ehrbase
 
 ## Sammanfattning
 
 | ID | Titel | Resultat | Tid (ms) |
 |---|---|---:|---:|
-| AQL-01 | Patienter med diagnos diabetes typ 2 | 113 | 92 |
-| AQL-02 | Patienter med HbA1c > 70 (senaste värdet) | 29 | 106 |
-| AQL-03 | Patienter med systoliskt BT > 160 (senaste mätning) | 106 | 395 |
-| AQL-04 | Patienter med ≥ 5 medication_statement-events (polyfarmaci) | 98 | 359 |
-| AQL-05 | Patienter med remiss (referral-event) | 197 | 93 |
-| AQL-06 | Diabetespatienter utan uppföljande HbA1c inom 90 dagar | 0 | 141 |
-| AQL-07 | HbA1c-trend per patient (första vs senaste värde) | 114 | 80 |
-| AQL-08 | Median dagar från första kontakt till remiss (per profil) | 11 | 122 |
-| AQL-09 | Patienter med > 3 primary_care_encounter under 90 dagar | 0 | 238 |
-| AQL-10 | Patienter med förbättrade labbvärden efter läkemedelsinsättning | 1 | 146 |
-| AQL-11 | Äldre multisjuka patienter (proxy: aldre_multisjuk-profil) | 98 | 131 |
-| AQL-12 | Marianne Lindqvists fullständiga journal kronologiskt | 28 | 54 |
-| AQL-13 | Patienter med >= 7 medication_statement (proxy för läkemedelsinteraktionsrisk) | 80 | 366 |
-| AQL-14 | Patienter vars labbvärden FÖRSÄMRATS trots läkemedelsinsättning | 0 | 136 |
-| AQL-15 | Median-magnitude per diagnosgrupp (proxy för populationsstatistik) | 2 | 276 |
+| AQL-01 | Patienter med diagnos diabetes typ 2 | 110 | 98 |
+| AQL-02 | Patienter med HbA1c > 70 (senaste värdet) | 29 | 152 |
+| AQL-03 | Patienter med systoliskt BT > 160 (senaste mätning) | 106 | 411 |
+| AQL-04 | Patienter med ≥ 5 medication_statement-events (polyfarmaci) | 144 | 460 |
+| AQL-05 | Patienter med remiss (referral-event) | 183 | 126 |
+| AQL-06 | Diabetespatienter utan uppföljande HbA1c inom 90 dagar | 75 | 263 |
+| AQL-07 | HbA1c-trend per patient (första vs senaste värde) | 101 | 159 |
+| AQL-08 | Median dagar från första kontakt till remiss (per profil) | 11 | 224 |
+| AQL-09 | Patienter med > 3 primary_care_encounter under 90 dagar | 10 | 284 |
+| AQL-10 | Patienter med förbättrade labbvärden efter läkemedelsinsättning | 35 | 285 |
+| AQL-11 | Äldre multisjuka patienter (proxy: aldre_multisjuk-profil) | 107 | 295 |
+| AQL-12 | Marianne Lindqvists fullständiga journal kronologiskt | 17 | 205 |
+| AQL-13 | Patienter med >= 7 medication_statement (proxy för läkemedelsinteraktionsrisk) | 101 | 417 |
+| AQL-14 | Patienter vars labbvärden FÖRSÄMRATS trots läkemedelsinsättning | 6 | 229 |
+| AQL-15 | Median-magnitude per diagnosgrupp (proxy för populationsstatistik) | 2 | 331 |
 
 ## Frågor i detalj
 
@@ -38,20 +38,20 @@ CONTAINS COMPOSITION c
 WHERE c/composer/name LIKE '*problem_diagnosis*diabetes_typ2*'
 ```
 
-**Resultat:** 113 rader (113 råa), 92 ms
+**Resultat:** 110 rader (110 råa), 98 ms
 
 Första 3 träffarna:
 
 ```json
 [
   [
-    "003d1250-7d9f-425b-87f2-cdb8630beae1"
+    "0253dcf3-da2b-417c-88d8-1ef9c9c829fa"
   ],
   [
-    "009b351c-f310-462d-8a88-9460b063fb0b"
+    "02c24fad-dffa-440d-a1fb-62ce0f29c876"
   ],
   [
-    "01a8c565-65fd-4531-a269-6e7f1bbc3009"
+    "03b61f94-19b5-45d1-9e7d-b0d472475f87"
   ]
 ]
 ```
@@ -70,22 +70,22 @@ WHERE c/composer/name LIKE '*HBA1C*'
 ORDER BY c/context/start_time/value DESC
 ```
 
-**Resultat:** 29 rader (232 råa), 106 ms
+**Resultat:** 29 rader (212 råa), 152 ms
 
 Första 3 träffarna:
 
 ```json
 [
   {
-    "ehr": "c51052b4-5b95-4838-8a76-03fc0d7461a4",
-    "hba1c": 77.41
+    "ehr": "eb983a18-ef3f-439f-a0ef-89d55cc1bb70",
+    "hba1c": 76.43
   },
   {
-    "ehr": "240662c4-1301-4bac-9c8a-40faccca03db",
-    "hba1c": 112.5
+    "ehr": "5d9ce982-635c-4d3c-99c4-e667e79f38ee",
+    "hba1c": 88.49
   },
   {
-    "ehr": "fcc9fecd-1661-4094-900e-21645cb415e0",
+    "ehr": "63e0ea23-2ad8-453a-81f3-1dae7095c9a7",
     "hba1c": 70.88
   }
 ]
@@ -105,23 +105,23 @@ WHERE c/composer/name LIKE '*vital_signs*BP*'
 ORDER BY c/context/start_time/value DESC
 ```
 
-**Resultat:** 106 rader (1981 råa), 395 ms
+**Resultat:** 106 rader (1776 råa), 411 ms
 
 Första 3 träffarna:
 
 ```json
 [
   {
-    "ehr": "ea186fea-2b82-4557-bb29-f13f25b04871",
-    "systolic": 191
+    "ehr": "d331a86b-1de1-4d02-acdb-677fdc9d7f7f",
+    "systolic": 196
   },
   {
-    "ehr": "b1a3dc07-0333-476b-a8b7-8362f270071d",
-    "systolic": 183
+    "ehr": "f071151a-2978-439f-b618-2e956a7df4aa",
+    "systolic": 211
   },
   {
-    "ehr": "93b43b1d-0d1d-4f9d-b27e-d224011332fb",
-    "systolic": 178
+    "ehr": "ee8dc5af-abaa-44df-a81f-ee61bb9bdde3",
+    "systolic": 216
   }
 ]
 ```
@@ -139,23 +139,23 @@ CONTAINS COMPOSITION c
 WHERE c/composer/name LIKE '*medication_statement*'
 ```
 
-**Resultat:** 98 rader (1894 råa), 359 ms
+**Resultat:** 144 rader (2422 råa), 460 ms
 
 Första 3 träffarna:
 
 ```json
 [
   {
-    "ehr": "7d1eb30e-dcf6-4570-a992-603aa1b95802",
-    "medications": 10
+    "ehr": "63dc00ee-881a-4103-8756-c63b15d8b214",
+    "medications": 8
   },
   {
-    "ehr": "6e156501-a627-4ec4-8294-caa3f0125297",
-    "medications": 7
+    "ehr": "88433a58-3858-4018-a84d-a3fcf3860188",
+    "medications": 5
   },
   {
-    "ehr": "3a2f4b1d-8b5b-4156-b88f-c44186adfe4c",
-    "medications": 7
+    "ehr": "b1f74d27-7fb8-45f5-b57a-c29739d24338",
+    "medications": 5
   }
 ]
 ```
@@ -173,20 +173,20 @@ CONTAINS COMPOSITION c
 WHERE c/composer/name LIKE '*referral*'
 ```
 
-**Resultat:** 197 rader (197 råa), 93 ms
+**Resultat:** 183 rader (183 råa), 126 ms
 
 Första 3 träffarna:
 
 ```json
 [
   [
-    "003c13e1-51db-4606-aa91-a6ec62c1ba8b"
+    "0253dcf3-da2b-417c-88d8-1ef9c9c829fa"
   ],
   [
-    "01de3b4d-c60f-469d-9371-66c3b3fbb738"
+    "03b61f94-19b5-45d1-9e7d-b0d472475f87"
   ],
   [
-    "022206d1-e877-4c30-974d-d4a11c945d11"
+    "042a06b3-e782-499e-b503-47577cd69592"
   ]
 ]
 ```
@@ -205,7 +205,29 @@ WHERE c/composer/name LIKE '*diabetes_typ2*' OR c/composer/name LIKE '*HBA1C*'
 ORDER BY e/ehr_id/value, c/context/start_time/value
 ```
 
-**Resultat:** 0 rader (855 råa), 141 ms
+**Resultat:** 75 rader (700 råa), 263 ms
+
+Första 3 träffarna:
+
+```json
+[
+  {
+    "ehr": "0253dcf3-da2b-417c-88d8-1ef9c9c829fa",
+    "diagnosed": "2026-01-15T08:30:00Z",
+    "followup_days": 104
+  },
+  {
+    "ehr": "02c24fad-dffa-440d-a1fb-62ce0f29c876",
+    "diagnosed": "2026-01-14T08:30:00Z",
+    "followup_days": 117
+  },
+  {
+    "ehr": "03b61f94-19b5-45d1-9e7d-b0d472475f87",
+    "diagnosed": "2026-01-15T08:30:00Z",
+    "followup_days": 115
+  }
+]
+```
 
 ### AQL-07 — HbA1c-trend per patient (första vs senaste värde)
 
@@ -221,45 +243,45 @@ WHERE c/composer/name LIKE '*HBA1C*'
 ORDER BY e/ehr_id/value, c/context/start_time/value
 ```
 
-**Resultat:** 114 rader (232 råa), 80 ms
+**Resultat:** 101 rader (212 råa), 159 ms
 
 Första 3 träffarna:
 
 ```json
 [
   {
-    "ehr": "003d1250-7d9f-425b-87f2-cdb8630beae1",
+    "ehr": "0253dcf3-da2b-417c-88d8-1ef9c9c829fa",
     "first": {
-      "date": "2026-05-21T21:54:32.60155509Z",
-      "val": 51.1
+      "date": "2026-01-11T08:30:00Z",
+      "val": 74.16
     },
     "last": {
-      "date": "2026-05-21T21:54:32.842578143Z",
-      "val": 51.1
+      "date": "2026-04-29T08:30:00Z",
+      "val": 74.16
     },
     "delta": 0
   },
   {
-    "ehr": "009b351c-f310-462d-8a88-9460b063fb0b",
+    "ehr": "02c24fad-dffa-440d-a1fb-62ce0f29c876",
     "first": {
-      "date": "2026-05-21T21:54:43.314488615Z",
-      "val": 51.36
+      "date": "2026-01-10T08:30:00Z",
+      "val": 51.06
     },
     "last": {
-      "date": "2026-05-21T21:54:43.540487263Z",
-      "val": 51.36
+      "date": "2026-05-11T08:30:00Z",
+      "val": 35.7
     },
-    "delta": 0
+    "delta": -15.4
   },
   {
-    "ehr": "01a8c565-65fd-4531-a269-6e7f1bbc3009",
+    "ehr": "03b61f94-19b5-45d1-9e7d-b0d472475f87",
     "first": {
-      "date": "2026-05-21T21:54:44.472308032Z",
-      "val": 50.13
+      "date": "2026-01-10T08:30:00Z",
+      "val": 112.64
     },
     "last": {
-      "date": "2026-05-21T21:54:44.665854055Z",
-      "val": 50.13
+      "date": "2026-05-10T08:30:00Z",
+      "val": 112.64
     },
     "delta": 0
   }
@@ -280,26 +302,26 @@ WHERE c/composer/name LIKE '*primary_care_encounter*' OR c/composer/name LIKE '*
 ORDER BY e/ehr_id/value, c/context/start_time/value
 ```
 
-**Resultat:** 11 rader (1306 råa), 122 ms
+**Resultat:** 11 rader (1228 råa), 224 ms
 
 Första 3 träffarna:
 
 ```json
 [
   {
+    "profile": "diabetes_typ",
+    "n": 29,
+    "median_days": 5
+  },
+  {
     "profile": "hjartsvikt",
     "n": 43,
-    "median_days": 0
+    "median_days": 2
   },
   {
-    "profile": "anemi",
-    "n": 22,
-    "median_days": 0
-  },
-  {
-    "profile": "aldre_multisjuk",
-    "n": 27,
-    "median_days": 0
+    "profile": "brostsmarta",
+    "n": 10,
+    "median_days": 1
   }
 ]
 ```
@@ -318,7 +340,26 @@ WHERE c/composer/name LIKE '*primary_care_encounter*'
 ORDER BY e/ehr_id/value, c/context/start_time/value
 ```
 
-**Resultat:** 0 rader (1107 råa), 238 ms
+**Resultat:** 10 rader (1045 råa), 284 ms
+
+Första 3 träffarna:
+
+```json
+[
+  {
+    "ehr": "075caecf-6c00-4309-999b-4f916710211b",
+    "encounters": 4
+  },
+  {
+    "ehr": "0b91fae0-d6bd-4477-895f-a10662210b78",
+    "encounters": 4
+  },
+  {
+    "ehr": "40bbedd2-1d62-4063-8622-88cadd7375ea",
+    "encounters": 4
+  }
+]
+```
 
 ### AQL-10 — Patienter med förbättrade labbvärden efter läkemedelsinsättning
 
@@ -334,24 +375,50 @@ WHERE c/composer/name LIKE '*HBA1C*' OR c/composer/name LIKE '*medication_statem
 ORDER BY e/ehr_id/value, c/context/start_time/value
 ```
 
-**Resultat:** 1 rader (2126 råa), 146 ms
+**Resultat:** 35 rader (2634 råa), 285 ms
 
 Första 3 träffarna:
 
 ```json
 [
   {
-    "ehr": "cdc026d9-3ff2-496d-a8bd-e1ef3bd661d1",
+    "ehr": "02c24fad-dffa-440d-a1fb-62ce0f29c876",
     "first": {
-      "date": "2026-05-21T18:36:16.134954386Z",
-      "val": 82
+      "date": "2026-01-10T08:30:00Z",
+      "val": 51.06
     },
     "last": {
-      "date": "2026-05-21T18:38:13.219692244Z",
-      "val": 68
+      "date": "2026-05-11T08:30:00Z",
+      "val": 35.7
     },
-    "rx_at": "2026-05-21T18:36:16.604018836Z",
-    "delta": -14
+    "rx_at": "2026-01-14T08:30:00Z",
+    "delta": -15.4
+  },
+  {
+    "ehr": "108fd673-5002-41db-9559-890748bc5320",
+    "first": {
+      "date": "2026-01-11T08:30:00Z",
+      "val": 60.5
+    },
+    "last": {
+      "date": "2026-04-02T08:30:00Z",
+      "val": 42.3
+    },
+    "rx_at": "2026-01-13T08:30:00Z",
+    "delta": -18.2
+  },
+  {
+    "ehr": "17c41eda-1523-4979-b537-13e63c03669a",
+    "first": {
+      "date": "2026-01-10T08:30:00Z",
+      "val": 69.47
+    },
+    "last": {
+      "date": "2026-03-30T08:30:00Z",
+      "val": 48.6
+    },
+    "rx_at": "2026-01-15T08:30:00Z",
+    "delta": -20.9
   }
 ]
 ```
@@ -369,23 +436,23 @@ CONTAINS COMPOSITION c
 WHERE c/composer/name LIKE '*aldre_multisjuk*' OR c/composer/name LIKE '*medication_statement*'
 ```
 
-**Resultat:** 98 rader (3003 råa), 131 ms
+**Resultat:** 107 rader (2998 råa), 295 ms
 
 Första 3 träffarna:
 
 ```json
 [
   {
-    "ehr": "7d1eb30e-dcf6-4570-a992-603aa1b95802",
-    "medications": 10
+    "ehr": "63dc00ee-881a-4103-8756-c63b15d8b214",
+    "medications": 8
   },
   {
-    "ehr": "3a2f4b1d-8b5b-4156-b88f-c44186adfe4c",
-    "medications": 7
+    "ehr": "5ae92a04-2ee5-42ce-b857-0cc35c05b7d4",
+    "medications": 5
   },
   {
-    "ehr": "5224c1d4-57e2-43a5-8a98-8cc0f2452ef0",
-    "medications": 7
+    "ehr": "370c55e1-b824-4e48-bf1a-8cb5bc974349",
+    "medications": 6
   }
 ]
 ```
@@ -404,26 +471,26 @@ WHERE e/ehr_status/subject/external_ref/id/value = 'marianne-lindqvist-syn-001'
 ORDER BY c/context/start_time/value
 ```
 
-**Resultat:** 28 rader (28 råa), 54 ms
+**Resultat:** 17 rader (17 råa), 205 ms
 
 Första 3 träffarna:
 
 ```json
 [
   [
+    "lab_order | aldre_multisjuk | initial workup [careflow=lab_ordered]",
+    "2026-01-08T08:30:00Z",
+    "e9ca67bc-ec5c-4993-8982-a11680cc884a::local.ehrbase.org::1"
+  ],
+  [
     "primary_care_encounter | first_visit | aldre_multisjuk initial contact [careflow=medication_review_visit]",
-    "2026-05-21T21:53:17.376988218Z",
-    "fecb37de-8e5f-457f-97ea-08ceac99c366::local.ehrbase.org::1"
+    "2026-01-08T08:30:00Z",
+    "e0f28cc2-7107-4acd-b290-1f4208e00578::local.ehrbase.org::1"
   ],
   [
     "vital_signs | BP | systolic 130 mm[Hg] [unit=mm[Hg]]",
-    "2026-05-21T21:53:17.641298687Z",
-    "1e6a8e1a-4858-436a-b5ff-265706c895ac::local.ehrbase.org::1"
-  ],
-  [
-    "lab_order | aldre_multisjuk | initial workup [careflow=lab_ordered]",
-    "2026-05-21T21:53:17.799955454Z",
-    "8e89464e-ba1a-4b90-8543-8acd7956450f::local.ehrbase.org::1"
+    "2026-01-08T08:30:00Z",
+    "5df790e6-dc97-4801-a965-5419f56a52f1::local.ehrbase.org::1"
   ]
 ]
 ```
@@ -441,23 +508,23 @@ CONTAINS COMPOSITION c
 WHERE c/composer/name LIKE '*medication_statement*'
 ```
 
-**Resultat:** 80 rader (1894 råa), 366 ms
+**Resultat:** 101 rader (2422 råa), 417 ms
 
 Första 3 träffarna:
 
 ```json
 [
   {
-    "ehr": "7d1eb30e-dcf6-4570-a992-603aa1b95802",
-    "medications": 10
+    "ehr": "63dc00ee-881a-4103-8756-c63b15d8b214",
+    "medications": 8
   },
   {
-    "ehr": "6e156501-a627-4ec4-8294-caa3f0125297",
+    "ehr": "c0759d9c-d1a8-4de9-9d05-84ca8d415158",
     "medications": 7
   },
   {
-    "ehr": "3a2f4b1d-8b5b-4156-b88f-c44186adfe4c",
-    "medications": 7
+    "ehr": "3b50b9e8-cfac-4175-82af-abfce4b22242",
+    "medications": 8
   }
 ]
 ```
@@ -476,7 +543,50 @@ WHERE c/composer/name LIKE '*HBA1C*' OR c/composer/name LIKE '*medication_statem
 ORDER BY e/ehr_id/value, c/context/start_time/value
 ```
 
-**Resultat:** 0 rader (2126 råa), 136 ms
+**Resultat:** 6 rader (2634 råa), 229 ms
+
+Första 3 träffarna:
+
+```json
+[
+  {
+    "ehr": "499e7bab-d659-433c-974f-0c887ecd733d",
+    "first": {
+      "date": "2026-01-09T08:30:00Z",
+      "val": 59.11
+    },
+    "last": {
+      "date": "2026-05-01T08:30:00Z",
+      "val": 68
+    },
+    "delta": 8.9
+  },
+  {
+    "ehr": "5011513f-9d92-4882-aad9-d602125129b3",
+    "first": {
+      "date": "2026-01-10T08:30:00Z",
+      "val": 57.48
+    },
+    "last": {
+      "date": "2026-03-23T08:30:00Z",
+      "val": 66.1
+    },
+    "delta": 8.6
+  },
+  {
+    "ehr": "8b3d4d35-644d-4dc7-8bd7-eca9e4355d05",
+    "first": {
+      "date": "2026-01-10T08:30:00Z",
+      "val": 54.84
+    },
+    "last": {
+      "date": "2026-04-20T08:30:00Z",
+      "val": 63.1
+    },
+    "delta": 8.3
+  }
+]
+```
 
 ### AQL-15 — Median-magnitude per diagnosgrupp (proxy för populationsstatistik)
 
@@ -491,7 +601,7 @@ CONTAINS COMPOSITION c
 WHERE c/composer/name LIKE '*lab_result*'
 ```
 
-**Resultat:** 2 rader (1634 råa), 276 ms
+**Resultat:** 2 rader (1422 råa), 331 ms
 
 Första 3 träffarna:
 
@@ -499,15 +609,15 @@ Första 3 träffarna:
 [
   {
     "bucket": "HBA1C",
-    "n": 232,
-    "median": 57.11,
-    "min": 48.47,
+    "n": 212,
+    "median": 55.74,
+    "min": 34.1,
     "max": 112.64
   },
   {
     "bucket": "HEMOGLOBIN",
-    "n": 582,
-    "median": 113.95,
+    "n": 380,
+    "median": 112.21,
     "min": 62.26,
     "max": 149.42
   }
