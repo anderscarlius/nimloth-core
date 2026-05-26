@@ -1,0 +1,73 @@
+{
+  "loadedAt": "2026-05-26T21:03:01.613Z",
+  "ehrbase": "http://192.168.1.189:11401/ehrbase",
+  "anchors": [
+    {
+      "patientId": "ingrid-andersson-syn-001",
+      "displayName": "Ingrid Andersson",
+      "age": 74,
+      "profileLabel": "bespoke (sprint 2 scenario)",
+      "seed": 1503,
+      "demoPoint": "Sprint 2 huvudscenario: 74-årig kvinna, multi-morbid, fall i hemmet kräver akut allergi+antikoagulation-svar",
+      "aqlIllustrated": "AQL-12 (kronologisk journal) + Sprint 2 demo-script",
+      "ehrId": "0e0c3af2-1e49-4ede-b861-05baca570f53",
+      "compositionCount": 16,
+      "errorCount": 0
+    },
+    {
+      "patientId": "anders-bergstrom-syn-001",
+      "displayName": "Anders Bergström",
+      "age": 58,
+      "profileLabel": "bespoke (AQL-06 dropout)",
+      "seed": 1958,
+      "demoPoint": "58-årig man, diabetes typ 2 diagnostiserad, metformin insatt — försvinner från uppföljning. Klassisk lost-to-followup-fall.",
+      "aqlIllustrated": "AQL-06 (diabetespatienter utan uppföljande HbA1c inom 90 d)",
+      "ehrId": "f5054071-ffd4-442e-bb16-1e0d829f9373",
+      "compositionCount": 5,
+      "errorCount": 0
+    },
+    {
+      "patientId": "karin-eriksson-syn-001",
+      "displayName": "Karin Eriksson",
+      "age": 72,
+      "profileLabel": "bespoke (AQL-09 recurrent UVI)",
+      "seed": 1972,
+      "demoPoint": "72-årig kvinna med recidiverande urinvägsinfektion — 5 vårdcentralsbesök på 70 dygn, antibiotika-resistensutredning aktuell.",
+      "aqlIllustrated": "AQL-09 (> 3 primary_care_encounter inom rullande 90-dygnsfönster)",
+      "ehrId": "327a3d32-33bd-475d-be3f-8217d8872a73",
+      "compositionCount": 7,
+      "errorCount": 0
+    },
+    {
+      "patientId": "lars-johansson-syn-001",
+      "displayName": "Lars Johansson",
+      "age": 64,
+      "profileLabel": "bespoke (AQL-10 responder)",
+      "seed": 1964,
+      "demoPoint": "64-årig man, nydiagnostiserad diabetes typ 2 (HbA1c 82). Metformin insatt + livsstilsförändring → HbA1c 58 efter 4 mån. Klassisk responder.",
+      "aqlIllustrated": "AQL-10 (förbättrade labbvärden efter läkemedelsinsättning)",
+      "ehrId": "d415fde8-979a-4c7a-8d4c-14ab7c78f8c1",
+      "compositionCount": 6,
+      "errorCount": 0
+    },
+    {
+      "patientId": "eva-lindgren-syn-001",
+      "displayName": "Eva Lindgren",
+      "age": 71,
+      "profileLabel": "bespoke (AQL-14 non-responder)",
+      "seed": 1971,
+      "demoPoint": "71-årig kvinna, diabetes typ 2 (HbA1c 82). Metformin insatt men HbA1c STIGER till 88 efter 4 mån — non-responder, SGLT2-tillägg aktuellt.",
+      "aqlIllustrated": "AQL-14 (försämrade labbvärden trots läkemedelsinsättning)",
+      "ehrId": "fdb0d573-3363-4635-bbe0-c12f520ed85c",
+      "compositionCount": 6,
+      "errorCount": 0
+    }
+  ],
+  "reachability": {
+    "AQL-06 (Anders dropout)": true,
+    "AQL-09 (Karin recurrence)": true,
+    "AQL-10 (Lars responder)": true,
+    "AQL-14 (Eva non-responder)": true,
+    "AQL-12 (Ingrid journal)": true
+  }
+}
