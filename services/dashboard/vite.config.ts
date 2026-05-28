@@ -10,6 +10,13 @@ const REPLICATION = process.env.REPLICATION_BASE_URL ?? 'http://replication:3007
 const EDGE_FHIR = process.env.EDGE_FHIR_BASE_URL ?? 'http://edge-su:3003';
 const TERMINOLOGY = process.env.TERMINOLOGY_BASE_URL ?? 'http://terminology:3008';
 const MAPPING_ASSISTANT = process.env.MAPPING_ASSISTANT_BASE_URL ?? 'http://mapping-assistant:3009';
+// Fas 3 AC1: aql-template-service är nu co-located på cf4 (container
+// aql-template-service-core, LAN-port 11402, service→EHRbase loopback).
+// Default pekar dit; sätt AQL_TEMPLATE_BASE_URL=http://localhost:3010 för
+// lokal dev mot en lokalt körande tjänst.
+const AQL_TEMPLATE = process.env.AQL_TEMPLATE_BASE_URL ?? 'http://192.168.1.189:11402';
+// Fas 3 AC6: med-review-orkestratorn (co-located på cf4, LAN-port 11403).
+const MED_REVIEW = process.env.MED_REVIEW_BASE_URL ?? 'http://192.168.1.189:11403';
 
 export default defineConfig({
   plugins: [react()],
@@ -48,6 +55,17 @@ export default defineConfig({
         target: FHIR,
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api\/parity/, '/facade/parity'),
+      },
+      // Fas 2: AQL-mall-tjänst. /api/aql-templates → service-rotens /api/aql-templates
+      // (ingen rewrite — service exponerar redan /api/aql-templates).
+      '/api/aql-templates': {
+        target: AQL_TEMPLATE,
+        changeOrigin: true,
+      },
+      // Fas 3 AC6: med-review-orkestrator (SSE). changeOrigin, ingen rewrite.
+      '/api/med-review': {
+        target: MED_REVIEW,
+        changeOrigin: true,
       },
     },
   },
