@@ -20,11 +20,13 @@
 import pino from "pino";
 import {
   buildAdverseReactionRiskOpt,
+  buildLaboratoryTestResultOpt,
   buildMedicationSummaryOpt,
   buildProblemDiagnosisOpt,
   createBridgeAuditPublisher,
   ARR_DEFAULT_TEMPLATE_ID,
   DEFAULT_TEMPLATE_ID,
+  LAB_DEFAULT_TEMPLATE_ID,
   PD_DEFAULT_TEMPLATE_ID,
 } from "../index.js";
 
@@ -56,6 +58,7 @@ const TEMPLATES: TemplateSpec[] = [
   { templateId: DEFAULT_TEMPLATE_ID, build: () => buildMedicationSummaryOpt() },
   { templateId: PD_DEFAULT_TEMPLATE_ID, build: () => buildProblemDiagnosisOpt() },
   { templateId: ARR_DEFAULT_TEMPLATE_ID, build: () => buildAdverseReactionRiskOpt() },
+  { templateId: LAB_DEFAULT_TEMPLATE_ID, build: () => buildLaboratoryTestResultOpt() },
 ];
 
 async function ensureEhrbaseUp(): Promise<void> {

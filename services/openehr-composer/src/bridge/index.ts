@@ -26,6 +26,15 @@ export {
 } from "./adverse-reaction-risk-opt.js";
 
 export {
+  buildLaboratoryTestResultOpt,
+  LAB_DEFAULT_TEMPLATE_ID,
+  LAB_DEFAULT_CONCEPT,
+  LAB_DEFAULT_UID,
+  LABORATORY_TEST_RESULT_ELEMENTS,
+  type LaboratoryTestResultOptOpts,
+} from "./laboratory-test-result-opt.js";
+
+export {
   createBridgeAuditPublisher,
   buildAuditEvent,
   isKafkaDisabled,

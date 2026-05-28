@@ -173,6 +173,185 @@ export function buildMinimalEvaluation(
   };
 }
 
+// --- SDG-10 domain shapes (replaced fixture-shapes for demo-critical types) ---
+//
+// INVARIANT 1 — every demo-critical event is its own composition with
+//   ctx/time = event time. NEVER stack any_event:N. The dispatcher in
+//   LoadPipeline.buildFlat preserves this (one composition per event);
+//   downstream changes must not batch.
+// INVARIANT 2 — consumers MUST filter on template_id or OBSERVATION/EVALUATION
+//   archetype, NOT on composition FLAT-prefix (laboratory_test_result.v1 and
+//   time_series.en.v1 share prefix `event_series`).
+//
+// Annotation parser: SDG carries clinical semantics in
+// `TYPE | CODE | DESCRIPTION`. New builders split on `|` to populate the
+// structured analyte/medication/diagnosis fields. composer.name keeps the
+// raw annotation during the transition window (AC4 rewrites the queries
+// that still depend on it).
+
+interface ParsedAnnotation {
+  /** Original annotation, trimmed. */
+  raw: string;
+  /** Middle segment — code (e.g. "HBA1C", "A10BA02", "M16.1") or null. */
+  code: string | null;
+  /** Trailing segment — clinical description, never null. */
+  description: string;
+}
+
+function parseAnnotation(annotation: string): ParsedAnnotation {
+  const raw = annotation.trim();
+  const parts = raw.split("|").map((s) => s.trim()).filter(Boolean);
+  // Expected: [type, code, description]. Tolerate missing trailing parts.
+  if (parts.length >= 3) {
+    return { raw, code: parts[1], description: parts.slice(2).join(" | ") };
+  }
+  if (parts.length === 2) {
+    return { raw, code: parts[1], description: parts[1] };
+  }
+  return { raw, code: null, description: raw };
+}
+
+// --- Shape 4: laboratory_test_result.v1 (P3.0e) ---
+//
+// OBSERVATION wrapping HISTORY/EVENT/ITEM_TREE/ELEMENTs. Unit is set per
+// composition (free in the OPT). composer.name keeps annotation for the
+// transition window.
+
+export function buildLabResult(
+  ctx: CompositionContext,
+  data: TimeSeriesData,
+): FlatJson {
+  const prefix = "event_series";
+  const obsPrefix = `${prefix}/laboratory_test_result:0`;
+  const eventTime = (data.eventTime ?? ctx.time).toISOString();
+  const parsed = parseAnnotation(data.annotation);
+  const analyteName = parsed.code ?? "Unknown analyte";
+  return {
+    ...rootCtx(prefix, { ...ctx, composerName: data.annotation }),
+    [`${prefix}/category|code`]: "433",
+    [`${prefix}/category|value`]: "event",
+    [`${prefix}/category|terminology`]: "openehr",
+    ...archetypeLang(obsPrefix),
+    [`${obsPrefix}/any_event:0/time`]: eventTime,
+    [`${obsPrefix}/any_event:0/analyte_name`]: analyteName,
+    [`${obsPrefix}/any_event:0/analyte_code|code`]: analyteName,
+    [`${obsPrefix}/any_event:0/analyte_code|value`]: analyteName,
+    [`${obsPrefix}/any_event:0/analyte_code|terminology`]: "local",
+    [`${obsPrefix}/any_event:0/analyte_result|magnitude`]: data.magnitude,
+    [`${obsPrefix}/any_event:0/analyte_result|unit`]: data.realUnit,
+    [`${obsPrefix}/any_event:0/result_comment`]: parsed.description,
+  };
+}
+
+// --- Shape 5: medication_summary.v1 (P3.0b) ---
+//
+// EVALUATION wrapping ITEM_TREE/ELEMENTs. COMPOSITION archetype is minimal.v1
+// so FLAT-prefix is `minimal` (shared with minimal_action/evaluation, but the
+// EVALUATION archetype slug `medication_summary:0` discriminates).
+
+export function buildMedicationSummary(
+  ctx: CompositionContext,
+  data: MinimalEvaluationData,
+): FlatJson {
+  const prefix = "minimal";
+  const evalPrefix = `${prefix}/medication_summary:0`;
+  const parsed = parseAnnotation(data.annotation);
+  const atcCode = parsed.code ?? "UNKNOWN";
+  const doseDescription = data.realUnit
+    ? `${data.magnitude} ${data.realUnit}`
+    : String(data.magnitude);
+  return {
+    ...rootCtx(prefix, { ...ctx, composerName: data.annotation }),
+    [`${prefix}/category|code`]: "433",
+    [`${prefix}/category|value`]: "event",
+    [`${prefix}/category|terminology`]: "openehr",
+    ...archetypeLang(evalPrefix),
+    [`${evalPrefix}/medication_name`]: parsed.description,
+    [`${evalPrefix}/atc_code|code`]: atcCode,
+    [`${evalPrefix}/atc_code|value`]: atcCode,
+    [`${evalPrefix}/atc_code|terminology`]: "local",
+    [`${evalPrefix}/dose_description`]: doseDescription,
+    [`${evalPrefix}/start_date`]: ctx.time.toISOString(),
+    [`${evalPrefix}/clinical_indication`]: parsed.description,
+  };
+}
+
+// --- Shape 6: problem_diagnosis.v1 (P3.0c) ---
+
+export function buildProblemDiagnosis(
+  ctx: CompositionContext,
+  data: MinimalEvaluationData,
+): FlatJson {
+  const prefix = "minimal";
+  const evalPrefix = `${prefix}/problem_diagnosis:0`;
+  const parsed = parseAnnotation(data.annotation);
+  const icdCode = parsed.code ?? "UNKNOWN";
+  return {
+    ...rootCtx(prefix, { ...ctx, composerName: data.annotation }),
+    [`${prefix}/category|code`]: "433",
+    [`${prefix}/category|value`]: "event",
+    [`${prefix}/category|terminology`]: "openehr",
+    ...archetypeLang(evalPrefix),
+    [`${evalPrefix}/diagnosis_name`]: parsed.description,
+    [`${evalPrefix}/diagnosis_code|code`]: icdCode,
+    [`${evalPrefix}/diagnosis_code|value`]: icdCode,
+    [`${evalPrefix}/diagnosis_code|terminology`]: "local",
+    [`${evalPrefix}/date_of_onset`]: ctx.time.toISOString(),
+    [`${evalPrefix}/clinical_description`]: parsed.description,
+  };
+}
+
+// --- Shape 7: adverse_reaction_risk.v2 (P3.0d) — Fas 3 AC2 ---
+//
+// EVALUATION (minimal.v1 composition → FLAT-prefix `minimal`, EVALUATION slug
+// `adverse_reaction_risk:0`). Fält per bridge-OPT at0002-at0007. Tar explicita
+// fält (rikare än generisk annotation-parse) men behåller annotation i
+// composer.name för transition-konsekvens + PATCH B-kontraktet.
+
+export interface AdverseReactionData {
+  /** Free-text substansnamn, t.ex. "Penicillin". */
+  substanceName: string;
+  /** ATC/lokal kod, t.ex. "J01CE" (penicilliner). */
+  substanceCode: string;
+  /** openEHR-kritikalitet: low / high / unable-to-assess. */
+  criticality: string;
+  /** Fri-text manifestation, t.ex. "anafylaxi". */
+  manifestation: string;
+  /** allergy / intolerance / propensity / contraindication. */
+  reactionType: string;
+  /** "adverse_reaction | CODE | DESC" — composer.name + PATCH B-kontrakt. */
+  annotation: string;
+  sdgEventType: string;
+  eventTime?: Date;
+}
+
+export function buildAdverseReaction(
+  ctx: CompositionContext,
+  data: AdverseReactionData,
+): FlatJson {
+  const prefix = "minimal";
+  const evalPrefix = `${prefix}/adverse_reaction_risk:0`;
+  return {
+    ...rootCtx(prefix, { ...ctx, composerName: data.annotation }),
+    [`${prefix}/category|code`]: "433",
+    [`${prefix}/category|value`]: "event",
+    [`${prefix}/category|terminology`]: "openehr",
+    ...archetypeLang(evalPrefix),
+    [`${evalPrefix}/substance_name`]: data.substanceName,
+    [`${evalPrefix}/substance_code|code`]: data.substanceCode,
+    [`${evalPrefix}/substance_code|value`]: data.substanceName,
+    [`${evalPrefix}/substance_code|terminology`]: "local",
+    [`${evalPrefix}/criticality|code`]: data.criticality,
+    [`${evalPrefix}/criticality|value`]: data.criticality,
+    [`${evalPrefix}/criticality|terminology`]: "local",
+    [`${evalPrefix}/manifestation`]: data.manifestation,
+    [`${evalPrefix}/onset_date`]: (data.eventTime ?? ctx.time).toISOString(),
+    [`${evalPrefix}/reaction_type|code`]: data.reactionType,
+    [`${evalPrefix}/reaction_type|value`]: data.reactionType,
+    [`${evalPrefix}/reaction_type|terminology`]: "local",
+  };
+}
+
 // --- Event router ---
 
 export type SdgEventType =
@@ -185,22 +364,32 @@ export type SdgEventType =
   | "referral"
   | "specialist_consultation"
   | "care_plan"
-  | "discharge_summary";
+  | "discharge_summary"
+  | "adverse_reaction"; // Fas 3 AC2
 
 export type ShapeId =
   | "time_series.en.v1"
   | "minimal_action.en.v1"
-  | "minimal_evaluation.en.v1";
+  | "minimal_evaluation.en.v1"
+  | "laboratory_test_result.v1"
+  | "medication_summary.v1"
+  | "problem_diagnosis.v1"
+  | "adverse_reaction_risk.v2";
 
+// SDG-10: lab/medication/diagnosis routed to domain OPTs. Fas 3 AC2 adds
+// adverse_reaction → adverse_reaction_risk.v2 (Ingrids penicillinallergi +
+// metformin-bärares E11 hanteras via pathway-härledning, ej här). Övriga 6
+// event-typer kvar i fixture-shapes (ej demo-kritiska för mall-tjänsten).
 export const EVENT_SHAPE_MAP: Record<SdgEventType, ShapeId> = {
-  primary_care_encounter: "minimal_action.en.v1",
-  vital_signs: "time_series.en.v1",
-  lab_order: "minimal_action.en.v1",
-  lab_result: "time_series.en.v1",
-  problem_diagnosis: "minimal_evaluation.en.v1",
-  medication_statement: "minimal_evaluation.en.v1",
-  referral: "minimal_action.en.v1",
-  specialist_consultation: "minimal_action.en.v1",
-  care_plan: "minimal_evaluation.en.v1",
-  discharge_summary: "minimal_evaluation.en.v1",
+  primary_care_encounter: "minimal_action.en.v1",     // fixture (kvar)
+  vital_signs: "time_series.en.v1",                   // fixture (kvar)
+  lab_order: "minimal_action.en.v1",                  // fixture (kvar)
+  lab_result: "laboratory_test_result.v1",            // SDG-10 migrated
+  problem_diagnosis: "problem_diagnosis.v1",          // SDG-10 migrated
+  medication_statement: "medication_summary.v1",      // SDG-10 migrated
+  referral: "minimal_action.en.v1",                   // fixture (kvar)
+  specialist_consultation: "minimal_action.en.v1",    // fixture (kvar)
+  care_plan: "minimal_evaluation.en.v1",              // fixture (kvar)
+  discharge_summary: "minimal_evaluation.en.v1",      // fixture (kvar)
+  adverse_reaction: "adverse_reaction_risk.v2",       // Fas 3 AC2
 };

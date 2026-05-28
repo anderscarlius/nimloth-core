@@ -39,9 +39,10 @@ function buildMarkdown(results: AqlRunResult[]): string {
   md += `Genererad: ${new Date().toISOString()}\n`;
   md += `EHRbase: http://192.168.1.189:11401/ehrbase\n\n`;
   md += `## Sammanfattning\n\n`;
-  md += `| ID | Titel | Resultat | Tid (ms) |\n|---|---|---:|---:|\n`;
+  md += `| ID | Tier | Titel | Resultat | Tid (ms) |\n|---|---|---|---:|---:|\n`;
   for (const r of results) {
-    md += `| ${r.id} | ${r.title} | ${r.error ? "FAIL" : r.resultCount} | ${r.executionTimeMs} |\n`;
+    const spec = QUERIES.find((q) => q.id === r.id)!;
+    md += `| ${r.id} | ${spec.tier} | ${r.title} | ${r.error ? "FAIL" : r.resultCount} | ${r.executionTimeMs} |\n`;
   }
   md += `\n## Frågor i detalj\n\n`;
   for (const r of results) {

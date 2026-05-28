@@ -20,9 +20,13 @@ import {
   runAql,
 } from "../ehrbase-client.js";
 import {
-  buildTimeSeries,
+  buildAdverseReaction,
+  buildLabResult,
+  buildMedicationSummary,
   buildMinimalAction,
   buildMinimalEvaluation,
+  buildProblemDiagnosis,
+  buildTimeSeries,
   EVENT_SHAPE_MAP,
   type CompositionContext,
   type SdgEventType,
@@ -104,7 +108,7 @@ const INGRID_ANDERSSON: Anchor = {
       date: "2024-11-15",
       eventType: "lab_result",
       build: (ctx) =>
-        buildTimeSeries(ctx, {
+        buildLabResult(ctx, {
           magnitude: 54,
           realUnit: "mmol/mol",
           annotation: "lab_result | HBA1C | 54 mmol/mol (välbehandlad T2D)",
@@ -117,7 +121,7 @@ const INGRID_ANDERSSON: Anchor = {
       date: "2024-11-15",
       eventType: "medication_statement",
       build: (ctx) =>
-        buildMinimalEvaluation(ctx, {
+        buildMedicationSummary(ctx, {
           magnitude: 1000,
           realUnit: "mg/d",
           annotation:
@@ -130,7 +134,7 @@ const INGRID_ANDERSSON: Anchor = {
       date: "2024-11-15",
       eventType: "medication_statement",
       build: (ctx) =>
-        buildMinimalEvaluation(ctx, {
+        buildMedicationSummary(ctx, {
           magnitude: 20,
           realUnit: "mg/d",
           annotation:
@@ -143,7 +147,7 @@ const INGRID_ANDERSSON: Anchor = {
       date: "2024-11-15",
       eventType: "medication_statement",
       build: (ctx) =>
-        buildMinimalEvaluation(ctx, {
+        buildMedicationSummary(ctx, {
           magnitude: 20,
           realUnit: "mg/d",
           annotation:
@@ -157,7 +161,7 @@ const INGRID_ANDERSSON: Anchor = {
       date: "2025-02-20",
       eventType: "problem_diagnosis",
       build: (ctx) =>
-        buildMinimalEvaluation(ctx, {
+        buildProblemDiagnosis(ctx, {
           magnitude: 1,
           unit: "mg",
           realUnit: "1",
@@ -197,7 +201,7 @@ const INGRID_ANDERSSON: Anchor = {
       date: "2025-03-18",
       eventType: "problem_diagnosis",
       build: (ctx) =>
-        buildMinimalEvaluation(ctx, {
+        buildProblemDiagnosis(ctx, {
           magnitude: 1,
           unit: "mg",
           realUnit: "1",
@@ -211,7 +215,7 @@ const INGRID_ANDERSSON: Anchor = {
       date: "2025-03-18",
       eventType: "medication_statement",
       build: (ctx) =>
-        buildMinimalEvaluation(ctx, {
+        buildMedicationSummary(ctx, {
           magnitude: 25,
           realUnit: "mg/d (2.5 mg x 1)",
           annotation:
@@ -225,7 +229,7 @@ const INGRID_ANDERSSON: Anchor = {
       date: "2025-03-20",
       eventType: "lab_result",
       build: (ctx) =>
-        buildTimeSeries(ctx, {
+        buildLabResult(ctx, {
           magnitude: 28,
           realUnit: "INR ×10",
           annotation: "lab_result | INR | INR 2.8 (mål 2.0-3.0)",
@@ -277,11 +281,48 @@ const INGRID_ANDERSSON: Anchor = {
       date: "2025-10-15",
       eventType: "lab_result",
       build: (ctx) =>
-        buildTimeSeries(ctx, {
+        buildLabResult(ctx, {
           magnitude: 52,
           realUnit: "mmol/mol",
           annotation: "lab_result | HBA1C | 52 mmol/mol (stabil T2D)",
           sdgEventType: "lab_result",
+        }),
+    },
+    // === Fas 3 AC2 — penicillinallergi (strukturerad) + aktiv amoxicillin ===
+    // Allergin fanns tidigare bara i narrativ (kommentar + demoPoint). Författas
+    // nu som äkta adverse_reaction_risk.v2-composition SÅ ATT medicinerings-
+    // genomgången kan LÄSA den. Den aktiva amoxicillinen (J01CA04) skapar
+    // konflikten "aktiv penicillin-besläktad medicin + dokumenterad
+    // penicillinallergi" som genomgången hittar i sitt vanliga flöde — ett
+    // kliniskt farligt fel en review SKA fånga. Allergin blir konsumerad, ej
+    // bara visad.
+    {
+      id: "I17",
+      date: "2024-11-15", // dokumenterad sedan länge i journalen
+      eventType: "adverse_reaction",
+      build: (ctx) =>
+        buildAdverseReaction(ctx, {
+          substanceName: "Penicillin",
+          substanceCode: "J01CE", // ATC: betalaktamaskänsliga penicilliner
+          criticality: "high",
+          manifestation: "anafylaxi",
+          reactionType: "allergy",
+          annotation:
+            "adverse_reaction | J01CE | Penicillinallergi, anafylaktisk reaktion (dokumenterad)",
+          sdgEventType: "adverse_reaction",
+        }),
+    },
+    {
+      id: "I18",
+      date: "2025-11-20", // nyligen insatt — den farliga förskrivningen
+      eventType: "medication_statement",
+      build: (ctx) =>
+        buildMedicationSummary(ctx, {
+          magnitude: 1500,
+          realUnit: "mg/d (500 mg x 3)",
+          annotation:
+            "medication_statement | J01CA04 | Amoxicillin 500 mg x 3 (UVI, nyinsatt)",
+          sdgEventType: "medication_statement",
         }),
     },
   ],
@@ -327,7 +368,7 @@ const ANDERS_BERGSTROM: Anchor = {
       }),
     ),
     ev("A03", "2025-01-17", "lab_result", (ctx) =>
-      buildTimeSeries(ctx, {
+      buildLabResult(ctx, {
         magnitude: 78,
         realUnit: "mmol/mol",
         annotation: "lab_result | HBA1C | 78 mmol/mol (manifest T2D)",
@@ -335,17 +376,17 @@ const ANDERS_BERGSTROM: Anchor = {
       }),
     ),
     ev("A04", "2025-01-20", "problem_diagnosis", (ctx) =>
-      buildMinimalEvaluation(ctx, {
+      buildProblemDiagnosis(ctx, {
         magnitude: 1,
         unit: "mg",
         realUnit: "1",
         annotation:
-          "problem_diagnosis | E11 diabetes_typ2 | severity=moderate, HbA1c 78",
+          "problem_diagnosis | E11 | Diabetes mellitus typ 2, severity=moderate, HbA1c 78",
         sdgEventType: "problem_diagnosis",
       }),
     ),
     ev("A05", "2025-01-20", "medication_statement", (ctx) =>
-      buildMinimalEvaluation(ctx, {
+      buildMedicationSummary(ctx, {
         magnitude: 1000,
         realUnit: "mg/d",
         annotation:
@@ -382,7 +423,7 @@ const KARIN_ERIKSSON: Anchor = {
       }),
     ),
     ev("K02", "2025-04-02", "medication_statement", (ctx) =>
-      buildMinimalEvaluation(ctx, {
+      buildMedicationSummary(ctx, {
         magnitude: 150,
         realUnit: "mg/d",
         annotation:
@@ -407,7 +448,7 @@ const KARIN_ERIKSSON: Anchor = {
       }),
     ),
     ev("K05", "2025-05-08", "medication_statement", (ctx) =>
-      buildMinimalEvaluation(ctx, {
+      buildMedicationSummary(ctx, {
         magnitude: 600,
         realUnit: "mg/d",
         annotation:
@@ -459,7 +500,7 @@ const LARS_JOHANSSON: Anchor = {
       }),
     ),
     ev("L02", "2025-02-13", "lab_result", (ctx) =>
-      buildTimeSeries(ctx, {
+      buildLabResult(ctx, {
         magnitude: 82,
         realUnit: "mmol/mol",
         annotation: "lab_result | HBA1C | 82 mmol/mol (initial, manifest T2D)",
@@ -467,17 +508,17 @@ const LARS_JOHANSSON: Anchor = {
       }),
     ),
     ev("L03", "2025-02-17", "problem_diagnosis", (ctx) =>
-      buildMinimalEvaluation(ctx, {
+      buildProblemDiagnosis(ctx, {
         magnitude: 1,
         unit: "mg",
         realUnit: "1",
         annotation:
-          "problem_diagnosis | E11 diabetes_typ2 | severity=severe, HbA1c 82",
+          "problem_diagnosis | E11 | Diabetes mellitus typ 2, severity=severe, HbA1c 82",
         sdgEventType: "problem_diagnosis",
       }),
     ),
     ev("L04", "2025-02-17", "medication_statement", (ctx) =>
-      buildMinimalEvaluation(ctx, {
+      buildMedicationSummary(ctx, {
         magnitude: 1000,
         realUnit: "mg/d",
         annotation:
@@ -486,7 +527,7 @@ const LARS_JOHANSSON: Anchor = {
       }),
     ),
     ev("L05", "2025-06-20", "lab_result", (ctx) =>
-      buildTimeSeries(ctx, {
+      buildLabResult(ctx, {
         magnitude: 58,
         realUnit: "mmol/mol",
         annotation: "lab_result | HBA1C | 58 mmol/mol (4 mån efter rx, RESPONDER)",
@@ -531,7 +572,7 @@ const EVA_LINDGREN: Anchor = {
       }),
     ),
     ev("E02", "2025-03-08", "lab_result", (ctx) =>
-      buildTimeSeries(ctx, {
+      buildLabResult(ctx, {
         magnitude: 82,
         realUnit: "mmol/mol",
         annotation: "lab_result | HBA1C | 82 mmol/mol (initial)",
@@ -539,17 +580,17 @@ const EVA_LINDGREN: Anchor = {
       }),
     ),
     ev("E03", "2025-03-12", "problem_diagnosis", (ctx) =>
-      buildMinimalEvaluation(ctx, {
+      buildProblemDiagnosis(ctx, {
         magnitude: 1,
         unit: "mg",
         realUnit: "1",
         annotation:
-          "problem_diagnosis | E11 diabetes_typ2 | severity=severe, HbA1c 82",
+          "problem_diagnosis | E11 | Diabetes mellitus typ 2, severity=severe, HbA1c 82",
         sdgEventType: "problem_diagnosis",
       }),
     ),
     ev("E04", "2025-03-12", "medication_statement", (ctx) =>
-      buildMinimalEvaluation(ctx, {
+      buildMedicationSummary(ctx, {
         magnitude: 1000,
         realUnit: "mg/d",
         annotation:
@@ -558,7 +599,7 @@ const EVA_LINDGREN: Anchor = {
       }),
     ),
     ev("E05", "2025-07-15", "lab_result", (ctx) =>
-      buildTimeSeries(ctx, {
+      buildLabResult(ctx, {
         magnitude: 88,
         realUnit: "mmol/mol",
         annotation:
@@ -644,7 +685,7 @@ async function verifyReachability(results: LoadResult[]): Promise<Record<string,
   // Vi använder demo-runnerens postProcess-logik förenklat: hämta alla
   // diabetes_typ2+HBA1C-rader och processera på samma sätt som AQL-06.
   const rows06 = await runAql<unknown[][]>(
-    "SELECT e/ehr_id/value, c/composer/name, c/context/start_time/value FROM EHR e CONTAINS COMPOSITION c WHERE c/composer/name LIKE '*diabetes_typ2*' OR c/composer/name LIKE '*HBA1C*' ORDER BY e/ehr_id/value, c/context/start_time/value",
+    "SELECT e/ehr_id/value, c/composer/name, c/context/start_time/value FROM EHR e CONTAINS COMPOSITION c WHERE c/composer/name LIKE '*E11*' OR c/composer/name LIKE '*HBA1C*' ORDER BY e/ehr_id/value, c/context/start_time/value",
   );
   const aql06Hits = new Set<string>();
   const byPatient = new Map<string, { diagDate?: string; lastHba1c?: string }>();
@@ -653,7 +694,8 @@ async function verifyReachability(results: LoadResult[]): Promise<Record<string,
     const name = String((r as unknown[])[1]);
     const t = String((r as unknown[])[2]);
     const entry = byPatient.get(ehr) ?? {};
-    if (name.includes("problem_diagnosis") && name.includes("diabetes_typ2") && !entry.diagDate) {
+    // Fas 3: diabetes-diagnos kodas nu E11 (normaliserad, ej profil-tagg).
+    if (name.includes("problem_diagnosis") && name.includes("E11") && !entry.diagDate) {
       entry.diagDate = t;
     }
     if (name.includes("HBA1C") && entry.diagDate && t > entry.diagDate) {

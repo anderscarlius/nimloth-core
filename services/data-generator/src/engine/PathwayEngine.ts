@@ -11,6 +11,7 @@ import type {
   PatientContext,
 } from "./types.js";
 import type { SdgEventType } from "../composers/index.js";
+import { assertAnnotation } from "./annotation-contract.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = resolve(__dirname, "..", "..");
@@ -62,7 +63,16 @@ function evalCondition(
   }
 }
 
-function clinicalAnnotation(
+// Fas 3 AC3 — profil → primär ICD-diagnoskod. Normaliserar diabetes_typ2-
+// profilen till äkta E11 (inte profil-taggen) så AQL-01/06 + den registrerade
+// honest-mallen kan nyckla på EN äkta kod, ej en syntetisk tagg. Övriga
+// profiler (hypertoni/hjartsvikt/kol…) behåller sin tagg tills en befordrad
+// mall nycklar på dem (loggat kvarvarande — samma princip).
+const PROFILE_PRIMARY_ICD: Record<string, { icd: string; name: string }> = {
+  diabetes_typ2: { icd: "E11", name: "Diabetes mellitus typ 2" },
+};
+
+function clinicalAnnotationRaw(
   eventType: SdgEventType,
   ctx: PatientContext,
   state: string,
@@ -114,12 +124,22 @@ function clinicalAnnotation(
         annotation: `lab_result | ${(key ?? "value").toUpperCase()} | ${m} ${realUnit}`,
       };
     }
-    case "problem_diagnosis":
+    case "problem_diagnosis": {
+      const primary = PROFILE_PRIMARY_ICD[ctx.profileId];
+      if (primary) {
+        return {
+          magnitude: 1,
+          realUnit: "1",
+          annotation: `problem_diagnosis | ${primary.icd} | ${primary.name}, severity=${ctx.clinical.severity}`,
+        };
+      }
+      // Övriga profiler: profil-tagg kvar (kvarvarande — fix när befordrad mall nycklar på dem).
       return {
         magnitude: 1,
         realUnit: "1",
         annotation: `problem_diagnosis | ${ctx.profileId} | severity=${ctx.clinical.severity}`,
       };
+    }
     case "medication_statement":
       return {
         magnitude: 1,
@@ -148,7 +168,25 @@ function clinicalAnnotation(
         realUnit: "1",
         annotation: `discharge_summary | ${ctx.profileId} | episode end`,
       };
+    case "adverse_reaction":
+      // Pathways emitterar aldrig adverse_reaction (det är ankar-only, Fas 3
+      // AC2). Defensiv gren för uttömmande switch — träffas ej i praktiken.
+      return {
+        annotation: `adverse_reaction | ${ctx.profileId} | unspecified`,
+      };
   }
+}
+
+// PATCH B: validera annotation-kontraktet vid genereringstid (fail loud).
+function clinicalAnnotation(
+  eventType: SdgEventType,
+  ctx: PatientContext,
+  state: string,
+  labFactor = 1.0,
+): { magnitude?: number; realUnit?: string; careflowStep?: string; annotation: string } {
+  const result = clinicalAnnotationRaw(eventType, ctx, state, labFactor);
+  assertAnnotation(result.annotation, eventType);
+  return result;
 }
 
 export function runPathway(

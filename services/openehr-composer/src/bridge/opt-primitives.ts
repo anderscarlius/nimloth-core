@@ -123,3 +123,33 @@ export function dvDateTime(): Record<string, unknown> {
     node_id: {},
   };
 }
+
+export interface DvQuantityOpts {
+  /** Pin to a specific unit. Omit to accept any unit (variable per analyte). */
+  unit?: string;
+  /** Optional inclusive lower bound on magnitude (default 0). */
+  magnitudeLower?: number;
+}
+
+/** DV_QUANTITY with optional unit constraint. Omit `unit` to allow any unit —
+ *  required for lab analytes where units differ per test (mmol/mol, µmol/L, ...). */
+export function dvQuantity(opts: DvQuantityOpts = {}): Record<string, unknown> {
+  const node: Record<string, unknown> = {
+    '@xsi:type': 'C_DV_QUANTITY',
+    rm_type_name: 'DV_QUANTITY',
+    occurrences: occurrences(),
+    node_id: {},
+  };
+  if (opts.unit !== undefined) {
+    node.list = {
+      magnitude: {
+        lower_included: true,
+        lower_unbounded: false,
+        upper_unbounded: true,
+        lower: opts.magnitudeLower ?? 0,
+      },
+      units: opts.unit,
+    };
+  }
+  return node;
+}

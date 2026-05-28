@@ -7,9 +7,13 @@ import {
   EhrbaseError,
 } from "../ehrbase-client.js";
 import {
-  buildTimeSeries,
+  buildAdverseReaction,
+  buildLabResult,
+  buildMedicationSummary,
   buildMinimalAction,
   buildMinimalEvaluation,
+  buildProblemDiagnosis,
+  buildTimeSeries,
   EVENT_SHAPE_MAP,
   type CompositionContext,
 } from "../composers/index.js";
@@ -51,7 +55,47 @@ function buildFlat(event: TimelineEvent, ctx: CompositionContext): Record<string
         realUnit: event.clinicalData.realUnit,
         sdgEventType: event.eventType,
       });
+    case "laboratory_test_result.v1":
+      return buildLabResult(ctx, {
+        magnitude: event.clinicalData.magnitude ?? 0,
+        realUnit: event.clinicalData.realUnit ?? "1",
+        annotation: event.clinicalData.annotation,
+        sdgEventType: event.eventType,
+      });
+    case "medication_summary.v1":
+      return buildMedicationSummary(ctx, {
+        magnitude: event.clinicalData.magnitude ?? 1,
+        annotation: event.clinicalData.annotation,
+        realUnit: event.clinicalData.realUnit,
+        sdgEventType: event.eventType,
+      });
+    case "problem_diagnosis.v1":
+      return buildProblemDiagnosis(ctx, {
+        magnitude: event.clinicalData.magnitude ?? 1,
+        annotation: event.clinicalData.annotation,
+        realUnit: event.clinicalData.realUnit,
+        sdgEventType: event.eventType,
+      });
+    case "adverse_reaction_risk.v2":
+      // Defensiv — pathways genererar inga adverse_reaction-events (bara Ingrids
+      // ankare, via sin egen bespoke build-funktion). Härled minimalt ur
+      // annotationen om en generators-event ändå skulle routas hit.
+      return buildAdverseReaction(ctx, {
+        substanceName: event.clinicalData.careflowStep ?? "Unknown substance",
+        substanceCode: parseCode(event.clinicalData.annotation),
+        criticality: "unable-to-assess",
+        manifestation: "",
+        reactionType: "allergy",
+        annotation: event.clinicalData.annotation,
+        sdgEventType: event.eventType,
+      });
   }
+}
+
+/** Plocka CODE-segmentet ur en TYPE | CODE | DESC-annotation. */
+function parseCode(annotation: string): string {
+  const parts = annotation.split("|").map((s) => s.trim());
+  return parts[1] || "UNKNOWN";
 }
 
 interface RetryOptions {

@@ -2,7 +2,7 @@
 
 exports[`SDG-09 baseline characterization (S1 regression guard) > Marianne Lindqvist (seed=42) timeline fingerprint stable 1`] = `
 {
-  "eventCount": 17,
+  "eventCount": 22,
   "eventTypes": [
     "primary_care_encounter",
     "vital_signs",
@@ -21,8 +21,13 @@ exports[`SDG-09 baseline characterization (S1 regression guard) > Marianne Lindq
     "vital_signs",
     "lab_result",
     "care_plan",
+    "problem_diagnosis",
+    "problem_diagnosis",
+    "problem_diagnosis",
+    "problem_diagnosis",
+    "problem_diagnosis",
   ],
-  "fingerprint": "589f26ef070bae4b6e6283fa09c14d6f63f1a1f65f330cd87358d2bcd799392e",
+  "fingerprint": "fbe414254080c75c7653899577f7db7da1900ea76d286d3e5e082d22abc5673a",
   "patientId": "marianne-lindqvist-syn-001",
   "profileId": "aldre_multisjuk",
   "seed": 42,
@@ -83,7 +88,7 @@ exports[`SDG-09 baseline characterization (S1 regression guard) > frozen event-c
       "moderate": 3,
       "severe": 1,
     },
-    "totalEvents": 167,
+    "totalEvents": 224,
   },
 ]
 `;
