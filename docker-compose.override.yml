@@ -116,3 +116,16 @@ services:
     container_name: openehr-composer-core
     ports: !override
       - "13015:3015"
+
+  # Fas 3 AC1 — co-located AQL-mall-tjänst. LAN-port 11402 (samma LAN-yta som
+  # ehrbase 11401, INGEN publik tunnel). service→EHRbase är loopback via 'core'.
+  aql-template-service:
+    container_name: aql-template-service-core
+    ports: !override
+      - "11402:3010"
+
+  # Fas 3 AC5/AC6 — co-located med-review-orkestrator. LAN-port 11403.
+  med-review:
+    container_name: med-review-core
+    ports: !override
+      - "11403:3011"

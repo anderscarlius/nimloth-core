@@ -593,6 +593,65 @@ services:
     networks:
       - core
 
+  # --- aql-template-service (Fas 2 Kontrakt 1; Fas 3 AC1 co-located) ---
+  # Co-locerad bredvid ehrbase så service→EHRbase blir loopback (docker-nät),
+  # inte ett LAN-hopp. Triggad av agent-last-benchmark (P95 502ms > 500 budget).
+  # Intern only — ingen publik tunnel (mock-auth-skuld gatar publik exponering).
+  aql-template-service:
+    build:
+      context: .
+      dockerfile: services/aql-template-service/Dockerfile
+    container_name: aql-template-service
+    environment:
+      NODE_ENV: production
+      PORT: "3010"
+      LOG_LEVEL: info
+      EHRBASE_BASE_URL: http://ehrbase:8080/ehrbase
+    ports:
+      - "3010:3010"
+    depends_on:
+      ehrbase:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3010/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - core
+
+  # --- med-review (Fas 3 AC5/AC6) — AI-medicineringsgenomgång ---
+  # Co-locerad: agent→aql-template-service→EHRbase allt loopback (docker-nät).
+  # Klinisk bedömning i deterministiska regelmotorer (S1); LLM-syntes via
+  # Anthropic (ANTHROPIC_API_KEY krävs för LLM-väg, annars deterministisk
+  # fallback). Intern only — ingen publik tunnel (mock-auth-skuld kvarstår).
+  med-review:
+    build:
+      context: .
+      dockerfile: services/med-review/Dockerfile
+    container_name: med-review
+    environment:
+      NODE_ENV: production
+      PORT: "3011"
+      LOG_LEVEL: info
+      AQL_TEMPLATE_BASE_URL: http://aql-template-service:3010
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      MED_REVIEW_SYNTH_MODEL: ${MED_REVIEW_SYNTH_MODEL:-claude-opus-4-7}
+    ports:
+      - "3011:3011"
+    depends_on:
+      aql-template-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3011/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - core
+
 volumes:
   melior-data:
   asynja-data:
