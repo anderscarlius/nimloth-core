@@ -2,7 +2,11 @@
 
 Syntetisk patientdatagenerator för Nimloth EHRbase-population.
 
-Implementerar SDG-01..SDG-08 från Nimloth_SDG_Specifikationsserie_v1.0.
+Implementerar SDG-01..SDG-08 från Nimloth_SDG_Specifikationsserie_v1.0, utökad med
+SDG-09 (namngivna ankarpersoner) och SDG-10/Fas 1 (migrering till äkta domän-OPTs:
+laboratory_test_result.v1, medication_summary.v1, problem_diagnosis.v1,
+adverse_reaction_risk.v2 — fixture-shapes ersatta). Se `memory/` för SDG-10-
+amendments + öppna spår (terminologibindning, profil-tagg→ICD-normalisering).
 
 ## Översikt
 

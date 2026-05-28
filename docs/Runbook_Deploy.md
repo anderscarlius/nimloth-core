@@ -31,6 +31,45 @@ Manuell process — se [INSTALL.md sektion A](INSTALL.md#a-carliusfyra-synology-
 
 Inga automatiserade webhooks eller watchtower-mekanismer. Deploy är medveten manuell process.
 
+## cf4 — co-lokaliserade Fas 2/3-tjänster (INTERN)
+
+Fas 2 + Fas 3 introducerade två **statslösa** tjänster som körs **co-lokaliserade
+på cf4 (CarliusFyra)** bredvid EHRbase, så att agent→AQL→EHRbase blir loopback
+över docker-nätet `core`:
+
+| Container | LAN-port | Internport | Roll |
+|---|---:|---:|---|
+| `aql-template-service-core` | 11402 | 3010 | Fas 2 AQL-mall-tjänst (Kontrakt 1) |
+| `med-review-core` | 11403 | 3011 | Fas 3 med-review-orkestrator (SSE) |
+
+- **`med-review-core` använder cf4:s `ANTHROPIC_API_KEY`** (compose: `${ANTHROPIC_API_KEY:-}`) för Claude-syntes. Nyckeln ligger i cf4-env — **checkas aldrig in, echo:as aldrig**. `MED_REVIEW_SYNTH_MODEL` default `claude-opus-4-7`.
+- **INTERN-ONLY.** Ingen publik tunnel — mock-auth-skulden (`aql-template-service/src/middleware/mock-auth.ts`) gatekeepar publik exponering. Intern co-location triggar inte den skulden.
+- **Co-location är INTE en latensfix** (AC1-benchmark falsifierade det — topologi ≠ flaskhalsen; bounded/stegad hämtning är spaken). Behålls som golv + intern säkerhet.
+
+### Deploy / omstart (skiljer sig från images-flödet ovan)
+
+Dessa byggs **på cf4** från synkad källa, inte via `docker save | ssh`:
+
+```bash
+# 1. Synka källa till cf4 (ingen SCP — tar+pipe)
+cd services/med-review && tar czf - src | \
+  ssh cf4 'cd /volume2/docker/nimloth-core/services/med-review && tar xzf -'
+
+# 2. Bygg + (åter)starta ENDAST dessa två tjänster
+ssh cf4 'set +e; cd /volume2/docker/nimloth-core && \
+  /usr/local/bin/docker-compose build med-review && \
+  /usr/local/bin/docker-compose up -d med-review'
+```
+
+⚠️ **Omstart av dessa två rör INTE EHRbase-stacken.** De är statslösa och
+återansluter bara till EHRbase över docker-nätet — populationen (1005 EHR) ligger
+i EHRbase-volymer och påverkas inte. **Kör ALDRIG `reset-ehrbase.sh` / volym-wipe
+som del av en med-review/aql-template-omstart.**
+
+Synology-gotchas: `docker-compose` = `/usr/local/bin/docker-compose` (bindestreck),
+docker under ContainerManager-sökvägen, `set +e`, ingen SCP. Repo på cf4:
+`/volume2/docker/nimloth-core`.
+
 ## CI
 
 GitHub Actions:

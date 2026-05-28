@@ -122,6 +122,8 @@ Repot är ett pnpm-workspace med tjänster i `services/` och delade paket i `pac
 | [`care-unit-edge`](services/care-unit-edge/) | — | 🔄 Sprint 1 | SQLite-baserad edge-deploy för vårdcentraler. |
 | [`cds-hooks`](services/cds-hooks/) | 3004 | ⏳ Sprint 5 | CDS Hooks-service för CQL-baserade regler. |
 | [`terminology`](services/terminology/) | — | 🔄 Sprint 1 | SNOMED + ICD-10-SE + LOINC-uppslag via Snowstorm. |
+| [`aql-template-service`](services/aql-template-service/) | 3010 / **11402** | ✅ Fas 2 levererad | Kontrakt-1-konform AQL-mall-tjänst. Registrerar ärliga SDG-frågor som parametriserade mallar, exekverar mot EHRbase. S4-validator + tier-gräns (honest/proxy). Co-lokaliserad på cf4 (intern). |
+| [`med-review`](services/med-review/) | 3011 / **11403** | ✅ Fas 3 levererad | AI-medicineringsgenomgång (Fork 4). Deterministiska regelmotorer (interaktion + Beers/STOPP) = klinisk bedömning; Claude omformulerar med S1-output-validering (LLM ur beslutsvägen). SSE-orkestrator, co-lokaliserad på cf4 (intern). Ej medicinteknisk produkt. |
 
 ### Delade paket
 

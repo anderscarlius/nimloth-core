@@ -419,6 +419,12 @@ Distribuerat läge använder två docker-nätverk:
 7. **Mappings** (Sprint 2) — Mapping-assistant godkänn/avvisa-flöde.
 8. **Datakvalitet** (Sprint 4) — bronze/silver/gold-status + dataquality-metrics.
 
+**Fas 2/3 — egna full-höjd-vyer utanför standard-Layout** (proxar till de
+co-lokaliserade cf4-tjänsterna):
+
+9. **ComposeDemo** (`/compose-demo`, Fas 2) — sandlådekatalog över de 6 ankarpersonerna; mätvärdestrend-komponent mot `aql-template-service` (cf4:11402).
+10. **MedReview** (`/med-review`, Fas 3) — AI-medicineringsgenomgång, tre-kolumns streaming (patientdata | fynd+narrativ | audit-tidslinje) via SSE mot `med-review` (cf4:11403). Visar S1-validering + ej-medicinteknisk-märkning.
+
 UI-tekniken:
 
 - `@tanstack/react-query` för FHIR-fetch.

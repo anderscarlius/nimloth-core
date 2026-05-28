@@ -347,6 +347,28 @@ P3.0b empiriskt scopad till **13 RM-typer** (var 30 i P3.0-rapporten) baserat p�
 
 Se `infra/openehr/compiler/P3.1-REPORT.md` sektion "Input till P3.0b".
 
+### 2026-05-28 — SDG → AI-beredskaps-spåret (Fas 1–3) levererat
+
+Ett parallellt arbetsspår (utanför P1–P7-numreringen, detaljplanerat i
+`nimloth-docs/`) landade i tre faser och bevisar bokens tes "plattform =
+AI-beredskap":
+
+- **Fas 1 (SDG-10):** migrerade syntetisk-data-generatorn från fixture-shapes till
+  äkta domän-OPTs (lab/medication/diagnos/adverse). 1005 EHR i EHRbase på cf4.
+  E11-normalisering av diabetes_typ2-profilen. (Övriga profil-taggar → ICD ännu
+  ej normaliserade — spårat öppet, se `memory/`.)
+- **Fas 2:** `aql-template-service` (Kontrakt 1) — ärliga SDG-frågor som
+  parametriserade mallar, S4-validator + tier-gräns. Co-lokaliserad på cf4
+  (:11402, intern). + dashboard-trendkomponent + `/compose-demo`-sandlåda.
+- **Fas 3 (Fork 4):** `med-review` AI-medicineringsgenomgång — deterministiska
+  regelmotorer (klinisk bedömning, S1-ryggrad) + Claude-syntes med
+  output-validering (LLM ur beslutsvägen, *verifierad* ej prompt-beroende).
+  Co-lokaliserad på cf4 (:11403, intern). `/med-review`-vy.
+
+**Öppna punkter:** mock-auth gatekeepar publik exponering (intern-only tills
+åtgärdad); exakta Beers/STOPP-kriterie-ID:n utestående (sektion+DOI shippad).
+Detaljerade beslut + körnings-lärdomar i `memory/` (MEMORY.md-index).
+
 ---
 
 ## 12. Referenser
