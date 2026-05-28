@@ -1,0 +1,8 @@
+# Memory index
+
+- [SDG-10 amendments](project_sdg-10-amendments.md) — adverse_reaction deferred to Fas 3; composer/consumer invariants for lab_result.
+- [SDG future terminology binding](project_sdg-future-terminology.md) — NPU/LOINC for lab codes, report-result.v1 container, ATC for medication. All deferred past SDG-10.
+- [SDG Fork-4 comorbidity](project_sdg-fork-4-comorbidity.md) — replace aldre_multisjuk profile-tag hack in AQL-11 with real multi-diagnosis comorbidities. Befordringsgräns (tier=honest) cutoff documented.
+- [fhir-facade observation.aql drift](project_fhir-facade-observation-aql-drift.md) — latent AQL-broker mismatch after SDG-10 lab migration (at0004 now analyte_name). Deferred (Kontrakt 2, out of Fas 2 scope). Fix recipe included.
+- [Mall-ärlighet & konflation](project_template-honesty-conflation.md) — dropout-mallen mis-klassade Lars/Eva; badge-precedens maskerade det. Lärdom: varje Compose-mall måste vara sann ensam, precedens ordnar bara presentation. Verifiera mallar rakt, inte via UI. `time_to_followup` deferred till Fas 3.
+- [Med-review Fas 3 (Fork 4)](project_med-review-fas3.md) — AI-medicineringsgenomgång: regelmotor-ryggrad = regulatorisk gräns; syntes-validering gör S1 verifierad (ej prompt-beroende); co-location-falsifiering (topologi ≠ latens-spaken, bounded/stegad hämtning är); stegad hämtning = bounded concurrency = streaming = en mekanism; metformin→E11-triad + cross-query; Beers/STOPP-ID:n spårat öppet (DOI shippad).
