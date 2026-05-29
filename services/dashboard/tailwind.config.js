@@ -13,6 +13,10 @@ export default {
           red: '#C0392B',
           green: '#27AE60',
         },
+        // Neutrala designtokens (DESIGN.md sek 3.1) — nordisk-sober palett.
+        ink: { DEFAULT: '#1a2332', 2: '#4a5568', 3: '#8b95a5' },
+        line: { DEFAULT: '#e4e7eb', 2: '#eef0f3' },
+        surface: { DEFAULT: '#fafbfc', 2: '#ffffff' },
       },
     },
   },
