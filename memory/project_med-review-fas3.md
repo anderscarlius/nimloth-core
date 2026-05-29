@@ -137,6 +137,46 @@ ankaret), 0 av metformin-bärarna feldroppade. Se [[template-honesty-conflation]
 - Synology: ingen SCP (tar+pipe över ssh), `docker-compose` =
   `/usr/local/bin/docker-compose`, docker under ContainerManager-sökväg, `set +e`.
 
+## Demo-yta (dashboard-demo, cf4:11005 — INTERN)
+
+Fristående, tydligt avgränsad demo av AI-medicineringsgenomgången — **separat
+från ops-dashboarden OCH atlasen** (egen identitet "AI-medicineringsgenomgång ·
+Demonstration · Nimloth-plattformen · Fas 2/3"; Anders styrning: "konkurrera inte,
+var en separat tydlig visning"). Egen intern navigering, inga döda ops-länkar.
+
+- **Tre vyer:** Populationsscreening (landning) · Patientregister (bläddra 1005
+  EHR per profil) · Genomgång (tre-kolumns-strömningen). + `/compose-demo`
+  (Mätvärdestrend, Fas 2) som egen yta.
+- **Deploy:** statisk vite-build serverad av nginx (`services/dashboard/Dockerfile.demo`
+  + `nginx.conf`), reverse-proxar `/api/med-review` (SSE — `proxy_buffering off`)
+  + `/api/aql-templates` till de co-lokaliserade tjänsterna på `core`-nätet.
+  Container `dashboard-demo-core`, LAN-port **11005**, INTERN only. Skild från
+  dev-tjänsten `dashboard` (vite dev). **Gotcha:** `absolute_redirect off` krävs —
+  annars tappar root-redirecten (→/med-review) porten (302 till :80).
+- **Design:** DESIGN.md nordic-sober-tokens (teal/navy, severity red/amber/green,
+  Inter+mono, 1px-borders utan skuggor). Lade till `ink`/`line`/`surface`-tokens i
+  `tailwind.config` (saknades; bara `core.*` fanns).
+
+### Populationsscreening (Fas C)
+`med-review/src/scripts/screen-population.ts` = ENGÅNGS-batch (bounded concurrency
+4) som kör regelmotorerna över hela populationen → `dashboard/public/screening-results.json`
+(serveras statiskt; demo-ytan fetchar). Senaste körning: **1005 patienter på 98s,
+199 flaggade (29 high)**.
+- **Ärlig uppdelning:** manifestet saknar ålder → Beers/STOPP **antar äldre**
+  (199, åldersantaget). Interaktion/kontraindikation är **åldersoberoende** (29
+  warfarin+SSRI high + 1 penicillin-kontraindikation = Ingrid) → den solida
+  rubriken. UI:t skiljer dem uppfront.
+- **Snapshot:** precomputerad. Vid populations-regen → kör om scriptet + rebuild.
+
+### Patient-identitet (begränsning, spårad)
+De 994 icke-ankarpatienterna har **profil-taggade syntetiska id:n**
+(`aldre_multisjuk-1000-N`) — **inga namn/personnummer** (bara de 6 ankarna har
+namn). Bläddraren filtrerar per **profil**, ej pnr-sök. Gamla `/search` (FHIR på
+pnr) är död — fhir-facadens postgres-store är tom (populationen finns i EHRbase,
+ej i facaden). Övriga ops-vyer (system/topology/audit/mappings/cds) saknar tjänster
+på cf4 → demo-ytan surfar dem inte (nginx: okänd `/api/*` → 503).
+
 Relaterat: [[template-honesty-conflation]] (mall-ärlighet, cross-query),
 [[sdg-fork-4-comorbidity]] (tier-befordringsgräns, comorbiditeter),
-[[sdg-10-amendments]] (adverse_reaction → Fas 3, INVARIANT 1/2).
+[[sdg-10-amendments]] (adverse_reaction → Fas 3, INVARIANT 1/2),
+[[sdg-profile-tag-icd-normalization]] (profil-taggar som diagnos).
