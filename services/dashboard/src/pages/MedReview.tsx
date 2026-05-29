@@ -24,6 +24,13 @@ const SEV_BADGE: Record<Finding['severity'], string> = {
   low: 'bg-gray-400 text-white',
 };
 
+// DEMO-flagga (aldrig default): /med-review?debug_inject=force_unsourced tvingar
+// en reproducerbar S1-avvisning. Visas tydligt i UI:t så ingen tror det är äkta drift.
+const DEBUG_INJECT =
+  new URLSearchParams(window.location.search).get('debug_inject') === 'force_unsourced'
+    ? ('force_unsourced' as const)
+    : undefined;
+
 export default function MedReview() {
   const [selected, setSelected] = useState(DEMO_ROSTER[4]); // Lars default
   const [running, setRunning] = useState(false);
@@ -90,7 +97,7 @@ export default function MedReview() {
       },
       onEnd: () => setRunning(false),
       onError: () => setRunning(false),
-    });
+    }, DEBUG_INJECT);
   }
 
   // Stäng strömmen vid unmount
@@ -110,6 +117,11 @@ export default function MedReview() {
             Demonstration — ej medicinteknisk produkt, ej beslutsstöd · syntetisk data
           </span>
         </div>
+        {DEBUG_INJECT && (
+          <div className="mt-2 text-xs font-semibold px-2.5 py-1 rounded bg-fuchsia-100 text-fuchsia-800 border border-fuchsia-300 inline-block">
+            ⚙ DEBUG-INJECT ({DEBUG_INJECT}) AKTIV — syntesen bypassas med känd osourcerad text för att demonstrera S1-avvisning. INTE äkta drift.
+          </div>
+        )}
       </header>
 
       {/* Patient-väljare */}

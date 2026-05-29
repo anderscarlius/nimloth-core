@@ -84,4 +84,26 @@ describe("orchestrator — stegad pipeline + audit + fynd", () => {
     const narr = ev.find((e): e is Extract<StreamEvent, { type: "narrative" }> => e.type === "narrative");
     expect(narr?.text).toContain("ej medicinteknisk produkt");
   });
+
+  // DEMO-väg: debugInject=force_unsourced ska 100% reproducerbart trigga
+  // S1-avvisning via den RIKTIGA validatorn (bypassar LLM, inget nät).
+  it("debugInject=force_unsourced → synthesis_rejected + deterministisk fallback", async () => {
+    const ev: StreamEvent[] = [];
+    // stubSynth skickas men ska IGNORERAS av inject-vägen (synthesize används).
+    await runReview("p", 74, fakeClient(), (e) => ev.push(e), stubSynth, {
+      debugInject: "force_unsourced",
+    });
+    const rejected = ev.find((e) => e.type === "synthesis_rejected");
+    expect(rejected).toBeDefined();
+    expect(rejected?.type === "synthesis_rejected" && rejected.violations.length).toBeGreaterThan(0);
+    const narr = ev.find((e): e is Extract<StreamEvent, { type: "narrative" }> => e.type === "narrative");
+    expect(narr?.source).toBe("deterministic");
+    expect(narr?.text).toContain("ej medicinteknisk produkt");
+    // Steg-strippen ska markera inject-läget synligt.
+    const synthStart = ev.find(
+      (e): e is Extract<StreamEvent, { type: "step" }> =>
+        e.type === "step" && e.step === "synthesis" && e.status === "start",
+    );
+    expect(synthStart?.label).toContain("DEBUG-INJECT");
+  });
 });

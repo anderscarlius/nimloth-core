@@ -116,6 +116,28 @@ export const anthropicGenerate: RawGenerate = async (input, onDelta) => {
   }
 };
 
+// =====================================================================
+// DEBUG/DEMO-INJEKTOR (force_unsourced) — ALDRIG default-på.
+//
+// För demon: en deterministisk väg som BYPASSAR LLM-anropet och matar in en
+// känd OSOURCERAD text i syntes-steget, så att S1-valideringen slår till 100%
+// reproducerbart (Haiku-stokasticitet styr inte demon). Texten innehåller
+// beslutsspråk ("överväg" + dosrekommendation) som inte finns i något fynd →
+// validateNarrative() avvisar → deterministisk fallback + synlig flagga.
+//
+// Aktiveras ENBART explicit per-anrop (server-flagga ?debug_inject=force_unsourced).
+// Får ALDRIG vara default. Använd `forceUnsourcedGenerate` som `generate`-seam.
+// =====================================================================
+export const FORCED_UNSOURCED_TEXT =
+  "Överväg att sänka warfarindosen till 1,25 mg och sätt ut sertralin.";
+
+/** Inject-generator: returnerar en känd osourcerad text i stället för att anropa
+ *  Claude. Reproducerbar S1-avvisning för demon. ALDRIG default. */
+export const forceUnsourcedGenerate: RawGenerate = async (_input, onDelta) => {
+  onDelta?.(FORCED_UNSOURCED_TEXT);
+  return FORCED_UNSOURCED_TEXT;
+};
+
 /**
  * Syntetisera ett narrativ ur de deterministiska fynden.
  *

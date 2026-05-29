@@ -12,11 +12,23 @@
 
 import { runRules, type Finding, type PatientSnapshot } from "./rules/index.js";
 import { AqlClient, TEMPLATES } from "./aql-client.js";
-import { synthesize, type SynthInput, type SynthResult, type OnDelta } from "./synthesis.js";
+import {
+  synthesize,
+  forceUnsourcedGenerate,
+  type SynthInput,
+  type SynthResult,
+  type OnDelta,
+} from "./synthesis.js";
 
 /** Injicerbar syntes — default är den riktiga (Claude + deterministisk fallback).
  *  Tester injicerar en deterministisk stub för isolering/hastighet. */
 export type SynthFn = (input: SynthInput, onDelta?: OnDelta) => Promise<SynthResult>;
+
+/** Kör-options. `debugInject` är en DEMO-väg (ALDRIG default-på) som tvingar en
+ *  reproducerbar S1-avvisning — se synthesis.ts forceUnsourcedGenerate. */
+export interface RunReviewOptions {
+  debugInject?: "force_unsourced";
+}
 
 export type StreamEvent =
   | { type: "step"; step: string; status: "start" | "done"; label: string; ms?: number }
@@ -44,6 +56,7 @@ export async function runReview(
   client: AqlClient,
   emit: Emit,
   synth: SynthFn = synthesize,
+  options: RunReviewOptions = {},
 ): Promise<void> {
   const t0 = Date.now();
   try {
@@ -81,16 +94,27 @@ export async function runReview(
     emit({ type: "step", step: "analysis", status: "done", label: `${findings.length} fynd` });
 
     // --- Steg 6: syntes (LLM-seam — Claude omformulerar fynden, S1: ej beslut) ---
-    emit({ type: "step", step: "synthesis", status: "start", label: "Syntetiserar narrativ" });
-    const synthResult = await synth(
-      {
-        patientId,
-        medCount: meds.length,
-        diagCount: diags.length,
-        findings,
-      },
-      (delta) => emit({ type: "narrative_delta", text: delta }),
-    );
+    // DEMO-väg: debugInject bypassar LLM och tvingar en känd osourcerad text
+    // genom den RIKTIGA validatorn → reproducerbar S1-avvisning (synthesis.ts).
+    const inject = options.debugInject === "force_unsourced";
+    emit({
+      type: "step",
+      step: "synthesis",
+      status: "start",
+      label: inject ? "Syntetiserar narrativ [DEBUG-INJECT: force_unsourced]" : "Syntetiserar narrativ",
+    });
+    const synthInput: SynthInput = {
+      patientId,
+      medCount: meds.length,
+      diagCount: diags.length,
+      findings,
+    };
+    const onDelta: OnDelta = (delta) => emit({ type: "narrative_delta", text: delta });
+    // Inject använder den riktiga synthesize() med en tvingande generate-seam så
+    // valideringen körs på äkta sätt; annars den injicerade synth (default Claude).
+    const synthResult = inject
+      ? await synthesize(synthInput, onDelta, forceUnsourcedGenerate)
+      : await synth(synthInput, onDelta);
     // S1-validering: om LLM-narrativet avvisades (osourcerat påstående) faller
     // vi tillbaka till deterministisk text och flaggar det synligt.
     const rejected = synthResult.validation && !synthResult.validation.ok;

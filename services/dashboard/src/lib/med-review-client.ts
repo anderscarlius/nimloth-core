@@ -29,14 +29,22 @@ export interface StreamHandlers {
   onError?: () => void;
 }
 
-/** Öppnar SSE-strömmen för en patient. Returnerar en stäng-funktion. */
+/** Öppnar SSE-strömmen för en patient. Returnerar en stäng-funktion.
+ *  `debugInject` (DEMO, aldrig default) vidarebefordras till backend för att
+ *  tvinga en reproducerbar S1-avvisning. */
 export function streamMedReview(
   patientId: string,
   age: number | undefined,
   handlers: StreamHandlers,
+  debugInject?: 'force_unsourced',
 ): () => void {
-  const ageQuery = age != null ? `?age=${age}` : '';
-  const es = new EventSource(`/api/med-review/${encodeURIComponent(patientId)}/stream${ageQuery}`);
+  const params = new URLSearchParams();
+  if (age != null) params.set('age', String(age));
+  if (debugInject) params.set('debug_inject', debugInject);
+  const qs = params.toString();
+  const es = new EventSource(
+    `/api/med-review/${encodeURIComponent(patientId)}/stream${qs ? `?${qs}` : ''}`,
+  );
 
   es.onmessage = (e) => {
     try {

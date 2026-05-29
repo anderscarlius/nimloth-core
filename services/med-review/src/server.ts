@@ -1,11 +1,25 @@
 import express, { type Request, type Response } from "express";
 import type { Logger } from "pino";
 import { AqlClient } from "./aql-client.js";
-import { runReview, type StreamEvent } from "./orchestrator.js";
+import { runReview, type StreamEvent, type RunReviewOptions } from "./orchestrator.js";
 
 export interface ServerDeps {
   aqlClient: AqlClient;
   logger: Logger;
+}
+
+/** Tolka ?debug_inject=force_unsourced. ALDRIG default-på — endast explicit
+ *  per-anrop. Loggar tydligt så ingen tror att en avvisning var äkta drift. */
+function parseDebugInject(req: Request, logger: Logger): RunReviewOptions {
+  const raw = req.query.debug_inject;
+  if (raw === "force_unsourced") {
+    logger.warn(
+      { patientId: req.params.patientId, debug_inject: raw },
+      "DEBUG-INJECT AKTIV (force_unsourced) — syntesen bypassas med känd osourcerad text för demo av S1-avvisning. INTE äkta drift.",
+    );
+    return { debugInject: "force_unsourced" };
+  }
+  return {};
 }
 
 export function createServer(deps: ServerDeps): express.Express {
@@ -33,8 +47,9 @@ export function createServer(deps: ServerDeps): express.Express {
       res.write(`data: ${JSON.stringify(e)}\n\n`);
     };
 
+    const options = parseDebugInject(req, deps.logger);
     deps.logger.info({ patientId, age }, "med-review stream start");
-    await runReview(patientId, age, deps.aqlClient, emit);
+    await runReview(patientId, age, deps.aqlClient, emit, undefined, options);
     res.write("event: end\ndata: {}\n\n");
     res.end();
   });
@@ -44,7 +59,8 @@ export function createServer(deps: ServerDeps): express.Express {
     const patientId = req.params.patientId;
     const age = req.query.age ? Number(req.query.age) : undefined;
     const events: StreamEvent[] = [];
-    await runReview(patientId, age, deps.aqlClient, (e) => events.push(e));
+    const options = parseDebugInject(req, deps.logger);
+    await runReview(patientId, age, deps.aqlClient, (e) => events.push(e), undefined, options);
     res.json({ patientId, events });
   });
 
