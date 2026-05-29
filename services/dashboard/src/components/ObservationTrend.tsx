@@ -72,9 +72,9 @@ export default function ObservationTrend({
   }));
 
   return (
-    <section className="bg-white border rounded-md p-4">
+    <section className="bg-white border border-line rounded-[3px] p-4">
       <div className="flex items-baseline justify-between mb-3">
-        <h2 className="font-semibold text-sm uppercase tracking-wide text-gray-700">
+        <h2 className="font-semibold text-[11px] uppercase tracking-wider text-ink-3">
           Mätvärdestrend — {analyte}
         </h2>
         {badgeEnabled && (
@@ -86,7 +86,7 @@ export default function ObservationTrend({
         )}
       </div>
 
-      {trend.isLoading && <p className="text-sm text-gray-500 py-8 text-center">Laddar…</p>}
+      {trend.isLoading && <p className="text-[13px] text-ink-3 py-8 text-center">Laddar…</p>}
 
       {trend.isError && (
         <p className="text-sm text-core-red py-8 text-center">
@@ -96,8 +96,8 @@ export default function ObservationTrend({
 
       {!trend.isLoading && !trend.isError && rows.length === 0 && (
         <div className="py-10 text-center">
-          <p className="text-sm text-gray-500">Inga {analyte}-mätningar för denna patient i perioden.</p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-[13px] text-ink-2">Inga {analyte}-mätningar för denna patient i perioden.</p>
+          <p className="text-[11px] text-ink-3 mt-1">
             (T.ex. en dropout-patient utan uppföljande prov, eller en patient utan denna analyt.)
           </p>
         </div>
@@ -122,15 +122,15 @@ export default function ObservationTrend({
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="#2563eb"
+                stroke="#0D7377"
                 strokeWidth={2}
-                dot={{ r: 4 }}
+                dot={{ r: 4, fill: '#0D7377' }}
               />
             </LineChart>
           </ResponsiveContainer>
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-[11px] text-ink-3 mt-2">
             {rows.length} mätning{rows.length === 1 ? '' : 'ar'} · enhet {unit} ·{' '}
-            mall <code>observation_trend_by_period</code> ({trend.data?.meta.total_ms} ms)
+            mall <code className="font-mono">observation_trend_by_period</code> ({trend.data?.meta.total_ms} ms)
           </p>
         </>
       )}
@@ -155,14 +155,14 @@ function AdaptiveBadge({
 }) {
   if (responder) {
     return (
-      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+      <span className="inline-flex items-center px-2.5 py-1 rounded-[3px] text-[11px] font-medium bg-[#e8f3ec] text-core-green border border-[#cce6d5]">
         responder: HbA1c {responder.delta} mmol/mol
       </span>
     );
   }
   if (nonresponder) {
     return (
-      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+      <span className="inline-flex items-center px-2.5 py-1 rounded-[3px] text-[11px] font-medium bg-[#fdf6e3] text-core-amber border border-[#efe4c4]">
         non-responder: HbA1c +{nonresponder.delta} mmol/mol
       </span>
     );
@@ -170,7 +170,7 @@ function AdaptiveBadge({
   if (followup?.status === 'dropout') {
     const after = followup.diagnosis_date ? followup.diagnosis_date.slice(0, 10) : 'diagnos';
     return (
-      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
+      <span className="inline-flex items-center px-2.5 py-1 rounded-[3px] text-[11px] font-medium bg-[#fbeceb] text-core-red border border-[#f0d5d3]">
         ingen uppföljning efter {after}
       </span>
     );
