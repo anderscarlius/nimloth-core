@@ -130,14 +130,20 @@ ankaret), 0 av metformin-bärarna feldroppade. Se [[template-honesty-conflation]
 
 ## Säkerhet / drift
 
-- Co-location är **INTERN** (docker-nät `core`) — INGEN publik tunnel förrän
-  mock-auth-skulden är åtgärdad. Intern co-location triggar inte den skulden.
+- **Backend-tjänsterna förblir INTERNA** (`med-review` 11403, `aql-template` 11402
+  på docker-nät `core`/`nimloth-core`) — INGEN egen publik tunnel.
+- **Demo-ytan `nimloth-demo` ÄR publikt tunnlad** sedan 2026-05 — men **bakom
+  Cloudflare Access (Zero Trust)** på `nimloth-demo.carlius.net` (verifierat).
+  mock-auth-skulden är därmed **MITIGERAD av Access, INTE löst**: appen är fortf.
+  mock, men Access framför gör att ingen oautentiserad trafik når den. Tas Access
+  bort → skulden återexponeras. Publik UTAN Access kräver fortfarande att mock-auth
+  åtgärdas. (Samma mönster som `nimloth-atlas.carlius.net`.)
 - `ANTHROPIC_API_KEY` finns i cf4-env (refereras `${ANTHROPIC_API_KEY:-}`).
   Echo:a ALDRIG nyckelvärdet.
 - Synology: ingen SCP (tar+pipe över ssh), `docker-compose` =
   `/usr/local/bin/docker-compose`, docker under ContainerManager-sökväg, `set +e`.
 
-## Demo-yta (dashboard-demo, cf4:11005 — INTERN)
+## Demo-yta (nimloth-demo, cf4:11005 + nimloth-demo.carlius.net via Access)
 
 Fristående, tydligt avgränsad demo av AI-medicineringsgenomgången — **separat
 från ops-dashboarden OCH atlasen** (egen identitet "AI-medicineringsgenomgång ·
@@ -154,11 +160,12 @@ var en separat tydlig visning"). Egen intern navigering, inga döda ops-länkar.
   `nimloth-atlas`), LAN-port **11005**. Skild från dev-tjänsten `dashboard`
   (vite dev). **Gotcha:** `absolute_redirect off` krävs — annars tappar
   root-redirecten (→/med-review) porten (302 till :80).
-- **Cloudflare-tunnel:** `nimloth-demo` ligger på BÅDE `nimloth-core` (backend) OCH
-  `carlius-net` (cloudflared) → tunnel-ingress pekar på `http://nimloth-demo:80`
-  (docker-DNS). MÅSTE bakom Cloudflare Access (Zero Trust) — mock-auth fortf. mock
-  + `med-review` bränner `ANTHROPIC_API_KEY`. (Verifierat: wget från carlius-net →
-  nimloth-demo:80/healthz = ok.)
+- **Cloudflare-tunnel (LIVE):** `nimloth-demo` ligger på BÅDE `nimloth-core` (backend)
+  OCH `carlius-net` (cloudflared) → tunnel-ingress `http://nimloth-demo:80` (docker-DNS),
+  publikt på **`nimloth-demo.carlius.net`** bakom **Cloudflare Access (Zero Trust)** —
+  verifierat. Backend-portarna (11402/11403) är INTE tunnlade. Access skyddar både
+  mock-auth-gapet och `ANTHROPIC_API_KEY`-kostnaden. (Verifierat: wget från carlius-net
+  → nimloth-demo:80/healthz = ok; tunnel verifierad av Anders.)
 - **Design:** DESIGN.md nordic-sober-tokens (teal/navy, severity red/amber/green,
   Inter+mono, 1px-borders utan skuggor). Lade till `ink`/`line`/`surface`-tokens i
   `tailwind.config` (saknades; bara `core.*` fanns).

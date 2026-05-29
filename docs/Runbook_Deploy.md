@@ -31,7 +31,7 @@ Manuell process — se [INSTALL.md sektion A](INSTALL.md#a-carliusfyra-synology-
 
 Inga automatiserade webhooks eller watchtower-mekanismer. Deploy är medveten manuell process.
 
-## cf4 — co-lokaliserade Fas 2/3-tjänster (INTERN)
+## cf4 — co-lokaliserade Fas 2/3-tjänster (intern backend + Access-gated demo)
 
 Fas 2 + Fas 3 introducerade **statslösa** tjänster som körs **co-lokaliserade
 på cf4 (CarliusFyra)** bredvid EHRbase, så att agent→AQL→EHRbase blir loopback
@@ -44,10 +44,10 @@ på cf4 (CarliusFyra)** bredvid EHRbase, så att agent→AQL→EHRbase blir loop
 | `nimloth-demo` | 11005 | 80 | Fristående demo-yta (nginx statisk + reverse-proxy) |
 
 - **`nimloth-demo`** (container_name; compose-tjänst `dashboard-demo`) = statisk vite-build (nginx) av AI-medicineringsgenomgång-demon (`/med-review` = screening · patientregister · genomgång; `/compose-demo`). Reverse-proxar `/api/med-review` (SSE, `proxy_buffering off`) + `/api/aql-templates` till tjänsterna ovan. Bygg `services/dashboard/Dockerfile.demo` + `nginx.conf`. **Gotcha:** `absolute_redirect off` (annars tappar root→/med-review-redirecten porten). Skild från dev-tjänsten `dashboard`. Screening-snapshot: `dashboard/public/screening-results.json` (regen via `med-review/src/scripts/screen-population.ts`).
-- **Cloudflare-tunnel:** `nimloth-demo` ligger på BÅDE `nimloth-core` (når backend-tjänsterna) OCH `carlius-net` (där cloudflared bor) → tunnel-ingress pekar på **`http://nimloth-demo:80`** (docker-DNS, syskon till `nimloth-atlas:80`). MÅSTE ligga bakom Cloudflare Access (Zero Trust) — mock-auth är fortf. mock + `med-review` bränner `ANTHROPIC_API_KEY`.
+- **Cloudflare-tunnel (LIVE):** `nimloth-demo` ligger på BÅDE `nimloth-core` (når backend-tjänsterna) OCH `carlius-net` (där cloudflared bor) → tunnel-ingress `service: http://nimloth-demo:80` (docker-DNS, syskon till `nimloth-atlas:80`). Publikt på **`nimloth-demo.carlius.net`** bakom **Cloudflare Access (Zero Trust)** — verifierat. Access skyddar både mock-auth-gapet och `ANTHROPIC_API_KEY`-kostnaden. Ta ALDRIG bort Access-gaten utan att först åtgärda mock-auth.
 
 - **`med-review-core` använder cf4:s `ANTHROPIC_API_KEY`** (compose: `${ANTHROPIC_API_KEY:-}`) för Claude-syntes. Nyckeln ligger i cf4-env — **checkas aldrig in, echo:as aldrig**. `MED_REVIEW_SYNTH_MODEL` default `claude-opus-4-7`.
-- **INTERN-ONLY.** Ingen publik tunnel — mock-auth-skulden (`aql-template-service/src/middleware/mock-auth.ts`) gatekeepar publik exponering. Intern co-location triggar inte den skulden.
+- **Backend-tjänsterna (`med-review` 11403, `aql-template` 11402) är INTERNA** — ingen egen publik tunnel; nås bara på LAN + av demo-ytan internt. Demo-ytan `nimloth-demo` ÄR publikt tunnlad men **bakom Cloudflare Access** (se nedan). mock-auth-skulden (`aql-template-service/src/middleware/mock-auth.ts`) är därmed **mitigerad av Access, inte löst** — publik UTAN Access kräver fortfarande att den åtgärdas.
 - **Co-location är INTE en latensfix** (AC1-benchmark falsifierade det — topologi ≠ flaskhalsen; bounded/stegad hämtning är spaken). Behålls som golv + intern säkerhet.
 
 ### Deploy / omstart (skiljer sig från images-flödet ovan)

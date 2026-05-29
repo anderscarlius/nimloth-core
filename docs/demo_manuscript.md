@@ -1,6 +1,6 @@
 # Demo-manus — Nimloth-plattformen (30 min, mixad publik)
 
-> **Format:** 30 min live-demo med strömmande UI + audit-tidslinje. **Publik:** VGR/Skåne ledning + klinisk informatik + arkitekter (mixad strategisk/teknisk). **Kanaler:** in-room (laptop+projektor), Teams (skärmdelning), YouTube (förinspelat). **Drivs av:** Anders, på laptop på LAN. **Två artefakter:** nimloth-atlas (arkitektur-vision, cf4:11006 internt / `nimloth-atlas.carlius.net` Cloudflare-Access-gated) + nimloth-core /med-review (S1-validerad AI-medicineringsgenomgång, internt på LAN). **Grundat i:** `demo_underlag.md` (live-fångat 2026-05-28) + `atlas_capture.md` (live-fångat 2026-05-28).
+> **Format:** 30 min live-demo med strömmande UI + audit-tidslinje. **Publik:** VGR/Skåne ledning + klinisk informatik + arkitekter (mixad strategisk/teknisk). **Kanaler:** in-room (laptop+projektor), Teams (skärmdelning), YouTube (förinspelat). **Drivs av:** Anders, på laptop på LAN. **Två artefakter:** nimloth-atlas (arkitektur-vision, cf4:11006 internt / `nimloth-atlas.carlius.net` Cloudflare-Access-gated) + nimloth-core /med-review (S1-validerad AI-medicineringsgenomgång; `nimloth-demo` på cf4, LAN `192.168.1.189:11005` / publikt `nimloth-demo.carlius.net` bakom Cloudflare Access). **Grundat i:** `demo_underlag.md` (live-fångat 2026-05-28) + `atlas_capture.md` (live-fångat 2026-05-28).
 
 > ⚠️ **Den viktigaste positioneringen:** atlas-L06-demon visar **imperativa** rekommendationer ur fixture-data ("seponera omgående") — det är prototyp-narrativ. /med-review visar **deskriptiva, S1-validerade** fynd — det är implementeringen. Manuset håller dem isär: atlas = vision, /med-review = defensiv implementering. Att vända imperativ-vs-deskriptiv till en *fördel* är hela poängen — visionen visar vad man *kan* göra, implementeringen visar hur man bygger det *defensivt*.
 
@@ -8,20 +8,21 @@
 
 ## Pre-flight checklist (innan demon)
 
-Kör 30 minuter innan publik kopplar in. Allt körs lokalt; ingen publik exponering.
+Kör 30 minuter innan publik kopplar in. Demo-ytan körs på cf4 (`nimloth-demo`) — nås på LAN (`192.168.1.189:11005`) eller publikt via `nimloth-demo.carlius.net` (bakom Cloudflare Access). Backend-tjänsterna är interna.
 
 - [ ] Laptop på LAN, kan nå 192.168.1.189
 - [ ] `med-review-core` healthy på cf4:11403 (`curl http://192.168.1.189:11403/health`)
 - [ ] `aql-template-service-core` healthy på cf4:11402
 - [ ] `nimloth-atlas` healthy på cf4:11006 (öppna i browser, ser landningssidan)
-- [ ] Dashboard körs lokalt på `localhost:3000` (`pnpm dev` i `services/dashboard`)
+- [ ] `nimloth-demo` healthy på cf4:11005 (`curl http://192.168.1.189:11005/healthz`) — ingen lokal `pnpm dev` behövs längre, demon körs på servern
+- [ ] (om publik visning) `nimloth-demo.carlius.net` når Access-login → logga in
 - [ ] Browser-flikar förinställda i denna ordning (alt+tab-flöde):
   1. Atlas landing: `http://192.168.1.189:11006/`
   2. Atlas L05.5 (ekosystem): `http://192.168.1.189:11006/L05.5`
   3. Atlas L06 demo: `http://192.168.1.189:11006/L06/demo`
   4. Atlas /migration: `http://192.168.1.189:11006/migration`
-  5. /med-review (normal): `http://localhost:3000/med-review`
-  6. /med-review (inject): `http://localhost:3000/med-review?debug_inject=force_unsourced`
+  5. /med-review (LAN): `http://192.168.1.189:11005/med-review` — publikt: `https://nimloth-demo.carlius.net/med-review`
+  6. /med-review (inject): `http://192.168.1.189:11005/med-review?debug_inject=force_unsourced`
 - [ ] Skärmbild-backups i `docs/operations/demo-assets/` öppna i ett extra fönster om något hänger live
 - [ ] Tyst notifications, stäng Slack/mail
 - [ ] Vatten
@@ -297,7 +298,7 @@ Att hålla i huvudet, inte att läsa upp:
 - [ ] Beers/STOPP exakta kriterie-ID:n när primärtabellerna kommer in — egen liten källref-commit.
 - [ ] Atlas-skärmbilder kompletta (resten av layer-batchen + demo-batchen om de inte hunnit landa).
 - [ ] Profil-tagg-skulden (hypertoni→I10, hjärtsvikt→I50, kol→J44) — fix-när-konsumerad, samma princip som diabetes_typ2→E11.
-- [ ] mock-auth (när och om publik exponering blir aktuell — håller demon intern tills den är fixad).
+- [ ] mock-auth — publik exponering är nu live men **mitigerad av Cloudflare Access** (`nimloth-demo.carlius.net`). Åtgärda mock-auth innan Access-gaten någonsin tas bort. Backend-portarna (11402/11403) förblir interna.
 - [ ] Allergi-harmonisering atlas-Ingrid (urtikaria/moderate) vs core-Ingrid (anafylaxi/high) om båda visas i samma demo upprepade gånger.
 
 ---

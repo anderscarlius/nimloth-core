@@ -365,9 +365,14 @@ AI-beredskap":
   output-validering (LLM ur beslutsvägen, *verifierad* ej prompt-beroende).
   Co-lokaliserad på cf4 (:11403, intern). `/med-review`-vy.
 
-**Öppna punkter:** mock-auth gatekeepar publik exponering (intern-only tills
-åtgärdad); exakta Beers/STOPP-kriterie-ID:n utestående (sektion+DOI shippad).
-Detaljerade beslut + körnings-lärdomar i `memory/` (MEMORY.md-index).
+**Demo-yta publik (Access-gated):** demo-ytan `nimloth-demo` är publikt tunnlad på
+`nimloth-demo.carlius.net` **bakom Cloudflare Access (Zero Trust)** — backend-tjänsterna
+(11402/11403) förblir interna. mock-auth-skulden är därmed *mitigerad av Access, inte
+löst* (publik utan Access kräver fortfarande att den åtgärdas).
+
+**Öppna punkter:** mock-auth (för publik exponering utan Access-lager); exakta
+Beers/STOPP-kriterie-ID:n utestående (sektion+DOI shippad). Detaljerade beslut +
+körnings-lärdomar i `memory/` (MEMORY.md-index).
 
 ---
 

@@ -184,9 +184,9 @@ Tonläge: HBR-möter-IEEE-Spectrum — strategiskt *varför* + tekniskt *hur*, s
 
 ## 9. Tillgångar + access
 
-- **Demo-yta:** dashboard `/med-review` (kör vite-dashboard lokalt; proxar SSE → cf4:11403). Compose-sandlåda: `/compose-demo`.
+- **Demo-yta:** fristående `nimloth-demo` på cf4 (statisk nginx-build): `/med-review` (Populationsscreening · Patientregister · Genomgång) + `/compose-demo`. Intern LAN: `http://192.168.1.189:11005`. Publik: `https://nimloth-demo.carlius.net` (bakom Cloudflare Access).
 - **Direkt SSE (utan UI):** `GET http://192.168.1.189:11403/api/med-review/<patientId>/stream?age=<n>` — patientId t.ex. `ingrid-andersson-syn-001` (74), `marianne-lindqvist-syn-001` (81).
-- **Access:** **INTERN ONLY** (LAN 192.168.1.189 eller SSH-port-forward). Ingen publik tunnel — mock-auth gatekeepar (se §10). För publik video: SSH-port-forward så intern IP ej syns (jfr [`Demo_Runbook.md`](Demo_Runbook.md) §2.2).
+- **Access:** demo-ytan är publikt tunnlad på **`nimloth-demo.carlius.net`** bakom **Cloudflare Access (Zero Trust)** — login krävs (302 → Access). Intern LAN (`192.168.1.189:11005`) finns kvar. **Backend-portarna (11402/11403) är INTE tunnlade** — bara LAN. För publik video: använd den Access-gated URL:en eller LAN/SSH-forward.
 - **Skärmbilder:** ⚠️ **att återfånga** — tidigare Preview-skärmbilder sparades inte till disk. Kör en genomgång i dashboard och fånga tre-kolumns-vyn (Ingrid + Marianne) före demo. Lägg i `docs/operations/demo-assets/` (skapas vid capture).
 - **Verbatim-data:** detta dokument (§1) är den auktoritativa fångsten 2026-05-28.
 
@@ -196,7 +196,7 @@ Tonläge: HBR-möter-IEEE-Spectrum — strategiskt *varför* + tekniskt *hur*, s
 
 | Punkt | Påverkan på demon | Status |
 |---|---|---|
-| **mock-auth** | Gatekeepar **publik** exponering — demon är **intern tills den är fixad**. Visa via LAN/SSH-forward, inte publik URL. | Spårad skuld |
+| **mock-auth** | **Mitigerad av Cloudflare Access** (demon publik på `nimloth-demo.carlius.net` bakom Zero Trust). Appen är fortf. mock — Access framför hindrar oautentiserad trafik. Ta ej bort Access utan att fixa mock-auth. Backend (11402/11403) ej tunnlat. | Mitigerad (ej löst) |
 | **Beers/STOPP exakta kriterie-ID:n** | Säg "sektion + DOI nu, exakt ID utestående" — ärligt, försvarbart. Gissa inte ID:n live. | Anders-beroende |
 | **Haiku-beatens reproducerbarhet** | Behöver deterministisk debug-inject för pålitlig on-cue-demo (se §5). | Ej byggd |
 | **Skärmbilder** | Måste återfångas före demo (§9). | Att göra |
