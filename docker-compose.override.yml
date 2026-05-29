@@ -92,9 +92,10 @@ services:
     ports: !override
       - "8010:3000"
 
-  # Fas 3 demo-yta — intern LAN-port 11005.
+  # Fas 3 demo-yta — intern LAN-port 11005. container_name nimloth-demo (syskon
+  # till nimloth-atlas) = findbart tunnel-mål: cloudflared → http://nimloth-demo:80.
   dashboard-demo:
-    container_name: dashboard-demo-core
+    container_name: nimloth-demo
     ports: !override
       - "11005:80"
 

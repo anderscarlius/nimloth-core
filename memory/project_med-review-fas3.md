@@ -149,10 +149,16 @@ var en separat tydlig visning"). Egen intern navigering, inga döda ops-länkar.
   (Mätvärdestrend, Fas 2) som egen yta.
 - **Deploy:** statisk vite-build serverad av nginx (`services/dashboard/Dockerfile.demo`
   + `nginx.conf`), reverse-proxar `/api/med-review` (SSE — `proxy_buffering off`)
-  + `/api/aql-templates` till de co-lokaliserade tjänsterna på `core`-nätet.
-  Container `dashboard-demo-core`, LAN-port **11005**, INTERN only. Skild från
-  dev-tjänsten `dashboard` (vite dev). **Gotcha:** `absolute_redirect off` krävs —
-  annars tappar root-redirecten (→/med-review) porten (302 till :80).
+  + `/api/aql-templates` till de co-lokaliserade tjänsterna på `nimloth-core`-nätet.
+  Container **`nimloth-demo`** (compose-tjänst `dashboard-demo`; syskon till
+  `nimloth-atlas`), LAN-port **11005**. Skild från dev-tjänsten `dashboard`
+  (vite dev). **Gotcha:** `absolute_redirect off` krävs — annars tappar
+  root-redirecten (→/med-review) porten (302 till :80).
+- **Cloudflare-tunnel:** `nimloth-demo` ligger på BÅDE `nimloth-core` (backend) OCH
+  `carlius-net` (cloudflared) → tunnel-ingress pekar på `http://nimloth-demo:80`
+  (docker-DNS). MÅSTE bakom Cloudflare Access (Zero Trust) — mock-auth fortf. mock
+  + `med-review` bränner `ANTHROPIC_API_KEY`. (Verifierat: wget från carlius-net →
+  nimloth-demo:80/healthz = ok.)
 - **Design:** DESIGN.md nordic-sober-tokens (teal/navy, severity red/amber/green,
   Inter+mono, 1px-borders utan skuggor). Lade till `ink`/`line`/`surface`-tokens i
   `tailwind.config` (saknades; bara `core.*` fanns).

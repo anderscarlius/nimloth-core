@@ -41,9 +41,10 @@ på cf4 (CarliusFyra)** bredvid EHRbase, så att agent→AQL→EHRbase blir loop
 |---|---:|---:|---|
 | `aql-template-service-core` | 11402 | 3010 | Fas 2 AQL-mall-tjänst (Kontrakt 1) |
 | `med-review-core` | 11403 | 3011 | Fas 3 med-review-orkestrator (SSE) |
-| `dashboard-demo-core` | 11005 | 80 | Fristående demo-yta (nginx statisk + reverse-proxy) |
+| `nimloth-demo` | 11005 | 80 | Fristående demo-yta (nginx statisk + reverse-proxy) |
 
-- **`dashboard-demo-core`** = statisk vite-build (nginx) av AI-medicineringsgenomgång-demon (`/med-review` = screening · patientregister · genomgång; `/compose-demo`). Reverse-proxar `/api/med-review` (SSE, `proxy_buffering off`) + `/api/aql-templates` till tjänsterna ovan. Bygg `services/dashboard/Dockerfile.demo` + `nginx.conf`. **Gotcha:** `absolute_redirect off` (annars tappar root→/med-review-redirecten porten). Skild från dev-tjänsten `dashboard`. Screening-snapshot: `dashboard/public/screening-results.json` (regen via `med-review/src/scripts/screen-population.ts`).
+- **`nimloth-demo`** (container_name; compose-tjänst `dashboard-demo`) = statisk vite-build (nginx) av AI-medicineringsgenomgång-demon (`/med-review` = screening · patientregister · genomgång; `/compose-demo`). Reverse-proxar `/api/med-review` (SSE, `proxy_buffering off`) + `/api/aql-templates` till tjänsterna ovan. Bygg `services/dashboard/Dockerfile.demo` + `nginx.conf`. **Gotcha:** `absolute_redirect off` (annars tappar root→/med-review-redirecten porten). Skild från dev-tjänsten `dashboard`. Screening-snapshot: `dashboard/public/screening-results.json` (regen via `med-review/src/scripts/screen-population.ts`).
+- **Cloudflare-tunnel:** `nimloth-demo` ligger på BÅDE `nimloth-core` (når backend-tjänsterna) OCH `carlius-net` (där cloudflared bor) → tunnel-ingress pekar på **`http://nimloth-demo:80`** (docker-DNS, syskon till `nimloth-atlas:80`). MÅSTE ligga bakom Cloudflare Access (Zero Trust) — mock-auth är fortf. mock + `med-review` bränner `ANTHROPIC_API_KEY`.
 
 - **`med-review-core` använder cf4:s `ANTHROPIC_API_KEY`** (compose: `${ANTHROPIC_API_KEY:-}`) för Claude-syntes. Nyckeln ligger i cf4-env — **checkas aldrig in, echo:as aldrig**. `MED_REVIEW_SYNTH_MODEL` default `claude-opus-4-7`.
 - **INTERN-ONLY.** Ingen publik tunnel — mock-auth-skulden (`aql-template-service/src/middleware/mock-auth.ts`) gatekeepar publik exponering. Intern co-location triggar inte den skulden.

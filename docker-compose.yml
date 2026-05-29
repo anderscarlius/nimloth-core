@@ -412,6 +412,9 @@ services:
       start_period: 10s
     networks:
       - core
+      # carlius-net: så cloudflared (på carlius-net) når tjänsten via docker-DNS
+      # (nimloth-demo:80) för Cloudflare-tunneln. Endast på cf4 där nätet finns.
+      - carlius-net
 
   # --- Terminologitjänst (Sprint 1, P1) ---
   # Tunn proxy framför Snowstorm/HAPI med fallback-data inbakad. Startar
@@ -690,3 +693,7 @@ networks:
   core:
     name: nimloth-core
     driver: bridge
+  # Externt nät (cloudflared + nimloth-atlas) — finns på cf4, skapas ej här.
+  # Endast dashboard-demo ansluts (för tunnel-ingress via docker-DNS).
+  carlius-net:
+    external: true
