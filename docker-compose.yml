@@ -387,6 +387,32 @@ services:
     networks:
       - core
 
+  # --- Fas 3 demo-yta: statisk dashboard-build (nginx) ---
+  # Serverar vite-builden + reverse-proxar /api/med-review (SSE) + /api/aql-templates
+  # till de co-lokaliserade tjänsterna. Endast /med-review + /compose-demo har
+  # backends här; övriga vyer 503. INTERN ONLY (mock-auth-skuld gatekeepar publik
+  # exponering). Separat från dev-tjänsten `dashboard` ovan (vite dev-server).
+  dashboard-demo:
+    build:
+      context: .
+      dockerfile: services/dashboard/Dockerfile.demo
+    container_name: dashboard-demo
+    ports:
+      - "3012:80"
+    depends_on:
+      med-review:
+        condition: service_healthy
+      aql-template-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - core
+
   # --- Terminologitjänst (Sprint 1, P1) ---
   # Tunn proxy framför Snowstorm/HAPI med fallback-data inbakad. Startar
   # alltid i fallback-mode; upstream aktiveras genom att sätta

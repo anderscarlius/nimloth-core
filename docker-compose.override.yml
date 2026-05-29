@@ -92,6 +92,12 @@ services:
     ports: !override
       - "8010:3000"
 
+  # Fas 3 demo-yta — intern LAN-port 11005.
+  dashboard-demo:
+    container_name: dashboard-demo-core
+    ports: !override
+      - "11005:80"
+
   terminology:
     container_name: terminology-core
     ports: !override

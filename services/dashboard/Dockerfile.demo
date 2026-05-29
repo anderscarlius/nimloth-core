@@ -1,0 +1,27 @@
+# syntax=docker/dockerfile:1.7
+# Dashboard DEMO-build (Fas 3) — statisk vite-build serverad av nginx, med
+# reverse-proxy till de co-lokaliserade tjänsterna (med-review + aql-template).
+#
+# Skiljer sig från services/dashboard/Dockerfile (vite dev-server) — detta är
+# ett prod-artefakt för den interna demo-ytan på cf4 (LAN-port 11005).
+# Endast /med-review + /compose-demo har backends på cf4; övriga /api/* → 503.
+
+# --- Stage 1: builder ---
+FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
+WORKDIR /app
+RUN corepack enable
+
+COPY package.json pnpm-workspace.yaml tsconfig.base.json ./
+COPY pnpm-lock.yaml* ./
+COPY services/dashboard ./services/dashboard
+
+RUN pnpm install --filter @nimloth-core/dashboard --frozen-lockfile=false
+RUN pnpm --filter @nimloth-core/dashboard build
+
+# --- Stage 2: runtime ---
+FROM nginx:alpine-slim AS runtime
+COPY services/dashboard/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/services/dashboard/dist /usr/share/nginx/html
+EXPOSE 80
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=10 \
+  CMD wget -q --spider http://localhost:80/healthz || exit 1
