@@ -16,7 +16,8 @@ const ARCHETYPE = 'openEHR-EHR-EVALUATION.medication_summary.v1';
 
 export interface MedAqlRow {
   composition_uid: string;
-  start_time: string;       // ISO datetime
+  context_start_time: string | null;     // c/context/start_time/value
+  archetype_start_date: string | null;   // at0006 — föredragen om satt
   medication_text: string;
   atc_code: string | null;
 }
@@ -27,8 +28,18 @@ export interface MedMapResult {
 }
 
 /**
- * Tar råa AQL-rader (4 kolumner i ordningen från aqlMedicationSummary)
+ * Tar råa AQL-rader (5 kolumner i ordningen från aqlMedicationSummary)
  * och returnerar drug_exposure-rader + ev. degraderings-anteckningar.
+ *
+ * Kolumn-ordning (KU Steg 1):
+ *   [0] composition_uid             c/uid/value
+ *   [1] context_start_time          c/context/start_time/value
+ *   [2] archetype_start_date        m/data[at0001]/items[at0006]/value/value
+ *   [3] medication_text             m/data[at0001]/items[at0002]/value/value
+ *   [4] atc_code                    m/data[at0001]/items[at0003]/value/defining_code/code_string
+ *
+ * Vi prefer:ar arketyp-intern start_date där den finns (klinisk-tidpunkt),
+ * och fall:ar tillbaka på composition-context.start_time. Aldrig commit-tid.
  */
 export function mapMedicationSummaryRows(
   patientSourceValue: string,
@@ -38,7 +49,21 @@ export function mapMedicationSummaryRows(
   const degradations: Degradation[] = [];
 
   for (const r of aqlRows) {
-    const [compUid, startTime, text, atc] = r as [string, string, string, string | null];
+    const [compUid, contextStart, archetypeStart, text, atc] = r as [
+      string,
+      string | null,
+      string | null,
+      string,
+      string | null,
+    ];
+
+    // Välj klinisk start_date — at0006 om satt, annars composition-context.
+    const startTime =
+      typeof archetypeStart === 'string' && archetypeStart.length > 0
+        ? archetypeStart
+        : typeof contextStart === 'string' && contextStart.length > 0
+          ? contextStart
+          : null;
 
     if (!compUid || !startTime) {
       // EHRbase ska aldrig leverera detta — defensiv check.

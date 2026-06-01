@@ -64,13 +64,21 @@ export function aqlEhrForPatient(patientId: string): string {
 
 /**
  * medication_summary.v1 — en rad per EVALUATION.
- * Kolumner: composition_uid, start_time, medication_text, atc_code
+ * Kolumner: composition_uid, context_start_time, archetype_start_date,
+ *           medication_text, atc_code
+ *
+ * KU Steg 1: Vi selekterar BÅDA start-paths (arketyp-intern at0006 +
+ * composition.context.start_time). Mapper-lagret prefer:ar at0006 där den finns
+ * och fall:ar tillbaka på context. Skälet: framtida CDR-data kan ha retroaktiv
+ * inrapportering där composition skapas senare än medicineringen startade —
+ * arketyp-intern start_date är då den korrekta klinisk-tidpunkten.
  */
 export function aqlMedicationSummary(patientId: string): string {
   return [
     `SELECT`,
     `  c/uid/value,`,
     `  c/context/start_time/value,`,
+    `  m/data[at0001]/items[at0006]/value/value,`,
     `  m/data[at0001]/items[at0002]/value/value,`,
     `  m/data[at0001]/items[at0003]/value/defining_code/code_string`,
     `FROM EHR e CONTAINS COMPOSITION c CONTAINS EVALUATION m[openEHR-EHR-EVALUATION.medication_summary.v1]`,
