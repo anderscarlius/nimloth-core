@@ -16,7 +16,8 @@
     "validate:profiles": "tsx src/scripts/validate-profiles.ts",
     "openehr:list-templates": "tsx src/scripts/list-templates.ts",
     "generate:load": "tsx src/scripts/generate-load.ts",
-    "demo:aql": "tsx src/queries/demo.ts"
+    "demo:aql": "tsx src/queries/demo.ts",
+    "seed:ingrid": "tsx src/scripts/seed-ingrid.ts"
   },
   "dependencies": {
     "@nimloth-core/shared": "workspace:*",

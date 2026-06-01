@@ -176,6 +176,41 @@ export async function createEhr(
   return ehrId;
 }
 
+/**
+ * POST canonical openEHR composition (utan FLAT-konvertering).
+ *
+ * KU Reseed: används av seed-skriptet för att återställa Ingrids handbyggda
+ * live-skiva från versionskontrollerade JSON-filer. Filerna är hämtade via
+ * GET /composition (canonical format) med uid-fältet strippat.
+ */
+export async function postCompositionCanonical(
+  ehrId: string,
+  canonicalJson: Record<string, unknown>,
+): Promise<string> {
+  const { headers, raw } = await ehrbaseFetch<unknown>(
+    `/ehr/${ehrId}/composition`,
+    {
+      method: "POST",
+      body: canonicalJson,
+      headers: { Prefer: "return=minimal" },
+    },
+  );
+  const loc = headers.get("location") ?? headers.get("Location");
+  if (loc) {
+    const tail = loc.split("/composition/")[1];
+    if (tail) return tail;
+  }
+  const etag = headers.get("etag") ?? headers.get("ETag");
+  if (etag) {
+    const cleaned = etag.replace(/"/g, "");
+    const uid = cleaned.split("::")[0];
+    if (uid) return uid;
+  }
+  throw new Error(
+    `Canonical composition POST succeeded but no uid in headers: ${raw.slice(0, 200)}`,
+  );
+}
+
 export async function postCompositionFlat(
   ehrId: string,
   templateId: string,
