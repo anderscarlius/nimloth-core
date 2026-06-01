@@ -20,7 +20,8 @@ const ARCHETYPE = 'openEHR-EHR-OBSERVATION.laboratory_test_result.v1';
 
 export interface LabAqlRow {
   composition_uid: string;
-  event_time: string;
+  context_start_time: string | null;   // c/context/start_time/value
+  event_time: string | null;           // events[at0002]/time/value — föredragen
   analyte_name: string | null;
   analyte_code: string | null;
   value_magnitude: number | null;
@@ -32,7 +33,22 @@ export interface LabMapResult {
   degradations: Degradation[];
 }
 
-/** Råa AQL-rader → measurement-rader. */
+/**
+ * Råa AQL-rader → measurement-rader.
+ *
+ * Kolumn-ordning (KU Steg 2):
+ *   [0] composition_uid              c/uid/value
+ *   [1] context_start_time           c/context/start_time/value
+ *   [2] event_time                   events[at0002]/time/value (POINT_EVENT.time)
+ *   [3] analyte_name                 items[at0004] (DV_TEXT)
+ *   [4] analyte_code                 items[at0005] (DV_CODED_TEXT/defining_code)
+ *   [5] value_magnitude              items[at0006]/magnitude (DV_QUANTITY)
+ *   [6] value_units                  items[at0006]/units
+ *
+ * Klinisk-tidpunkt: prefer event.time (POINT_EVENT.time), fall:a tillbaka på
+ * composition.context.start_time. Paritet med medication-mappern:s at0006-
+ * fallback från Steg 1. Aldrig commit-tid.
+ */
 export function mapLaboratoryTestResultRows(
   patientSourceValue: string,
   aqlRows: unknown[][],
@@ -41,27 +57,35 @@ export function mapLaboratoryTestResultRows(
   const degradations: Degradation[] = [];
 
   for (const r of aqlRows) {
-    const [compUid, eventTime, analyteName, analyteCode, magnitude, units] = r as [
+    const [compUid, contextStart, eventTime, analyteName, analyteCode, magnitude, units] = r as [
       string,
-      string,
+      string | null,
+      string | null,
       string | null,
       string | null,
       number | null,
       string | null,
     ];
 
-    if (!compUid || !eventTime) {
+    // Prefer event-time (klinisk-tidpunkt) över composition-context.start_time.
+    const dt =
+      typeof eventTime === 'string' && eventTime.length > 0
+        ? eventTime
+        : typeof contextStart === 'string' && contextStart.length > 0
+          ? contextStart
+          : null;
+
+    if (!compUid || !dt) {
       degradations.push({
         kind: 'missing_field',
         source_archetype: ARCHETYPE,
-        source_field: 'composition_uid|event_time',
+        source_field: 'composition_uid|event_time|context_start_time',
         source_value: null,
-        reason: 'AQL returnerade tom composition_uid eller event_time — raden hoppas',
+        reason: 'AQL returnerade tom composition_uid eller båda tids-paths — raden hoppas',
       });
       continue;
     }
 
-    const dt = eventTime;
     const date = dt.slice(0, 10);
     const code = analyteCode?.trim() || null;
     const nameStr = analyteName?.trim() || null;

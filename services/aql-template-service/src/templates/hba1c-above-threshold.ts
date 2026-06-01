@@ -3,13 +3,17 @@ import type { TemplateDefinition } from "../types.js";
 // AQL-02 lyft. Returnerar HbA1c-mätningar som överstiger en parametriserad
 // tröskel för en patient. Tröskeln är parametriserad per D1 från Fas 1
 // (Anders: "server-side MEN parameteriserad — Fas 2-liftbar").
+//
+// KU Steg 2 (2026-06-01) — lineage-utökning:
+//   + composition_uid (c/uid/value) → EHDS data provenance per mätning.
+// Bakåtkompatibilitet: timestamp/magnitude/unit returneras i samma form.
 
 export const HBA1C_ABOVE_THRESHOLD: TemplateDefinition = {
   id: "se.nimloth.aql.hba1c_above_threshold",
-  version: "1.0.0",
+  version: "1.1.0",
   title: "HbA1c-mätningar över tröskel för en patient",
   description:
-    "Filtrerar HbA1c-mätningar (mmol/mol) över en konfigurerbar tröskel för en angiven patient. Server-side magnitude-filter i AQL.",
+    "Filtrerar HbA1c-mätningar (mmol/mol) över en konfigurerbar tröskel för en angiven patient. Server-side magnitude-filter i AQL. Inkluderar composition-UID för spårbarhet till källkomposition.",
   parameters: [
     {
       name: "patient_id",
@@ -30,6 +34,7 @@ export const HBA1C_ABOVE_THRESHOLD: TemplateDefinition = {
       { name: "timestamp", type: "DV_DATE_TIME" },
       { name: "magnitude", type: "Real" },
       { name: "unit", type: "string" },
+      { name: "composition_uid", type: "string", description: "EHRbase composition-UID (lineage)." },
     ],
   },
   metadata: {
@@ -41,7 +46,8 @@ export const HBA1C_ABOVE_THRESHOLD: TemplateDefinition = {
   aql: `SELECT
   c/context/start_time/value AS timestamp,
   o/data[at0001]/events[at0002]/data[at0003]/items[at0006]/value/magnitude AS magnitude,
-  o/data[at0001]/events[at0002]/data[at0003]/items[at0006]/value/units AS unit
+  o/data[at0001]/events[at0002]/data[at0003]/items[at0006]/value/units AS unit,
+  c/uid/value AS composition_uid
 FROM EHR e
 CONTAINS COMPOSITION c
 CONTAINS OBSERVATION o[openEHR-EHR-OBSERVATION.laboratory_test_result.v1]
@@ -50,9 +56,13 @@ AND o/data[at0001]/events[at0002]/data[at0003]/items[at0004]/value/value = 'HBA1
 AND o/data[at0001]/events[at0002]/data[at0003]/items[at0006]/value/magnitude > :hba1c_threshold
 ORDER BY c/context/start_time/value`,
   postProcess: (rows) =>
-    rows.map((r) => ({
-      timestamp: String((r as unknown[])[0]),
-      magnitude: Number((r as unknown[])[1]),
-      unit: String((r as unknown[])[2]),
-    })),
+    rows.map((raw) => {
+      const r = raw as unknown[];
+      return {
+        timestamp: String(r[0]),
+        magnitude: Number(r[1]),
+        unit: String(r[2]),
+        composition_uid: String(r[3]),
+      };
+    }),
 };

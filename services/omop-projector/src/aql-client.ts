@@ -88,16 +88,23 @@ export function aqlMedicationSummary(patientId: string): string {
 
 /**
  * laboratory_test_result.v1 — en rad per ELEMENT-set inom POINT_EVENT.
- * Kolumner: composition_uid, event_time, analyte_name, analyte_code, value_magnitude, value_units
+ * Kolumner: composition_uid, context_start_time, event_time, analyte_name,
+ *           analyte_code, value_magnitude, value_units
  *
  * Notera: HBA1C/INR/kreatinin är alla samma struktur — varje composition har
  * EXAKT ETT analyte_result-set i Del 1 (en lab-event per composition).
+ *
+ * KU Steg 2: Vi selekterar BÅDA event-paths (POINT_EVENT.time + composition
+ * context.start_time). Mappern prefererar event.time där den finns och fall:ar
+ * tillbaka på context.start_time. Detta är paritet med medication-mappern:s
+ * at0006 → context-fallback från Steg 1.
  */
 export function aqlLaboratoryTestResult(patientId: string): string {
   return [
     `SELECT`,
     `  c/uid/value,`,
     `  c/context/start_time/value,`,
+    `  obs/data[at0001]/events[at0002]/time/value,`,
     `  obs/data[at0001]/events[at0002]/data[at0003]/items[at0004]/value/value,`,
     `  obs/data[at0001]/events[at0002]/data[at0003]/items[at0005]/value/defining_code/code_string,`,
     `  obs/data[at0001]/events[at0002]/data[at0003]/items[at0006]/value/magnitude,`,
