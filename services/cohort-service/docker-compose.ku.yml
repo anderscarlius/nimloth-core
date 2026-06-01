@@ -1,0 +1,80 @@
+# =====================================================================
+# KU Deploy — sidostack för Kohortutforskaren-tjänsterna på CarliusFyra.
+#
+# Avsiktligt isolerat från nimloth-core:s huvud-compose så att deploy + restart
+# inte kan röra övriga tjänster av misstag. Anslutet till nimloth-core-nätet
+# (external) så att tjänsterna når core-db/ehrbase/aql-template-service via
+# container-namn.
+#
+# Användning på CarliusFyra (/volume2/docker/nimloth-core-ku/):
+#   docker-compose -f docker-compose.ku.yml up -d
+#   docker-compose -f docker-compose.ku.yml logs -f cohort-service
+#   docker-compose -f docker-compose.ku.yml down
+#
+# omop-projector körs ad-hoc:
+#   docker-compose -f docker-compose.ku.yml run --rm omop-projector \
+#     --patient ingrid-andersson-syn-001 --no-migrate
+# =====================================================================
+
+services:
+  cohort-service:
+    image: nimloth-core-cohort-service:ku-0.1
+    container_name: cohort-service-core
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      OMOP_DB_HOST: core-db
+      OMOP_DB_PORT: "5432"
+      OMOP_DB_NAME: core
+      OMOP_DB_USER: core
+      OMOP_DB_PASSWORD: core
+      COHORT_PORT: "3020"
+      # CORS: Atlas-origin (publik via Cloudflare) + lokal Atlas-preview för dev.
+      # Cloudflare Access skyddar tunneln; ingen MFA på API:t självt eftersom
+      # datan är synthetic.
+      CORS_ALLOWED_ORIGINS: https://nimloth-atlas.carlius.net,http://localhost:3017
+    ports:
+      # Portstrategi 11100-serie: 11111 ledig (kontrollerad mot pi-allokering 2026-06-01).
+      - "11111:3020"
+    networks:
+      - nimloth-core
+    labels:
+      - "com.nimloth.service=cohort-service"
+      - "com.nimloth.version=ku-0.1"
+      - "com.nimloth.demoInstance=true"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3020/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # omop-projector — CLI / batch-engångskörning, EJ HTTP-tjänst.
+  # restart: 'no' så Docker inte försöker starta upp den i loop.
+  # Default-kommando är --help; använd `docker-compose run --rm omop-projector ...`
+  # för en faktisk projektering.
+  omop-projector:
+    image: nimloth-core-omop-projector:ku-0.1
+    container_name: omop-projector-core
+    restart: "no"
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      OMOP_DB_HOST: core-db
+      OMOP_DB_PORT: "5432"
+      OMOP_DB_NAME: core
+      OMOP_DB_USER: core
+      OMOP_DB_PASSWORD: core
+      EHRBASE_BASE_URL: http://ehrbase:8080/ehrbase
+      OMOP_TRANSFORM_VERSION: omop-projector@ku-0.1
+    networks:
+      - nimloth-core
+    labels:
+      - "com.nimloth.service=omop-projector"
+      - "com.nimloth.version=ku-0.1"
+      - "com.nimloth.demoInstance=true"
+
+networks:
+  nimloth-core:
+    external: true

@@ -1,5 +1,6 @@
 // Express-app builder — separat från index.ts så vi kan testa via supertest.
 
+import cors from 'cors';
 import express, { type Express } from 'express';
 import type pg from 'pg';
 import type { Logger } from 'pino';
@@ -12,6 +13,20 @@ export interface ServerDeps {
 
 export function buildApp(deps: ServerDeps): Express {
   const app = express();
+
+  // CORS: Atlas-origin (nimloth-atlas.carlius.net) + lokal dev. Komma-separerad
+  // env-lista; om tom = wildcard (acceptabelt eftersom datan är synthetic och
+  // ingen MFA-skydd ligger på själva API:t — Cloudflare Access skyddar tunneln).
+  const corsAllowed = (process.env.CORS_ALLOWED_ORIGINS ?? '*')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  app.use(
+    cors({
+      origin: corsAllowed.length === 1 && corsAllowed[0] === '*' ? true : corsAllowed,
+      credentials: true,
+    }),
+  );
   app.use(express.json({ limit: '256kb' }));
 
   app.get('/healthz', async (_req, res) => {
