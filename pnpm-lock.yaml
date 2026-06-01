@@ -252,6 +252,55 @@ importers:
         specifier: ^1.5.0
         version: 1.6.1(@types/node@20.19.39)
 
+  services/cohort-service:
+    dependencies:
+      '@nimloth-core/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      express:
+        specifier: ^4.19.2
+        version: 4.22.1
+      pg:
+        specifier: ^8.11.5
+        version: 8.20.0
+      pino:
+        specifier: ^9.0.0
+        version: 9.14.0
+      seedrandom:
+        specifier: ^3.0.5
+        version: 3.0.5
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
+    devDependencies:
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.25
+      '@types/node':
+        specifier: ^20.12.7
+        version: 20.19.39
+      '@types/pg':
+        specifier: ^8.11.6
+        version: 8.20.0
+      '@types/seedrandom':
+        specifier: ^3.0.8
+        version: 3.0.8
+      '@types/supertest':
+        specifier: ^7.2.0
+        version: 7.2.0
+      supertest:
+        specifier: ^7.2.2
+        version: 7.2.2
+      tsx:
+        specifier: ^4.9.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: ^1.5.0
+        version: 1.6.1(@types/node@20.19.39)
+
   services/composition-mapper:
     dependencies:
       '@nimloth-core/model-router':
@@ -565,6 +614,34 @@ importers:
       '@types/node':
         specifier: ^20.12.7
         version: 20.19.39
+      tsx:
+        specifier: ^4.9.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: ^1.5.0
+        version: 1.6.1(@types/node@20.19.39)
+
+  services/omop-projector:
+    dependencies:
+      '@nimloth-core/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      pg:
+        specifier: ^8.11.5
+        version: 8.20.0
+      pino:
+        specifier: ^9.0.0
+        version: 9.14.0
+    devDependencies:
+      '@types/node':
+        specifier: ^20.12.7
+        version: 20.19.39
+      '@types/pg':
+        specifier: ^8.11.6
+        version: 8.20.0
       tsx:
         specifier: ^4.9.0
         version: 4.21.0

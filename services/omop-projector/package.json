@@ -1,0 +1,28 @@
+{
+  "name": "@nimloth-core/omop-projector",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/cli.js",
+  "description": "Deterministisk OMOP-projektor — översätter openEHR-kompositioner till OMOP CDM-rader (medication_summary.v1 → drug_exposure, laboratory_test_result.v1 → measurement). INGEN LLM.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && pnpm run copy-assets",
+    "copy-assets": "mkdir -p dist/migrations && cp migrations/*.sql dist/migrations/",
+    "clean": "rm -rf dist",
+    "dev": "tsx src/cli.ts",
+    "omop:project": "tsx src/cli.ts",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@nimloth-core/shared": "workspace:*",
+    "pg": "^8.11.5",
+    "pino": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@types/pg": "^8.11.6",
+    "tsx": "^4.9.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  }
+}
