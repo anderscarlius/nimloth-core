@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadConfig } from './config.js';
 import { createPool, migrate } from './db.js';
+import { EhrbaseClient } from './ehrbase-client.js';
 import { createLogger } from './logger.js';
 import { buildApp } from './server.js';
 
@@ -18,7 +19,8 @@ async function main(): Promise<void> {
   const migrationsDir = path.resolve(__dirname, '..', 'migrations');
   await migrate(pool, migrationsDir, logger);
 
-  const app = buildApp({ pool, logger });
+  const ehr = new EhrbaseClient({ baseUrl: cfg.ehrbase.baseUrl, timeoutMs: cfg.ehrbase.timeoutMs });
+  const app = buildApp({ pool, ehr, logger });
   const server = app.listen(cfg.http.port, cfg.http.host, () => {
     logger.info({ host: cfg.http.host, port: cfg.http.port }, 'cohort-service lyssnar');
   });

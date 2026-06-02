@@ -12,6 +12,10 @@ export interface CohortConfig {
     port: number;
     host: string;
   };
+  ehrbase: {
+    baseUrl: string;
+    timeoutMs: number;
+  };
   bulk: {
     /** Antal preloaded personer som ska genereras. */
     size: number;
@@ -37,6 +41,11 @@ export function loadConfig(): CohortConfig {
     http: {
       port: Number(process.env.COHORT_PORT ?? 3020),
       host: process.env.COHORT_HOST ?? '0.0.0.0',
+    },
+    ehrbase: {
+      // I container default ehrbase via nimloth-core-nätet; Mac-dev kan override.
+      baseUrl: process.env.EHRBASE_BASE_URL ?? 'http://192.168.1.189:11401/ehrbase',
+      timeoutMs: Number(process.env.EHRBASE_REQUEST_TIMEOUT_MS ?? 15_000),
     },
     bulk: {
       size: Number(process.env.COHORT_BULK_SIZE ?? 20_000),

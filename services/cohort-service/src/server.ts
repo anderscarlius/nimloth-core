@@ -4,10 +4,14 @@ import cors from 'cors';
 import express, { type Express } from 'express';
 import type pg from 'pg';
 import type { Logger } from 'pino';
+import type { EhrbaseClient } from './ehrbase-client.js';
 import { buildCohortRouter } from './routes/cohorts.js';
+import { buildLineageRouter } from './routes/lineage.js';
+import { buildPatientRouter } from './routes/patients.js';
 
 export interface ServerDeps {
   pool: pg.Pool;
+  ehr: EhrbaseClient;
   logger: Logger;
 }
 
@@ -39,6 +43,8 @@ export function buildApp(deps: ServerDeps): Express {
   });
 
   app.use('/api/cohorts', buildCohortRouter(deps.pool, deps.logger));
+  app.use('/api/patients', buildPatientRouter(deps.pool, deps.ehr, deps.logger));
+  app.use('/api/lineage', buildLineageRouter(deps.ehr, deps.logger));
 
   // Stoppa läckage av stack-traces
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
