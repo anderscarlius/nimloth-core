@@ -20,7 +20,7 @@ if [[ "$NO_CACHE" == "true" ]]; then
 fi
 
 docker build \
-  "${BUILD_FLAGS[@]}" \
+  ${BUILD_FLAGS[@]+"${BUILD_FLAGS[@]}"} \
   --tag "${IMAGE_NAME}:${VERSION}" \
   --tag "${IMAGE_NAME}:latest" \
   .
