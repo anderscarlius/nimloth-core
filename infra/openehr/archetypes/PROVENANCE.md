@@ -100,6 +100,35 @@ Varje arketyp dokumenteras med:
 - **Användning:** Diagnoser (ICD-10-SE). Behövs P3.0b för att kunna mappa.
 - **Licens:** CC-BY-SA 3.0 (openEHR Foundation)
 
+## openEHR-EHR-OBSERVATION.progress_note.v1.adl
+
+- **CKM-id:** `openEHR-EHR-OBSERVATION.progress_note.v1`
+- **UID:** `4c1c083f-70e1-4359-8ea2-07cafca0be0f`, revision 1.1.1
+- **Hämtad från:** https://raw.githubusercontent.com/regionstockholm/CKM-mirror-via-modellbibliotek/master/local/archetypes/entry/observation/openEHR-EHR-OBSERVATION.progress_note.v1.adl
+- **Källrepo:** Region Stockholms mirror av Modellbiblioteket (`regionstockholm/CKM-mirror-via-modellbibliotek`), i sin tur en fork-kedja från `openEHR/CKM-mirror` — vald i stället för den internationella mirrorn direkt eftersom projektet vill källa svenska arketyper från Modellbibliotekets kanal när möjligt (se `COMPOSITION.encounter.v1.adl` nedan för var den svenska översättningen faktiskt sitter).
+- **CKM-mirror commit:** `18edd9e26447380016293f4afcd2ac0806e8c116` per 2026-06-24
+- **Hämtningsdatum:** 2026-08-19
+- **SHA256:** `47b50c161dbe917003aa48282b20832229e6bd8d851c9a9ff90944e0ef0ec6cb`
+- **Filstorlek:** 21 732 bytes
+- **ADL-version:** 1.4
+- **Original author:** Heather Leslie, Atomica Informatics (2013-04-11)
+- **Användning:** Klinisk anteckning (fritext) — innehållsarketyp för Compose Etapp 1:s anteckningskomponent (`note-list-view`). **Ingen svensk översättning finns i mirrorn** (endast en/de/nb/es-ar/nl) — fältetiketter blir engelska tills en svensk översättning bidras uppströms till Modellbiblioteket. Se `Compose_Etapp1_MariaDemon_2026-08-19.md` i nimloth-docs för uppföljning som ett kandidat-bidrag.
+- **Licens:** CC-BY-SA **4.0** International (inbäddad i filens `other_details["licence"]` — nyare än repots rot-`LICENSE` som fortfarande anger 3.0; filens egen metadata är auktoritativ för filen).
+
+## openEHR-EHR-COMPOSITION.encounter.v1.adl
+
+- **CKM-id:** `openEHR-EHR-COMPOSITION.encounter.v1`
+- **Hämtad från:** https://raw.githubusercontent.com/regionstockholm/CKM-mirror-via-modellbibliotek/master/local/archetypes/composition/openEHR-EHR-COMPOSITION.encounter.v1.adl
+- **CKM-mirror commit:** `18edd9e26447380016293f4afcd2ac0806e8c116` per 2026-06-24
+- **Hämtningsdatum:** 2026-08-19
+- **SHA256:** `f334e2d3b7238c634cf753d19ab6e7900e8ffc4baa4b0c9614be4d55168d866c`
+- **Filstorlek:** 45 002 bytes
+- **ADL-version:** 1.4
+- **Original author:** Thomas Beale, Ocean Informatics UK (2005-10-10)
+- **Svensk översättning (`["sv"]`-block):** Kirsi Poikela, Per Nemirovski, Åsa Skagerhult, Manna Vosta — Tieto Sweden AB / B3 HealthTech / Region Östergötland / Karolinska University Hospital. Genuin, väl auktoriserad svensk översättning (inte bara engelska etiketter) — detta är skälet till att kompositions-omslaget hämtas härifrån snarare än direkt från den internationella mirrorn.
+- **Användning:** "Vårdkontakt" — kompositions-omslag runt `OBSERVATION.progress_note.v1` för anteckningskomponenten.
+- **Licens:** CC-BY-SA **4.0** International (samma auktoritetsanmärkning som ovan).
+
 ---
 
 ## Reproduktionssteg
@@ -120,3 +149,13 @@ shasum -a 256 *.adl
 ```
 
 Förväntade SHA256 listas per arketyp ovan.
+
+De två anteckningsarketyperna (`progress_note.v1`, `encounter.v1`) kommer från Modellbiblioteks-mirrorn (Region Stockholm), inte den internationella CKM-mirrorn direkt — separat block eftersom källrepot skiljer sig:
+
+```bash
+cd infra/openehr/archetypes
+BASE="https://raw.githubusercontent.com/regionstockholm/CKM-mirror-via-modellbibliotek/master/local/archetypes"
+curl -fsSL "$BASE/entry/observation/openEHR-EHR-OBSERVATION.progress_note.v1.adl" -o openEHR-EHR-OBSERVATION.progress_note.v1.adl
+curl -fsSL "$BASE/composition/openEHR-EHR-COMPOSITION.encounter.v1.adl"           -o openEHR-EHR-COMPOSITION.encounter.v1.adl
+shasum -a 256 openEHR-EHR-OBSERVATION.progress_note.v1.adl openEHR-EHR-COMPOSITION.encounter.v1.adl
+```
