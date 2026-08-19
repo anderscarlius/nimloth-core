@@ -29,3 +29,10 @@ pnpm openehr:load-templates
 ```
 
 Detta POSTar alla OPT-filer i mappen till EHRbase. Failar om någon avvisas.
+
+## Undantag: `progress-note-v1.opt`
+
+Byggd manuellt via `tools.openehr.org/designer` (inte av `pnpm openehr:compile`, som
+fortfarande är i diagnostic mode) — se `DESIGNER-IMPORT-progress-note.md` i denna mapp för
+det fullständiga, reproducerbara steg-för-steg-receptet. Ska regenereras från compilern och
+detta undantag tas bort när P3.0b:s AOM→XML-OPT-bridge landar.
