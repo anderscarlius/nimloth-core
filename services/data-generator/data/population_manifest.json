@@ -9044,6 +9044,24 @@
       "compositionCount": 8,
       "failed": 0,
       "generatedAt": "2026-05-28T12:24:50.702Z"
+    },
+    {
+      "ehrId": "548a149c-fd3d-4e30-aaf2-176a5ed5f546",
+      "patientId": "maria-demo-comorbid-001",
+      "profileId": "diabetes_typ2",
+      "seed": 9001,
+      "compositionCount": 5,
+      "failed": 8,
+      "generatedAt": "2026-08-19T05:33:09.442Z"
+    },
+    {
+      "ehrId": "548a149c-fd3d-4e30-aaf2-176a5ed5f546",
+      "patientId": "maria-demo-comorbid-001",
+      "profileId": "hypertoni",
+      "seed": 9002,
+      "compositionCount": 5,
+      "failed": 7,
+      "generatedAt": "2026-08-19T05:33:25.948Z"
     }
   ]
 }
