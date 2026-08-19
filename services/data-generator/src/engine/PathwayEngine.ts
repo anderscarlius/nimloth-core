@@ -77,7 +77,17 @@ function clinicalAnnotationRaw(
   ctx: PatientContext,
   state: string,
   labFactor = 1.0,
-): { magnitude?: number; realUnit?: string; careflowStep?: string; annotation: string } {
+): {
+  magnitude?: number;
+  realUnit?: string;
+  careflowStep?: string;
+  annotation: string;
+  // Fas 3 AC-BP — blodtryck är två samtidiga värden, inte ett. lab_result
+  // kan bara returnera en analyt per anrop (se nedan), så ett andra
+  // observation-payload för diastoliskt tryck bärs här och emitteras av
+  // runPathway som en egen TimelineEvent med samma dayOffset.
+  secondary?: { magnitude: number; realUnit: string; annotation: string };
+} {
   // Map event type to "interesting" clinical payload by event-type.
   switch (eventType) {
     case "primary_care_encounter":
@@ -118,10 +128,23 @@ function clinicalAnnotationRaw(
       const m = labFactor === 1.0 ? rawM : Math.round(rawM * labFactor * 10) / 10;
       const realUnit =
         key === "hba1c" ? "mmol/mol" : key === "hemoglobin" ? "g/L" : "1";
+      // Fas 3 AC-BP: systoliskt blodtryck vinner alltid nyckel-prioriteringen
+      // ovan för hypertoni-profilen (insättningsordning i labs). Diastoliskt
+      // värde finns i samma labs-objekt men skulle annars aldrig emitteras —
+      // bär det som secondary så det når EHRbase som en egen observation.
+      const secondary =
+        key === "systolic_bp" && labs.diastolic_bp !== undefined
+          ? (() => {
+              const rawD = labs.diastolic_bp;
+              const d = labFactor === 1.0 ? rawD : Math.round(rawD * labFactor * 10) / 10;
+              return { magnitude: d, realUnit: "1", annotation: `lab_result | DIASTOLIC_BP | ${d} 1` };
+            })()
+          : undefined;
       return {
         magnitude: m,
         realUnit,
         annotation: `lab_result | ${(key ?? "value").toUpperCase()} | ${m} ${realUnit}`,
+        secondary,
       };
     }
     case "problem_diagnosis": {
@@ -183,9 +206,12 @@ function clinicalAnnotation(
   ctx: PatientContext,
   state: string,
   labFactor = 1.0,
-): { magnitude?: number; realUnit?: string; careflowStep?: string; annotation: string } {
+): ReturnType<typeof clinicalAnnotationRaw> {
   const result = clinicalAnnotationRaw(eventType, ctx, state, labFactor);
   assertAnnotation(result.annotation, eventType);
+  if (result.secondary) {
+    assertAnnotation(result.secondary.annotation, eventType);
+  }
   return result;
 }
 
@@ -200,6 +226,18 @@ export function runPathway(
   let day = 0;
   let stepCount = 0;
 
+  // Fas 3 AC-BP: en klinisk händelse kan bära ett sekundärt observation-
+  // payload (t.ex. diastoliskt blodtryck vid sidan av systoliskt) — emittera
+  // det som en egen TimelineEvent med samma dayOffset/eventType.
+  function pushClinicalEvent(eventType: SdgEventType, dayOffset: number, state: string, labFactor: number): void {
+    const clinicalData = clinicalAnnotation(eventType, ctx, state, labFactor);
+    const { secondary, ...primary } = clinicalData;
+    events.push({ dayOffset, eventType, clinicalData: primary });
+    if (secondary) {
+      events.push({ dayOffset, eventType, clinicalData: secondary });
+    }
+  }
+
   while (stateName && stepCount < maxSteps) {
     const state: PathwayState | undefined = pathway.states[stateName];
     if (!state) break;
@@ -209,11 +247,7 @@ export function runPathway(
 
     const labFactor = state.lab_factor ?? 1.0;
     for (const eventType of state.compositions ?? []) {
-      events.push({
-        dayOffset: day,
-        eventType,
-        clinicalData: clinicalAnnotation(eventType, ctx, stateName, labFactor),
-      });
+      pushClinicalEvent(eventType, day, stateName, labFactor);
     }
 
     const transitions: PathwayTransition[] = state.transitions ?? [];
@@ -221,11 +255,7 @@ export function runPathway(
     if (!taken) break;
 
     for (const eventType of taken.compositions ?? []) {
-      events.push({
-        dayOffset: day,
-        eventType,
-        clinicalData: clinicalAnnotation(eventType, ctx, stateName, labFactor),
-      });
+      pushClinicalEvent(eventType, day, stateName, labFactor);
     }
 
     stateName = taken.to;

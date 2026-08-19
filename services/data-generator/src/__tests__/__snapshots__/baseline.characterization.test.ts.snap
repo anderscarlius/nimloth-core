@@ -56,7 +56,7 @@ exports[`SDG-09 baseline characterization (S1 regression guard) > frozen event-c
       "moderate": 4,
       "severe": 2,
     },
-    "totalEvents": 102,
+    "totalEvents": 112,
   },
   {
     "count": 10,
