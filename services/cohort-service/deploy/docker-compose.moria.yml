@@ -1,0 +1,44 @@
+# Moria pull-deploy — CI/CD-temat 2026-08-19.
+#
+# Källa i git, inte efterhandsrekonstruktion (se deploy/RUNBOOK_DEPLOY.md).
+# Ersätter den cohort-service-delen av /opt/nimloth-core-ku/docker-compose.ku.yml
+# på Moria (den behåller omop-projector — orört, ej del av detta ärende).
+#
+# Ingen egen healthcheck-override längre: localhost->127.0.0.1-fixen är
+# nu inbakad i Dockerfilens HEALTHCHECK (image-nivå), så den tidigare
+# ospårade /opt/nimloth-core-ku/docker-compose.moria.yml-overriden
+# pensioneras i samma veva som denna fil tas i bruk.
+#
+# omop-projector är en CLI/batch-engångskörning, inte en långlivad tjänst —
+# lämnas orörd i den gamla KU-compose-filen (utanför detta ärendes scope).
+
+services:
+  cohort-service:
+    image: ghcr.io/anderscarlius/nimloth-core-cohort-service:${IMAGE_TAG:?IMAGE_TAG måste anges explicit, t.ex. sha-abc1234}
+    container_name: cohort-service-core
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      OMOP_DB_HOST: core-db
+      OMOP_DB_PORT: "5432"
+      OMOP_DB_NAME: core
+      OMOP_DB_USER: core
+      OMOP_DB_PASSWORD: core
+      COHORT_PORT: "3020"
+      # CORS: Atlas-origin (publik via Cloudflare) + lokal Atlas-preview för dev.
+      # Cloudflare Access skyddar tunneln; ingen MFA på API:t självt eftersom
+      # datan är synthetic.
+      CORS_ALLOWED_ORIGINS: https://nimloth-atlas.carlius.net,http://localhost:3017
+    ports:
+      # Portstrategi 11100-serie: 11111.
+      - "11111:3020"
+    networks:
+      - nimloth-core
+    labels:
+      - "com.nimloth.service=cohort-service"
+      - "com.nimloth.demoInstance=true"
+
+networks:
+  nimloth-core:
+    external: true

@@ -1,15 +1,22 @@
 # =====================================================================
-# KU Deploy — sidostack för Kohortutforskaren-tjänsterna på CarliusFyra.
+# KU Deploy — sidostack för Kohortutforskaren-tjänsterna.
+#
+# Historisk not (2026-08-19): kommentaren nedan sa länge "CarliusFyra" —
+# tjänsterna kör i praktiken på Moria (/opt/nimloth-core-ku/) sedan en
+# tidigare, odokumenterad migrering. Repofilen är den historiska källan,
+# inte en levande deploy-referens.
+#
+# CI/CD-temat (2026-08-19): cohort-service-tjänsten deployas numera via
+# den nya ghcr-pull-vägen — se services/cohort-service/deploy/. Denna fil
+# behåller bara omop-projector (CLI/batch, utanför det ärendets scope).
+# Den tidigare cohort-service-tjänstedefinitionen nedan är kvar i git-
+# historiken men ska INTE längre köras därifrån — se deploy/RUNBOOK_DEPLOY.md
+# "Efter denna deploy: rensa den gamla KU-compose-filen".
 #
 # Avsiktligt isolerat från nimloth-core:s huvud-compose så att deploy + restart
 # inte kan röra övriga tjänster av misstag. Anslutet till nimloth-core-nätet
 # (external) så att tjänsterna når core-db/ehrbase/aql-template-service via
 # container-namn.
-#
-# Användning på CarliusFyra (/volume2/docker/nimloth-core-ku/):
-#   docker-compose -f docker-compose.ku.yml up -d
-#   docker-compose -f docker-compose.ku.yml logs -f cohort-service
-#   docker-compose -f docker-compose.ku.yml down
 #
 # omop-projector körs ad-hoc:
 #   docker-compose -f docker-compose.ku.yml run --rm omop-projector \
