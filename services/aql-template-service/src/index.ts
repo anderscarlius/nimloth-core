@@ -21,7 +21,12 @@ function main(): void {
     process.exit(1);
   }
 
-  const app = createServer({ registry, ehrbaseBaseUrl: config.ehrbaseBaseUrl, logger });
+  const app = createServer({
+    registry,
+    ehrbaseBaseUrl: config.ehrbaseBaseUrl,
+    logger,
+    corsAllowedOrigins: config.corsAllowedOrigins,
+  });
   app.listen(config.port, () => {
     logger.info({ port: config.port, templates: registry.size() }, "HTTP server ready");
   });

@@ -15,11 +15,32 @@ export interface ServerDeps {
   registry: TemplateRegistry;
   ehrbaseBaseUrl: string;
   logger: Logger;
+  corsAllowedOrigins?: string[];
 }
 
 export function createServer(deps: ServerDeps): express.Express {
   const app = express();
   app.use(express.json({ limit: "256kb" }));
+
+  // Compose Etapp 1 — se config.ts. Tomt/ounsatt = ingen CORS-header,
+  // identiskt med tidigare beteende.
+  const allowedOrigins = deps.corsAllowedOrigins ?? [];
+  if (allowedOrigins.length > 0) {
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      const origin = req.headers.origin;
+      if (origin && allowedOrigins.includes(origin)) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+        res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+      }
+      if (req.method === "OPTIONS") {
+        res.sendStatus(204);
+        return;
+      }
+      next();
+    });
+  }
+
   app.use(mockAuth);
 
   // Health

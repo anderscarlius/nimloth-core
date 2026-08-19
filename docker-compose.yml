@@ -636,6 +636,10 @@ services:
       PORT: "3010"
       LOG_LEVEL: info
       EHRBASE_BASE_URL: http://ehrbase:8080/ehrbase
+      # Compose Etapp 1 — opt-in via skalmiljövariabel, tom default =
+      # ingen CORS-header (identiskt med tidigare beteende överallt som
+      # inte explicit sätter CORS_ALLOWED_ORIGINS före `docker compose up`).
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
     ports:
       - "3010:3010"
     depends_on:
