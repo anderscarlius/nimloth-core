@@ -8,7 +8,7 @@ utanför detta ärendes scope.
 ## Drift-regel — läs innan du kör
 
 Samma regel som `nimloth-compose/deploy/RUNBOOK_DEPLOY.md`: filerna i
-`/opt/cohort-service-deploy/` på Moria är **engångskopior**, redigeras
+`/opt/nimloth-deploy/cohort-service/` på Moria är **engångskopior**, redigeras
 aldrig på plats. Källan är alltid detta repo. `deploy.sh` loggar sin
 käll-SHA och compose-filens sha256-hash vid varje körning.
 
@@ -33,13 +33,13 @@ bruk (se grind 2-anteckningarna för exakt kommando).
 GIT_SHA=$(git rev-parse --short=7 HEAD)
 IMAGE_TAG="sha-${GIT_SHA}"
 
-ssh nsf-moria "mkdir -p /opt/cohort-service-deploy"
+ssh nsf-moria "mkdir -p /opt/nimloth-deploy/cohort-service"
 scp services/cohort-service/deploy/docker-compose.moria.yml \
     services/cohort-service/deploy/deploy.sh \
-    nsf-moria:/opt/cohort-service-deploy/
-ssh nsf-moria "chmod +x /opt/cohort-service-deploy/deploy.sh"
+    nsf-moria:/opt/nimloth-deploy/cohort-service/
+ssh nsf-moria "chmod +x /opt/nimloth-deploy/cohort-service/deploy.sh"
 
-ssh nsf-moria "cd /opt/cohort-service-deploy && IMAGE_TAG=${IMAGE_TAG} DEPLOY_SOURCE_SHA=$(git rev-parse HEAD) ./deploy.sh"
+ssh nsf-moria "cd /opt/nimloth-deploy/cohort-service && IMAGE_TAG=${IMAGE_TAG} DEPLOY_SOURCE_SHA=$(git rev-parse HEAD) ./deploy.sh"
 ```
 
 ## Verifiering efter deploy
@@ -57,7 +57,7 @@ Revision-labeln ska matcha `git rev-parse HEAD`, health-status ska bli
 ## Rollback
 
 ```bash
-ssh nsf-moria "cd /opt/cohort-service-deploy && IMAGE_TAG=<föregående-tagg> DEPLOY_SOURCE_SHA=rollback ./deploy.sh"
+ssh nsf-moria "cd /opt/nimloth-deploy/cohort-service && IMAGE_TAG=<föregående-tagg> DEPLOY_SOURCE_SHA=rollback ./deploy.sh"
 ```
 
 ## Efter denna deploy: rensa den gamla KU-compose-filen
@@ -70,4 +70,4 @@ och `networks`-blocket) så ingen råkar köra `docker-compose -f
 docker-compose.ku.yml up -d` därifrån och skapar en namnkonflikt. Detta
 är en avsiktlig, engångs-redigering av en redan hand-underhållen fil —
 inte ett brott mot engångskopia-regeln ovan (den gäller de NYA filerna
-i `/opt/cohort-service-deploy/`).
+i `/opt/nimloth-deploy/cohort-service/`).
