@@ -23,11 +23,13 @@ import {
   buildLaboratoryTestResultOpt,
   buildMedicationSummaryOpt,
   buildProblemDiagnosisOpt,
+  buildProgressNoteOpt,
   createBridgeAuditPublisher,
   ARR_DEFAULT_TEMPLATE_ID,
   DEFAULT_TEMPLATE_ID,
   LAB_DEFAULT_TEMPLATE_ID,
   PD_DEFAULT_TEMPLATE_ID,
+  PROGRESS_NOTE_DEFAULT_TEMPLATE_ID,
 } from "../index.js";
 
 const EHRBASE_URL = process.env.EHRBASE_URL ?? "http://localhost:8088";
@@ -59,6 +61,7 @@ const TEMPLATES: TemplateSpec[] = [
   { templateId: PD_DEFAULT_TEMPLATE_ID, build: () => buildProblemDiagnosisOpt() },
   { templateId: ARR_DEFAULT_TEMPLATE_ID, build: () => buildAdverseReactionRiskOpt() },
   { templateId: LAB_DEFAULT_TEMPLATE_ID, build: () => buildLaboratoryTestResultOpt() },
+  { templateId: PROGRESS_NOTE_DEFAULT_TEMPLATE_ID, build: () => buildProgressNoteOpt() },
 ];
 
 async function ensureEhrbaseUp(): Promise<void> {

@@ -35,6 +35,15 @@ export {
 } from "./laboratory-test-result-opt.js";
 
 export {
+  buildProgressNoteOpt,
+  PROGRESS_NOTE_DEFAULT_TEMPLATE_ID,
+  PROGRESS_NOTE_DEFAULT_CONCEPT,
+  PROGRESS_NOTE_DEFAULT_UID,
+  PROGRESS_NOTE_ELEMENTS,
+  type ProgressNoteOptOpts,
+} from "./progress-note-opt.js";
+
+export {
   createBridgeAuditPublisher,
   buildAuditEvent,
   isKafkaDisabled,
