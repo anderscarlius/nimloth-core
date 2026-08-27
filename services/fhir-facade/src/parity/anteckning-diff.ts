@@ -159,3 +159,97 @@ export async function diffAnteckningForPatient(
 
   return { patientNo, ehrId, totalLegacyNotes: legacyNotes.length, rows, summary };
 }
+
+// B4 Etapp 2 — spegelbilden av ovan för S2 (Nimloth auktoritativ, legacy
+// skuggas). Samma modulgräns-argument som Etapp 1 (se filens header):
+// diffAnteckningForPatient itererar FRÅN legacy, vilket är rätt för
+// S0/S1 men ofullständigt för S2 — en Nimloth-född anteckning vars
+// omvända skuggskrivning fallerat skulle aldrig upptäckas av en
+// legacy-driven loop, eftersom den inte finns i legacy alls än. Denna
+// funktion itererar i stället FRÅN reverse_shadow_write_log (gatewayens
+// facit över vad Nimloth skrivit), inte från en generaliserad
+// N-riktningsloop (S7 — ingen verktygslåda, en sibling-funktion räcker).
+//
+// note_text i reverse_shadow_write_log är denormaliserad vid
+// skrivtillfället (se migration-gatewayens migrations/006-kommentar) —
+// ingen AQL-läsning behövs här, bara en jämförelse mot legacy:s aktuella
+// text för SUCCESS-poster.
+
+export type NimlothOriginClassification =
+  | "NIMLOTH_ONLY_NOT_SHADOWED"
+  | "REVERSE_SHADOW_SUCCESS_MATCH"
+  | "REVERSE_SHADOW_SUCCESS_MISMATCH";
+
+export interface NimlothOriginDiffRow {
+  voId: string;
+  classification: NimlothOriginClassification;
+  nimlothText: string;
+  legacyText: string | null;
+  legacyNoteId: string | null;
+}
+
+export interface NimlothOriginDiffResult {
+  ehrId: string;
+  totalNimlothNotes: number;
+  rows: NimlothOriginDiffRow[];
+  summary: Record<NimlothOriginClassification, number>;
+}
+
+interface ReverseShadowLogRow {
+  vo_id: string;
+  note_text: string;
+  legacy_note_id: string | null;
+  status: "SUCCESS" | "FAILED";
+}
+
+async function fetchLegacyNoteText(legacySimBaseUrl: string, legacyNoteId: string): Promise<string | null> {
+  const resp = await fetch(`${legacySimBaseUrl}/notes/${encodeURIComponent(legacyNoteId)}`);
+  if (resp.status === 404) return null;
+  const body = (await resp.json()) as { text: string };
+  return body.text;
+}
+
+export async function diffNimlothOriginatedForEhr(
+  deps: { legacySimBaseUrl: string; gatewayPool: pg.Pool },
+  ehrId: string,
+): Promise<NimlothOriginDiffResult> {
+  const logRows = await deps.gatewayPool.query(
+    `SELECT vo_id, note_text, legacy_note_id, status FROM reverse_shadow_write_log WHERE ehr_id = $1`,
+    [ehrId],
+  );
+  const rowsData = logRows.rows as ReverseShadowLogRow[];
+
+  const summary: Record<NimlothOriginClassification, number> = {
+    NIMLOTH_ONLY_NOT_SHADOWED: 0,
+    REVERSE_SHADOW_SUCCESS_MATCH: 0,
+    REVERSE_SHADOW_SUCCESS_MISMATCH: 0,
+  };
+
+  const rows: NimlothOriginDiffRow[] = [];
+  for (const logRow of rowsData) {
+    if (logRow.status === "FAILED") {
+      summary.NIMLOTH_ONLY_NOT_SHADOWED++;
+      rows.push({
+        voId: logRow.vo_id,
+        classification: "NIMLOTH_ONLY_NOT_SHADOWED",
+        nimlothText: logRow.note_text,
+        legacyText: null,
+        legacyNoteId: null,
+      });
+      continue;
+    }
+
+    const legacyText = await fetchLegacyNoteText(deps.legacySimBaseUrl, logRow.legacy_note_id as string);
+    const matches = legacyText === logRow.note_text;
+    summary[matches ? "REVERSE_SHADOW_SUCCESS_MATCH" : "REVERSE_SHADOW_SUCCESS_MISMATCH"]++;
+    rows.push({
+      voId: logRow.vo_id,
+      classification: matches ? "REVERSE_SHADOW_SUCCESS_MATCH" : "REVERSE_SHADOW_SUCCESS_MISMATCH",
+      nimlothText: logRow.note_text,
+      legacyText,
+      legacyNoteId: logRow.legacy_note_id,
+    });
+  }
+
+  return { ehrId, totalNimlothNotes: rowsData.length, rows, summary };
+}

@@ -9,7 +9,7 @@
 //   tsx src/parity/scripts/run-anteckning-diff.ts <patient_no> <ehr_id>
 
 import pg from "pg";
-import { diffAnteckningForPatient } from "../anteckning-diff.js";
+import { diffAnteckningForPatient, diffNimlothOriginatedForEhr } from "../anteckning-diff.js";
 
 async function main(): Promise<void> {
   const [patientNo, ehrId] = process.argv.slice(2);
@@ -48,6 +48,27 @@ async function main(): Promise<void> {
     console.log(`    legacy:  ${row.legacyText}`);
     if (row.openEhrText !== null) console.log(`    openehr: ${row.openEhrText}`);
     if (row.errorDetail) console.log(`    fel:     ${row.errorDetail}`);
+  }
+
+  // B4 Etapp 2 — spegelbilden: anteckningar FÖDDA i Nimloth (S2), diffade
+  // mot legacy. B5:s andra halva kräver båda riktningarna för att vara
+  // ärligt "noll avvikelse" — en ren legacy-driven diff ser aldrig en
+  // Nimloth-född post vars omvända skuggskrivning fallerat.
+  const reverseResult = await diffNimlothOriginatedForEhr(
+    { legacySimBaseUrl: process.env.LEGACY_SIM_BASE_URL ?? "http://localhost:11601", gatewayPool },
+    ehrId,
+  );
+  console.log(`\n=== Paritetsdiff — Nimloth-födda anteckningar (S2) — ehr_id=${ehrId} ===\n`);
+  console.log(`Totalt antal Nimloth-födda anteckningar: ${reverseResult.totalNimlothNotes}\n`);
+  console.log("Klassificering:");
+  for (const [key, count] of Object.entries(reverseResult.summary)) {
+    console.log(`  ${key}: ${count}`);
+  }
+  console.log("\nDetalj:");
+  for (const row of reverseResult.rows) {
+    console.log(`  [${row.classification}] ${row.voId}`);
+    console.log(`    nimloth: ${row.nimlothText}`);
+    if (row.legacyText !== null) console.log(`    legacy:  ${row.legacyText}`);
   }
 
   await gatewayPool.end();

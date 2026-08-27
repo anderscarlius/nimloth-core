@@ -5,7 +5,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type pg from "pg";
-import { diffAnteckningForPatient } from "../parity/anteckning-diff.js";
+import { diffAnteckningForPatient, diffNimlothOriginatedForEhr } from "../parity/anteckning-diff.js";
 
 function fakePool(shadowRows: Array<{ legacy_note_id: string; status: string; composition_uid: string | null; error_detail: string | null }>): pg.Pool {
   return {
@@ -112,6 +112,80 @@ describe("anteckning-diff — de fyra klassificeringarna", () => {
       SHADOW_FAILED: 1,
       SHADOW_SUCCESS_MATCH: 1,
       SHADOW_SUCCESS_MISMATCH: 0,
+    });
+  });
+});
+
+// B4 Etapp 2 — spegelbilden: Nimloth-födda anteckningar (S2), diffade
+// mot legacy via reverse_shadow_write_log. Ingen AQL denna gång —
+// note_text är denormaliserad i loggen (se migration-gatewayens
+// migrations/006-kommentar).
+function fakeGatewayPoolForReverse(
+  logRows: Array<{ vo_id: string; note_text: string; legacy_note_id: string | null; status: string }>,
+): pg.Pool {
+  return {
+    query: vi.fn().mockResolvedValue({ rows: logRows }),
+  } as unknown as pg.Pool;
+}
+
+describe("anteckning-diff — Nimloth-födda anteckningar (S2)", () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (url.includes("/notes/legacy-note-match")) {
+          return { status: 200, json: async () => ({ text: "Text A" }) } as Response;
+        }
+        if (url.includes("/notes/legacy-note-mismatch")) {
+          return { status: 200, json: async () => ({ text: "En annan text i legacy" }) } as Response;
+        }
+        throw new Error(`oväntat fetch-anrop: ${url}`);
+      }),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("NIMLOTH_ONLY_NOT_SHADOWED — FAILED-post, aldrig kommit fram till legacy", async () => {
+    const pool = fakeGatewayPoolForReverse([
+      { vo_id: "vo-1", note_text: "text", legacy_note_id: null, status: "FAILED" },
+    ]);
+    const result = await diffNimlothOriginatedForEhr({ legacySimBaseUrl: "http://x", gatewayPool: pool }, "ehr-1");
+    expect(result.summary.NIMLOTH_ONLY_NOT_SHADOWED).toBe(1);
+    expect(result.rows[0].legacyText).toBeNull();
+  });
+
+  it("REVERSE_SHADOW_SUCCESS_MATCH — kom fram, samma text som i legacy", async () => {
+    const pool = fakeGatewayPoolForReverse([
+      { vo_id: "vo-1", note_text: "Text A", legacy_note_id: "legacy-note-match", status: "SUCCESS" },
+    ]);
+    const result = await diffNimlothOriginatedForEhr({ legacySimBaseUrl: "http://x", gatewayPool: pool }, "ehr-1");
+    expect(result.summary.REVERSE_SHADOW_SUCCESS_MATCH).toBe(1);
+    expect(result.summary.REVERSE_SHADOW_SUCCESS_MISMATCH).toBe(0);
+  });
+
+  it("REVERSE_SHADOW_SUCCESS_MISMATCH — kom fram, men skiljer sig från legacy", async () => {
+    const pool = fakeGatewayPoolForReverse([
+      { vo_id: "vo-1", note_text: "Text A", legacy_note_id: "legacy-note-mismatch", status: "SUCCESS" },
+    ]);
+    const result = await diffNimlothOriginatedForEhr({ legacySimBaseUrl: "http://x", gatewayPool: pool }, "ehr-1");
+    expect(result.summary.REVERSE_SHADOW_SUCCESS_MISMATCH).toBe(1);
+    expect(result.rows[0].legacyText).toBe("En annan text i legacy");
+  });
+
+  it("blandat fall: alla tre klassificeringar särskiljs korrekt", async () => {
+    const pool = fakeGatewayPoolForReverse([
+      { vo_id: "vo-1", note_text: "text", legacy_note_id: null, status: "FAILED" },
+      { vo_id: "vo-2", note_text: "Text A", legacy_note_id: "legacy-note-match", status: "SUCCESS" },
+      { vo_id: "vo-3", note_text: "Text A", legacy_note_id: "legacy-note-mismatch", status: "SUCCESS" },
+    ]);
+    const result = await diffNimlothOriginatedForEhr({ legacySimBaseUrl: "http://x", gatewayPool: pool }, "ehr-1");
+    expect(result.summary).toEqual({
+      NIMLOTH_ONLY_NOT_SHADOWED: 1,
+      REVERSE_SHADOW_SUCCESS_MATCH: 1,
+      REVERSE_SHADOW_SUCCESS_MISMATCH: 1,
     });
   });
 });
