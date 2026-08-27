@@ -1,4 +1,5 @@
-// Läsvägen — utökad för S2 (B4 Etapp 2, Grind 1 fynd i, del 1).
+// Läsvägen — utökad för S2 (B4 Etapp 2, Grind 1 fynd i, del 1) och för
+// S3 (B4 Etapp 3, Grind 1 punkt f).
 //
 // G1 (Etapp 1): live läsfederation mot legacy, inte logg-baserad CDC.
 // I S0/S1 räckte det att läsa legacy rakt av — legacy förblir en
@@ -10,6 +11,17 @@
 // vy"). Denna fil slår ihop legacy:s lista med FAILED-poster ur
 // reverse_shadow_write_log (identifierade via vo_id, källa: samma tabell
 // som redan bär texten denormaliserad — se dess migrations-kommentar).
+//
+// S3-tillägget (Grind 1 punkt f, beslut med motivering): efter en
+// återgång till LEGACY_ONLY är legacy återigen auktoritativt — vyn ska
+// visa legacy:s innehåll, inte tyst servera Nimloths rikare version
+// (det vore att låtsas att återgången inte hänt). Men en post som
+// ursprungligen skrevs under NIMLOTH-auktoritet (note_provenance =
+// 'openehr') och lyckades reverse-skuggas bär en LOSSY projektion i
+// legacy. Att visa den utan markering vore att tyst servera den
+// fattigare versionen — det uttryckliga förbudet i insikt 4. Varje
+// sådan post annoteras därför med richer_version_available + en
+// pekare mot exportpaketets manifestpost (compositionUid).
 
 import type pg from "pg";
 import type { LegacyClient, LegacyNote } from "./legacy-client.js";
@@ -26,10 +38,39 @@ export interface MergedNote {
   created_at: string;
   signed_at: string | null;
   source: MergedNoteSource;
+  richer_version_available: boolean;
+  richer_version_ref: { composition_uid: string } | null;
 }
 
-function fromLegacy(note: LegacyNote): MergedNote {
-  return { ...note, source: "legacy" };
+interface RicherVersionRow {
+  legacy_note_id: string;
+  composition_uid: string;
+}
+
+async function fetchRicherVersionRefs(pool: pg.Pool, legacyNoteIds: string[]): Promise<Map<string, string>> {
+  if (legacyNoteIds.length === 0) return new Map();
+  // note_provenance styr VILKEN store som var auktoritativ när posten
+  // skrevs, men bär inte compositionUid — den kopplingen finns bara i
+  // reverse_shadow_write_log (legacy_note_id -> composition_uid, satt
+  // vid SUCCESS). En join, inte två separata frågor att kombinera i
+  // applikationskoden.
+  const result = await pool.query(
+    `SELECT r.legacy_note_id, r.composition_uid
+     FROM reverse_shadow_write_log r
+     JOIN note_provenance p ON p.logical_note_id = r.vo_id
+     WHERE r.legacy_note_id = ANY($1::uuid[]) AND r.status = 'SUCCESS' AND p.canonical_store = 'openehr'`,
+    [legacyNoteIds],
+  );
+  return new Map(result.rows.map((row: RicherVersionRow) => [row.legacy_note_id, row.composition_uid]));
+}
+
+function fromLegacy(note: LegacyNote, richerVersionCompositionUid: string | undefined): MergedNote {
+  return {
+    ...note,
+    source: "legacy",
+    richer_version_available: richerVersionCompositionUid !== undefined,
+    richer_version_ref: richerVersionCompositionUid ? { composition_uid: richerVersionCompositionUid } : null,
+  };
 }
 
 // Upptäckt live under Fas B steg 6 (medvetet framkallad SHADOW_FAILED):
@@ -78,6 +119,10 @@ async function fetchPendingShadowNotes(pool: pg.Pool, patientNo: string): Promis
     created_at: toIsoString(row.note_created_at),
     signed_at: null,
     source: "openehr_pending_shadow" as const,
+    // Den HÄR posten ÄR den rikare versionen (den bor bara i EHRbase än)
+    // — ingen ytterligare pekare att erbjuda.
+    richer_version_available: false,
+    richer_version_ref: null,
   }));
 }
 
@@ -93,12 +138,17 @@ export async function getNotesByPatientMerged(
 ): Promise<MergedNotesResult> {
   let legacyNotes: MergedNote[] = [];
   let legacyUnavailable = false;
+  let rawLegacyNotes: LegacyNote[] = [];
   try {
-    legacyNotes = (await legacyClient.getNotesByPatient(patientNo)).map(fromLegacy);
+    rawLegacyNotes = await legacyClient.getNotesByPatient(patientNo);
   } catch {
     // legacy helt nere (inte "posten finns inte") — degradera, krascha inte.
     legacyUnavailable = true;
   }
+  // Utanför try/catch avsiktligt: ett fel HÄR är ett gateway-DB-fel, inte
+  // ett legacy-otillgänglighetsfel — de ska inte rapporteras som samma sak.
+  const richerRefs = await fetchRicherVersionRefs(pool, rawLegacyNotes.map((n) => n.id));
+  legacyNotes = rawLegacyNotes.map((n) => fromLegacy(n, richerRefs.get(n.id)));
   const pending = await fetchPendingShadowNotes(pool, patientNo);
   const notes = [...legacyNotes, ...pending].sort((a, b) => a.created_at.localeCompare(b.created_at));
   return { notes, legacyUnavailable };
@@ -122,6 +172,8 @@ async function fetchPendingShadowNoteById(pool: pg.Pool, id: string): Promise<Me
     created_at: toIsoString(row.note_created_at),
     signed_at: null,
     source: "openehr_pending_shadow",
+    richer_version_available: false,
+    richer_version_ref: null,
   };
 }
 
@@ -137,7 +189,10 @@ export async function getNoteByIdMerged(
   } catch {
     legacyUnavailable = true;
   }
-  if (legacyNote) return fromLegacy(legacyNote);
+  if (legacyNote) {
+    const richerRefs = await fetchRicherVersionRefs(pool, [legacyNote.id]);
+    return fromLegacy(legacyNote, richerRefs.get(legacyNote.id));
+  }
 
   const pending = await fetchPendingShadowNoteById(pool, id);
   if (pending) return pending;

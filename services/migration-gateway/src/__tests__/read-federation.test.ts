@@ -96,6 +96,41 @@ describe("getNotesByPatientMerged", () => {
     expect(merged.notes).toHaveLength(1);
   });
 
+  it("B4 Etapp 3, insikt 4: en SUCCESS-reverse-skuggad post är markerad richer_version_available — legacy är auktoritativt men INTE tyst det enda som visas", async () => {
+    const legacy: LegacyClient = fakeLegacyClient();
+    const ehrId = randomUUID();
+    await seedIdentity(pool, { patientNo: "1001", ehrId, careUnit: "vc-lund-norr" });
+    const legacyNote = await legacy.createNote({ patient_no: "1001", care_unit: "vc-lund-norr", text: "a", author_sign: "----" });
+    const compositionUid = `${randomUUID()}::local.ehrbase.org::1`;
+    const voId = compositionUid.split("::")[0];
+    await pool.query(
+      `INSERT INTO note_provenance (logical_note_id, canonical_store) VALUES ($1, 'openehr')`,
+      [voId],
+    );
+    await pool.query(
+      `INSERT INTO reverse_shadow_write_log
+         (composition_uid, vo_id, ehr_id, patient_no, care_unit, note_text, note_created_at, legacy_note_id, status, duration_ms)
+       VALUES ($1, $2, $3, '1001', 'vc-lund-norr', 'a', NOW(), $4, 'SUCCESS', 50)`,
+      [compositionUid, voId, ehrId, legacyNote.id],
+    );
+
+    const merged = await getNotesByPatientMerged(pool, legacy, "1001");
+    expect(merged.notes).toHaveLength(1);
+    expect(merged.notes[0].richer_version_available).toBe(true);
+    expect(merged.notes[0].richer_version_ref).toEqual({ composition_uid: compositionUid });
+
+    const single = await getNoteByIdMerged(pool, legacy, legacyNote.id);
+    expect(single?.richer_version_available).toBe(true);
+  });
+
+  it("en legacy-född post (aldrig reverse-skuggad) har richer_version_available=false", async () => {
+    const legacy: LegacyClient = fakeLegacyClient();
+    await legacy.createNote({ patient_no: "1001", care_unit: "vc-lund-norr", text: "legacy-född", author_sign: "ANCA" });
+    const merged = await getNotesByPatientMerged(pool, legacy, "1001");
+    expect(merged.notes[0].richer_version_available).toBe(false);
+    expect(merged.notes[0].richer_version_ref).toBeNull();
+  });
+
   it("legacy helt nere: degraderar (legacyUnavailable=true) i stället för att krascha, pending-poster syns ändå", async () => {
     const unreachable = fakeUnreachableLegacyClient();
     const ehrId = randomUUID();

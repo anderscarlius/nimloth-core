@@ -89,12 +89,18 @@ describe("routinghistoriken", () => {
     return result.rows[0].now as Date;
   }
 
+  // B4 Etapp 3: 10ms visade sig vara för tunn en marginal under full
+  // svit-belastning (många containrar + testfiler samtidigt) — testet
+  // flakade intermittent (verifierat: alltid grönt isolerat, ibland rött
+  // i full körning). Höjt till 100ms. Upptäckt medan denna fil ändå
+  // redigerades denna etapp, inte ett eget letande.
+
   it("auktoritetsproveniens över tid: atTime rekonstruerar vad som gällde vid en given tidpunkt, inte bara nu", async () => {
     const audit = fakeAudit();
     await setDirection(pool, audit, { domain: "anteckning", careUnit: "vc-lund-norr", direction: "SHADOW", updatedBy: "op1" });
 
     const between = await dbNow();
-    await new Promise((r) => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 100));
 
     await setDirection(pool, audit, { domain: "anteckning", careUnit: "vc-lund-norr", direction: "NIMLOTH", updatedBy: "op2" });
 
@@ -104,7 +110,7 @@ describe("routinghistoriken", () => {
 
   it("atTime före första ändringen ger DEFAULT_DIRECTION", async () => {
     const before = await dbNow();
-    await new Promise((r) => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 100));
     const audit = fakeAudit();
     await setDirection(pool, audit, { domain: "anteckning", careUnit: "vc-lund-norr", direction: "SHADOW", updatedBy: "op1" });
     expect(await getDirection(pool, "anteckning", "vc-lund-norr", before)).toBe(DEFAULT_DIRECTION);
@@ -128,6 +134,24 @@ describe("routinghistoriken", () => {
         resourceType: "RoutingConfig",
         resourceId: "anteckning/vc-lund-norr",
         details: expect.objectContaining({ from: "LEGACY_ONLY", to: "SHADOW" }),
+      }),
+    );
+  });
+
+  it("B4 Etapp 3, A6: auditspåret är obrutet över S2→S3-återgången specifikt (NIMLOTH -> LEGACY_ONLY), inte bara routingändringar i allmänhet", async () => {
+    const emit = vi.fn().mockResolvedValue(undefined);
+    const spyAudit: GatewayAuditPublisher = { emit, stop: async () => {} };
+
+    await setDirection(pool, spyAudit, { domain: "anteckning", careUnit: "vc-lund-norr", direction: "NIMLOTH", updatedBy: "op1" });
+    await setDirection(pool, spyAudit, { domain: "anteckning", careUnit: "vc-lund-norr", direction: "LEGACY_ONLY", updatedBy: "revert-operator" });
+
+    expect(emit).toHaveBeenCalledTimes(2);
+    expect(emit).toHaveBeenNthCalledWith(
+      2,
+      "ROUTING_CHANGED",
+      expect.objectContaining({
+        resourceId: "anteckning/vc-lund-norr",
+        details: expect.objectContaining({ from: "NIMLOTH", to: "LEGACY_ONLY" }),
       }),
     );
   });

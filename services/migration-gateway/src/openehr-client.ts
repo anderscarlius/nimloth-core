@@ -10,6 +10,13 @@ export class OpenEhrWriteError extends Error {
   }
 }
 
+export class OpenEhrReadError extends Error {
+  constructor(public readonly status: number) {
+    super(`EHRbase avvisade läsningen: HTTP ${status}`);
+    this.name = "OpenEhrReadError";
+  }
+}
+
 export interface OpenEhrClient {
   writeProgressNote(input: {
     ehrId: string;
@@ -17,10 +24,21 @@ export interface OpenEhrClient {
     composerName: string;
     timestampIso: string;
   }): Promise<{ compositionUid: string }>;
+  // B4 Etapp 3 — exportpaketet (§2 i prompten): kanoniskt format, inte en
+  // AQL-projektion. AQL (anteckning-diff.ts) räcker för att jämföra EN
+  // textsträng; exportpaketet ska bära hela compositionen som den faktiskt
+  // lagras.
+  fetchRawComposition(ehrId: string, compositionUid: string): Promise<unknown>;
 }
 
 export function createOpenEhrClient(baseUrl: string): OpenEhrClient {
   return {
+    async fetchRawComposition(ehrId, compositionUid) {
+      const resp = await fetch(`${baseUrl}/rest/openehr/v1/ehr/${ehrId}/composition/${compositionUid}`);
+      if (!resp.ok) throw new OpenEhrReadError(resp.status);
+      return resp.json();
+    },
+
     async writeProgressNote({ ehrId, text, composerName, timestampIso }) {
       const composition = {
         _type: "COMPOSITION",

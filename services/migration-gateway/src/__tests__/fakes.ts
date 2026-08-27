@@ -51,7 +51,9 @@ export function fakeFailingLegacyClient(): LegacyClient {
   };
 }
 
-export function fakeOpenEhrClient(opts: { shouldFail?: boolean } = {}): OpenEhrClient & { calls: number } {
+export function fakeOpenEhrClient(
+  opts: { shouldFail?: boolean; rawComposition?: unknown } = {},
+): OpenEhrClient & { calls: number } {
   const client = {
     calls: 0,
     async writeProgressNote() {
@@ -60,6 +62,9 @@ export function fakeOpenEhrClient(opts: { shouldFail?: boolean } = {}): OpenEhrC
         throw new Error("simulerat EHRbase-fel");
       }
       return { compositionUid: `${randomUUID()}::local.ehrbase.org::1` };
+    },
+    async fetchRawComposition() {
+      return opts.rawComposition ?? { _type: "COMPOSITION", composer: { name: "Test Testsson" } };
     },
   };
   return client;

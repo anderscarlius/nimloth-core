@@ -400,3 +400,32 @@ describe("I4 spegelvänd — idempotens för omvänd skuggskrivning (attemptReve
     expect(second.status).toBe("SKIPPED_ALREADY_ATTEMPTED");
   });
 });
+
+describe("S5 (B4 Etapp 3) — I1 genom hela S2→S3-återgången", () => {
+  it("en S2-skriven, reverse-skuggad post: ett återförsök EFTER att routingen växlat tillbaka till LEGACY_ONLY är fortfarande skyddat — inget nytt legacy-anrop, oavsett riktning som nu gäller", async () => {
+    const legacy = fakeLegacyClient();
+    const audit = fakeAudit();
+    const note = {
+      compositionUid: `${randomUUID()}::local.ehrbase.org::1`,
+      voId: randomUUID(),
+      ehrId: randomUUID(),
+      patientNo: "1001",
+      careUnit: "vc-lund-norr",
+      text: "skriven under S2",
+      noteCreatedAt: new Date().toISOString(),
+    };
+
+    const duringS2 = await attemptReverseShadowWrite(pool, legacy, audit, note);
+    expect(duringS2.status).toBe("SUCCESS");
+
+    // Återgången: routingen pekas tillbaka. Detta ändrar INGET i
+    // idempotenskontrollen — den frågar reverse_shadow_write_log, inte
+    // routing_history — men S5 kräver att det bevisas explicit för just
+    // detta scenario, inte bara antas av symmetri.
+    await setDirection(pool, audit, { domain: "anteckning", careUnit: "vc-lund-norr", direction: "LEGACY_ONLY", updatedBy: "revert-operator" });
+
+    const afterS3 = await attemptReverseShadowWrite(pool, legacy, audit, note);
+    expect(afterS3.status).toBe("SKIPPED_ALREADY_ATTEMPTED");
+    expect(afterS3.legacyNoteId).toBe(duringS2.legacyNoteId);
+  });
+});
