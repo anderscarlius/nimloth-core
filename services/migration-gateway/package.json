@@ -1,0 +1,32 @@
+{
+  "name": "@nimloth-core/migration-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "description": "B4 — reversibel skrivväg. Routar skrivningar mellan legacy-simulatorn och Nimloth enligt en auditerad, hot-reloadad routingtabell. Block 7 (Migreringslagret) — riktig arkitektur, inte rekvisita (D5).",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && pnpm run copy-assets",
+    "copy-assets": "mkdir -p dist/migrations && cp migrations/*.sql dist/migrations/",
+    "clean": "rm -rf dist",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "kafkajs": "^2.2.4",
+    "pg": "^8.11.5",
+    "pino": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.7",
+    "@types/pg": "^8.11.6",
+    "@types/supertest": "^6.0.2",
+    "supertest": "^7.0.0",
+    "tsx": "^4.9.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  }
+}
