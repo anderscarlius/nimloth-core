@@ -22,6 +22,8 @@ export async function freshTestPool(): Promise<pg.Pool> {
   for (const file of files) {
     await pool.query(readFileSync(path.join(MIGRATIONS_DIR, file), "utf-8"));
   }
-  await pool.query("TRUNCATE legacy_patient_identity, routing_config, shadow_write_log, note_provenance");
+  await pool.query(
+    "TRUNCATE legacy_patient_identity, routing_history, shadow_write_log, reverse_shadow_write_log, note_provenance",
+  );
   return pool;
 }

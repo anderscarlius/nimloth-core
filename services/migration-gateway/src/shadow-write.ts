@@ -4,6 +4,11 @@
 // (shadow_write_log) och auditeras, men klienten får ändå framgång —
 // en trasig skugga får inte blockera det kliniska arbetet. Detta är en
 // medveten avvägning, inte ett förbiseende (Grind 1, punkt e).
+//
+// S2 (B4 Etapp 2) — samma regel speglad: Nimloth skrivs FÖRST och är
+// auktoritativ, legacy skuggas best-effort via attemptReverseShadowWrite.
+// En trasig omvänd skugga blockerar inte klienten, men den ÄR en skuld
+// mot en framtida S2→S3-återgång (se shadow-debt.ts).
 
 import type pg from "pg";
 import type { LegacyClient, LegacyNote } from "./legacy-client.js";
@@ -20,11 +25,39 @@ export interface ShadowResult {
   errorDetail?: string;
 }
 
+export interface ReverseShadowResult {
+  status: ShadowStatus;
+  legacyNoteId?: string;
+  errorDetail?: string;
+}
+
+export interface NimlothNote {
+  id: string; // vo_id — se reverse_shadow_write_log-migrationen för resonemanget.
+  compositionUid: string;
+  ehrId: string;
+  text: string;
+  createdAt: string;
+}
+
 export interface WriteNoteResult {
   direction: RoutingDirection;
-  legacyNote: LegacyNote;
+  legacyNote?: LegacyNote;
+  nimlothNote?: NimlothNote;
   shadow: ShadowResult | null;
+  reverseShadow: ReverseShadowResult | null;
 }
+
+// Grind 1-amendemang (2026-08-27, punkt 1): author_sign i legacy betyder
+// "den här personen skrev det" i en journalhandling — det får aldrig
+// ersättas med en systemsignatur som ser ut som en riktig persons
+// initialer. När Nimloth är författare och skuggar till legacy finns
+// ingen tillförlitlig mappning till legacy:s fyrteckensformat (inget
+// HSA/SITHS-baserat identitetslager är byggt än, Block 1). Valet är
+// därför INGEN mappning: en sentinel som ingen människa kan förväxla med
+// riktiga initialer (jmf. "ANCA", "BSVN" i seed-datat). Förlustliggaren
+// (loss-ledger.ts) registrerar detta explicit som "författare ej
+// rekonstruerbar", inte som en lossy men ändå meningsfull konvertering.
+export const REVERSE_SHADOW_SENTINEL_AUTHOR_SIGN = "----";
 
 async function setProvenance(pool: pg.Pool, logicalNoteId: string, canonicalStore: "legacy" | "openehr"): Promise<void> {
   await pool.query(
@@ -98,6 +131,79 @@ export async function attemptShadowWrite(
   }
 }
 
+// I4, spegelvänd — idempotent: säkert att kalla om för samma composition.
+// Kollar loggen FÖRE varje legacy-anrop, oavsett om den underliggande
+// legacy-raden (om den finns) hunnit signeras sedan förra försöket (I1,
+// Grind 1 punkt h) — det finns aldrig ett andra anrop som skulle kunna
+// träffa en signerad rad, för det finns aldrig ett andra anrop alls.
+export async function attemptReverseShadowWrite(
+  pool: pg.Pool,
+  legacyClient: LegacyClient,
+  audit: GatewayAuditPublisher,
+  note: {
+    compositionUid: string;
+    voId: string;
+    ehrId: string;
+    patientNo: string;
+    careUnit: string;
+    text: string;
+    noteCreatedAt: string;
+  },
+): Promise<ReverseShadowResult> {
+  const existing = await pool.query(
+    `SELECT status, legacy_note_id, error_detail FROM reverse_shadow_write_log WHERE composition_uid = $1`,
+    [note.compositionUid],
+  );
+  if (existing.rows.length > 0) {
+    return {
+      status: "SKIPPED_ALREADY_ATTEMPTED",
+      legacyNoteId: existing.rows[0].legacy_note_id ?? undefined,
+      errorDetail: existing.rows[0].error_detail ?? undefined,
+    };
+  }
+
+  const startedAt = Date.now();
+  try {
+    const legacyNote = await legacyClient.createNote({
+      patient_no: note.patientNo,
+      care_unit: note.careUnit,
+      text: note.text,
+      author_sign: REVERSE_SHADOW_SENTINEL_AUTHOR_SIGN,
+    });
+    const durationMs = Date.now() - startedAt;
+    await pool.query(
+      `INSERT INTO reverse_shadow_write_log
+         (composition_uid, vo_id, ehr_id, patient_no, care_unit, note_text, note_created_at, legacy_note_id, status, duration_ms)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'SUCCESS', $9)`,
+      [note.compositionUid, note.voId, note.ehrId, note.patientNo, note.careUnit, note.text, note.noteCreatedAt, legacyNote.id, durationMs],
+    );
+    await audit.emit("REVERSE_SHADOW_WRITE_SUCCESS", {
+      resourceType: "Note",
+      resourceId: note.voId,
+      canonicalStore: "openehr",
+      details: { legacyNoteId: legacyNote.id, ehrId: note.ehrId, durationMs },
+    });
+    return { status: "SUCCESS", legacyNoteId: legacyNote.id };
+  } catch (err) {
+    const durationMs = Date.now() - startedAt;
+    const errorDetail = err instanceof Error ? err.message : String(err);
+    await pool.query(
+      `INSERT INTO reverse_shadow_write_log
+         (composition_uid, vo_id, ehr_id, patient_no, care_unit, note_text, note_created_at, status, error_detail, duration_ms)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'FAILED', $8, $9)`,
+      [note.compositionUid, note.voId, note.ehrId, note.patientNo, note.careUnit, note.text, note.noteCreatedAt, errorDetail, durationMs],
+    );
+    await audit.emit("REVERSE_SHADOW_WRITE_FAILED", {
+      resourceType: "Note",
+      resourceId: note.voId,
+      canonicalStore: "openehr",
+      outcome: "ERROR",
+      details: { errorDetail, ehrId: note.ehrId, durationMs },
+    });
+    return { status: "FAILED", errorDetail };
+  }
+}
+
 export async function writeNote(
   pool: pg.Pool,
   legacyClient: LegacyClient,
@@ -109,16 +215,46 @@ export async function writeNote(
     careUnit: string;
     text: string;
     authorSign: string;
+    composerName?: string;
   },
 ): Promise<WriteNoteResult> {
   const direction = await getDirection(pool, params.domain, params.careUnit);
 
-  // I5: SHADOW kräver en identitetsmappning. Ingen tyst fallback till
-  // LEGACY_ONLY om den saknas — det vore precis den tysta felkälla
-  // spec:en varnar för. Felar högt, före legacy-skrivningen.
+  // I5: SHADOW och NIMLOTH kräver båda en identitetsmappning. Ingen tyst
+  // fallback till LEGACY_ONLY om den saknas — det vore precis den tysta
+  // felkälla spec:en varnar för. Felar högt, före någon skrivning alls.
   let ehrId: string | undefined;
-  if (direction === "SHADOW") {
+  if (direction === "SHADOW" || direction === "NIMLOTH") {
     ehrId = await lookupEhrIdByPatientNo(pool, params.patientNo);
+  }
+
+  if (direction === "NIMLOTH") {
+    const timestampIso = new Date().toISOString();
+    const { compositionUid } = await openEhrClient.writeProgressNote({
+      ehrId: ehrId as string,
+      text: params.text,
+      composerName: params.composerName ?? params.authorSign,
+      timestampIso,
+    });
+    const voId = compositionUid.split("::")[0];
+    await setProvenance(pool, voId, "openehr");
+
+    const reverseShadow = await attemptReverseShadowWrite(pool, legacyClient, audit, {
+      compositionUid,
+      voId,
+      ehrId: ehrId as string,
+      patientNo: params.patientNo,
+      careUnit: params.careUnit,
+      text: params.text,
+      noteCreatedAt: timestampIso,
+    });
+
+    return {
+      direction,
+      nimlothNote: { id: voId, compositionUid, ehrId: ehrId as string, text: params.text, createdAt: timestampIso },
+      shadow: null,
+      reverseShadow,
+    };
   }
 
   const legacyNote = await legacyClient.createNote({
@@ -131,9 +267,9 @@ export async function writeNote(
   await setProvenance(pool, legacyNote.id, "legacy");
 
   if (direction === "LEGACY_ONLY") {
-    return { direction, legacyNote, shadow: null };
+    return { direction, legacyNote, shadow: null, reverseShadow: null };
   }
 
   const shadow = await attemptShadowWrite(pool, openEhrClient, audit, legacyNote, ehrId as string);
-  return { direction, legacyNote, shadow };
+  return { direction, legacyNote, shadow, reverseShadow: null };
 }

@@ -13,6 +13,7 @@ import { createOpenEhrClient, type OpenEhrClient } from "./openehr-client.js";
 import { writeNote } from "./shadow-write.js";
 import { getDirection, listRouting, setDirection, type RoutingDirection } from "./routing.js";
 import { IdentityNotFoundError, seedIdentity } from "./identity.js";
+import { getNoteByIdMerged, getNotesByPatientMerged, LegacyUnavailableError } from "./read-federation.js";
 
 const DOMAIN_NOTE = "anteckning"; // D2 — enda domänen denna etapp.
 
@@ -25,15 +26,22 @@ export function buildApp(
   const app = express();
   app.use(express.json());
 
-  // Skrivvägen — S0/S1. Body-formen är legacyns egen (legacy är
-  // auktoritativ i båda tillstånden denna etapp känner till).
+  // Skrivvägen — S0/S1/S2. Body-formen är legacyns egen (author_sign
+  // krävs alltid — legacy behöver den direkt i S0/S1, och den fungerar
+  // som fallback-komponentnamn mot EHRbase). composer_name är valfri och
+  // används i stället för author_sign som EHRbase-komponentens namn när
+  // den finns (t.ex. ett riktigt namn i stället för fyra bokstäver) —
+  // men NÅGONSIN mot legacy: en omvänd skuggskrivning (S2) använder
+  // alltid sentinelen i shadow-write.ts, aldrig något klienten skickat
+  // in (Grind 1-amendemang punkt 1).
   app.post("/gateway/notes", async (req: Request, res: Response) => {
-    const { patient_no, care_unit, text, author_sign } = req.body ?? {};
+    const { patient_no, care_unit, text, author_sign, composer_name } = req.body ?? {};
     if (
       typeof patient_no !== "string" || !patient_no ||
       typeof care_unit !== "string" || !care_unit ||
       typeof text !== "string" || !text ||
-      typeof author_sign !== "string" || author_sign.length !== 4
+      typeof author_sign !== "string" || author_sign.length !== 4 ||
+      (composer_name !== undefined && typeof composer_name !== "string")
     ) {
       res.status(400).json({ fel: "ogiltig-post" });
       return;
@@ -45,6 +53,7 @@ export function buildApp(
         careUnit: care_unit,
         text,
         authorSign: author_sign,
+        composerName: composer_name,
       });
       res.status(201).json(result);
     } catch (err) {
@@ -60,15 +69,26 @@ export function buildApp(
     }
   });
 
-  // Läsvägen — live läsfederation mot legacy-sim (G1: inte logg-baserad
-  // CDC, se legacy-client.ts).
+  // Läsvägen — live läsfederation, nu sammanslagen (Grind 1 fynd i, del
+  // 1): legacy:s lista + Nimloth-födda poster vars omvända skuggskrivning
+  // fallerat (annars osynliga i legacy, vilket bryter A5). Se
+  // read-federation.ts.
   app.get("/gateway/notes/by-patient/:patient_no", async (req: Request, res: Response) => {
-    const notes = await legacyClient.getNotesByPatient(req.params.patient_no);
-    res.status(200).json(notes);
+    const { notes, legacyUnavailable } = await getNotesByPatientMerged(pool, legacyClient, req.params.patient_no);
+    res.status(200).json({ notes, legacy_unavailable: legacyUnavailable });
   });
 
   app.get("/gateway/notes/:id", async (req: Request, res: Response) => {
-    const note = await legacyClient.getNoteById(req.params.id);
+    let note;
+    try {
+      note = await getNoteByIdMerged(pool, legacyClient, req.params.id);
+    } catch (err) {
+      if (err instanceof LegacyUnavailableError) {
+        res.status(503).json({ fel: "legacy-otillganglig", meddelande: err.message });
+        return;
+      }
+      throw err;
+    }
     if (!note) {
       res.status(404).json({ fel: "hittades-inte" });
       return;
@@ -84,12 +104,12 @@ export function buildApp(
   });
 
   // Routingtabellen — hot-reload är gratis (ingen cache), varje ändring
-  // auditeras i setDirection() själv (S5/I3).
+  // auditeras i setDirection() själv (S5/I3). NIMLOTH tillagd (S2).
   app.put("/routing/:domain/:care_unit", async (req: Request, res: Response) => {
     const direction = req.body?.direction as RoutingDirection | undefined;
     const updatedBy = req.body?.updated_by as string | undefined;
-    if (direction !== "LEGACY_ONLY" && direction !== "SHADOW") {
-      res.status(400).json({ fel: "ogiltig-riktning", tillatna: ["LEGACY_ONLY", "SHADOW"] });
+    if (direction !== "LEGACY_ONLY" && direction !== "SHADOW" && direction !== "NIMLOTH") {
+      res.status(400).json({ fel: "ogiltig-riktning", tillatna: ["LEGACY_ONLY", "SHADOW", "NIMLOTH"] });
       return;
     }
     if (!updatedBy) {

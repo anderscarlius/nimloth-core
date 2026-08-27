@@ -16,7 +16,9 @@ import type { Logger } from "pino";
 export type GatewayAuditAction =
   | "ROUTING_CHANGED"
   | "SHADOW_WRITE_SUCCESS"
-  | "SHADOW_WRITE_FAILED";
+  | "SHADOW_WRITE_FAILED"
+  | "REVERSE_SHADOW_WRITE_SUCCESS"
+  | "REVERSE_SHADOW_WRITE_FAILED";
 
 export interface GatewayAuditEvent {
   event_id: string;
@@ -59,7 +61,7 @@ export interface GatewayAuditPublisher {
 }
 
 function inferOutcome(action: GatewayAuditAction): "SUCCESS" | "ERROR" {
-  return action === "SHADOW_WRITE_FAILED" ? "ERROR" : "SUCCESS";
+  return action === "SHADOW_WRITE_FAILED" || action === "REVERSE_SHADOW_WRITE_FAILED" ? "ERROR" : "SUCCESS";
 }
 
 export function buildGatewayAuditEvent(
