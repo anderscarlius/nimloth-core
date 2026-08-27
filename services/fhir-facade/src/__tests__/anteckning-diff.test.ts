@@ -13,6 +13,22 @@ function fakePool(shadowRows: Array<{ legacy_note_id: string; status: string; co
   } as unknown as pg.Pool;
 }
 
+// G4: shadow_write_log och reverse_shadow_write_log är två olika
+// frågor mot samma pool — behöver kunna svara olika på var och en.
+function fakePoolWithReverse(
+  shadowRows: Array<{ legacy_note_id: string; status: string; composition_uid: string | null; error_detail: string | null }>,
+  reverseShadowedLegacyIds: string[],
+): pg.Pool {
+  return {
+    query: vi.fn().mockImplementation(async (sql: string) => {
+      if (sql.includes("reverse_shadow_write_log")) {
+        return { rows: reverseShadowedLegacyIds.map((id) => ({ legacy_note_id: id })) };
+      }
+      return { rows: shadowRows };
+    }),
+  } as unknown as pg.Pool;
+}
+
 const LEGACY_NOTES = [
   { id: "note-1", text: "Text A" },
   { id: "note-2", text: "Text B" },
@@ -96,7 +112,7 @@ describe("anteckning-diff — de fyra klassificeringarna", () => {
     expect(row?.openEhrText).toBe("En annan text än originalet");
   });
 
-  it("blandat fall: alla fyra klassificeringar samtidigt särskiljs korrekt", async () => {
+  it("blandat fall: alla klassificeringar samtidigt särskiljs korrekt", async () => {
     (globalThis as any).__aqlResponse = { rows: [["Text C"]] };
     const pool = fakePool([
       { legacy_note_id: "note-2", status: "FAILED", composition_uid: null, error_detail: "timeout" },
@@ -109,10 +125,29 @@ describe("anteckning-diff — de fyra klassificeringarna", () => {
     );
     expect(result.summary).toEqual({
       LEGACY_ONLY_NOT_SHADOWED: 1,
+      REVERSE_SHADOWED_SEE_MIRROR: 0,
       SHADOW_FAILED: 1,
       SHADOW_SUCCESS_MATCH: 1,
       SHADOW_SUCCESS_MISMATCH: 0,
     });
+  });
+
+  it("REVERSE_SHADOWED_SEE_MIRROR — G4: ingen framåtrad, men skriven av gatewayen i motsatt riktning", async () => {
+    const pool = fakePoolWithReverse([], ["note-1"]);
+    const result = await diffAnteckningForPatient(
+      { legacySimBaseUrl: "http://x", ehrbaseBaseUrl: "http://y", gatewayPool: pool },
+      "1001",
+      "ehr-1",
+    );
+    expect(result.summary).toEqual({
+      LEGACY_ONLY_NOT_SHADOWED: 2,
+      REVERSE_SHADOWED_SEE_MIRROR: 1,
+      SHADOW_FAILED: 0,
+      SHADOW_SUCCESS_MATCH: 0,
+      SHADOW_SUCCESS_MISMATCH: 0,
+    });
+    const row = result.rows.find((r) => r.legacyNoteId === "note-1");
+    expect(row?.classification).toBe("REVERSE_SHADOWED_SEE_MIRROR");
   });
 });
 

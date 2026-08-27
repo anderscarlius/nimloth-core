@@ -22,11 +22,20 @@
 // migration-gateway:s shadow_write_log för att skilja "kom aldrig fram"
 // (FAILED, eller ingen rad alls — se LEGACY_ONLY_NOT_SHADOWED) från
 // "kom fram och skiljer sig" (SUCCESS men innehållet ändå avviker).
+//
+// G4-stängning (B4 Etapp 3): en legacy-post utan rad i shadow_write_log
+// kan ändå ha kommit till legacy via DEN ANDRA riktningen — gatewayen
+// skrev den dit på Nimloths vägnar (reverse_shadow_write_log). Utan att
+// konsultera den tabellen konflaterar denna diff "aldrig skuggad i
+// någon riktning" med "skuggad, men åt andra hållet" (Etapp 2:s
+// körning: 16 av 32 var faktiskt reverse-skuggade). Se
+// B4_Etapp2_S2_Vaxling_2026-08-19.md kap 10.
 
 import type pg from "pg";
 
 export type AnteckningClassification =
   | "LEGACY_ONLY_NOT_SHADOWED"
+  | "REVERSE_SHADOWED_SEE_MIRROR"
   | "SHADOW_FAILED"
   | "SHADOW_SUCCESS_MATCH"
   | "SHADOW_SUCCESS_MISMATCH";
@@ -75,6 +84,19 @@ async function fetchShadowLog(gatewayPool: pg.Pool, legacyNoteIds: string[]): Pr
   return new Map(result.rows.map((row: ShadowLogRow) => [row.legacy_note_id, row]));
 }
 
+// G4-stängning: legacy-poster som gatewayen själv skrev dit (omvänd
+// riktning) — en träff här, inte ett saknat shadow_write_log-facit,
+// förklarar varför posten inte har en FRAMÅT-loggrad.
+async function fetchReverseShadowedLegacyIds(gatewayPool: pg.Pool, legacyNoteIds: string[]): Promise<Set<string>> {
+  if (legacyNoteIds.length === 0) return new Set();
+  const result = await gatewayPool.query(
+    `SELECT legacy_note_id FROM reverse_shadow_write_log
+     WHERE legacy_note_id = ANY($1::uuid[]) AND status = 'SUCCESS'`,
+    [legacyNoteIds],
+  );
+  return new Set(result.rows.map((row: { legacy_note_id: string }) => row.legacy_note_id));
+}
+
 async function fetchCompositionText(ehrbaseBaseUrl: string, ehrId: string, compositionUid: string): Promise<string | null> {
   const aql = {
     q: `SELECT o/data[at0001]/events[at0002]/data[at0003]/items[at0004]/value/value AS note_text
@@ -98,9 +120,11 @@ export async function diffAnteckningForPatient(
 ): Promise<AnteckningDiffResult> {
   const legacyNotes = await fetchLegacyNotes(deps.legacySimBaseUrl, patientNo);
   const shadowLog = await fetchShadowLog(deps.gatewayPool, legacyNotes.map((n) => n.id));
+  const reverseShadowed = await fetchReverseShadowedLegacyIds(deps.gatewayPool, legacyNotes.map((n) => n.id));
 
   const summary: Record<AnteckningClassification, number> = {
     LEGACY_ONLY_NOT_SHADOWED: 0,
+    REVERSE_SHADOWED_SEE_MIRROR: 0,
     SHADOW_FAILED: 0,
     SHADOW_SUCCESS_MATCH: 0,
     SHADOW_SUCCESS_MISMATCH: 0,
@@ -111,9 +135,27 @@ export async function diffAnteckningForPatient(
     const logRow = shadowLog.get(note.id);
 
     if (!logRow) {
-      // Förenkling denna etapp: ingen rad i shadow_write_log tolkas som
-      // "routing var LEGACY_ONLY när posten skrevs, ingen skuggning
-      // försöktes" — inte som en avvikelse. Håller inte om en post
+      if (reverseShadowed.has(note.id)) {
+        // G4: den här posten kom till legacy via reverse-skuggning, inte
+        // via legacy själv utan skuggning alls. Detaljen (matchar/skiljer
+        // sig) ägs av diffNimlothOriginatedForEhr — se den funktionens
+        // resultat för samma ehr_id, inte denna rad.
+        summary.REVERSE_SHADOWED_SEE_MIRROR++;
+        rows.push({
+          legacyNoteId: note.id,
+          classification: "REVERSE_SHADOWED_SEE_MIRROR",
+          legacyText: note.text,
+          openEhrText: null,
+          compositionUid: null,
+          errorDetail: null,
+        });
+        continue;
+      }
+
+      // Förenkling denna etapp: ingen rad i shadow_write_log OCH ingen
+      // rad i reverse_shadow_write_log tolkas som "routing var
+      // LEGACY_ONLY när posten skrevs, ingen skuggning försöktes i
+      // någon riktning" — inte som en avvikelse. Håller inte om en post
       // skrevs under SHADOW men shadow_write_log-raden gått förlorad av
       // annan anledning (skulle i så fall se likadan ut). Flaggat, inte
       // löst, i B4_Etapp1-rapporten.
