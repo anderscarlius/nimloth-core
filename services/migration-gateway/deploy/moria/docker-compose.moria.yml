@@ -1,0 +1,134 @@
+# B7 — Moria pull-deploy för migration-gateway + dess egen, ISOLERADE
+# B4-kedja (Grind 1, punkt e, amenderad 2026-08-28): egen Postgres, egen
+# EHRbase — INTE delad core-db/ehrbase-core. Målet är att det som kör
+# på Moria ska vara EXAKT det CI-jobbet (services/migration-gateway/
+# deploy/ci/docker-compose.ci.yml) reser, bara med längre uptime.
+# Samma bild-taggstrategi, samma miljövariabler i sak — skillnaden är
+# bara namngivna volymer (demo-data ska överleva en omstart, CI-data
+# ska inte) och Traefik-exponering i stället för CI-nedrivning.
+#
+# Delar det externa nätverket "b4-chain" med nimloth-legacy-sims egen
+# compose-fil (annat repo) — skapas idempotent av respektive deploy.sh.
+# INTE samma nätverk som /opt/nimloth-core:s "nimloth-core"-nätverk —
+# medveten isolering, se ovan.
+#
+# Portar enligt Portstrategi.md: migration-gateway 11113 (redan
+# allokerad), demo-ehrbase 11871 (redan reserverad, aldrig använd
+# innan denna etapp).
+
+services:
+  migration-gateway-db:
+    image: postgres:16-alpine
+    container_name: migration-gateway-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: migration_gateway
+      POSTGRES_USER: migration_gateway
+      POSTGRES_PASSWORD: migration_gateway
+    volumes:
+      - migration-gateway-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "migration_gateway"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - b4-chain
+
+  demo-ehrbase-db:
+    # Samma image + healthcheck-härdning som CI:s docker-compose.ci.yml
+    # (uuid_generate_v4()-racet upptäcktes och fixades där först).
+    image: ehrbase/ehrbase-v2-postgres:16.2@sha256:abe14e8f9ba33cabc9946c6c17c5aa95b64b35387f266cd20a894149203196d7
+    container_name: demo-ehrbase-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: postgres
+      EHRBASE_USER: ehrbase
+      EHRBASE_PASSWORD: ehrbase
+      EHRBASE_USER_ADMIN: ehrbase_admin
+      EHRBASE_PASSWORD_ADMIN: ehrbase_admin
+    volumes:
+      - demo-ehrbase-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "PGPASSWORD=ehrbase psql -U ehrbase -d ehrbase -tAc 'SELECT uuid_generate_v4()' >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    networks:
+      - b4-chain
+
+  demo-ehrbase:
+    image: ehrbase/ehrbase:2.30.1@sha256:c08be93f41164bb6ba8e957532ce4cccd18e6b9d26e074ef97f3faff9c3cd52f
+    container_name: demo-ehrbase
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:postgresql://demo-ehrbase-db:5432/ehrbase
+      DB_USER: ehrbase
+      DB_PASS: ehrbase
+      DB_USER_ADMIN: ehrbase_admin
+      DB_PASS_ADMIN: ehrbase_admin
+      SECURITY_AUTHTYPE: NONE
+      JAVA_TOOL_OPTIONS: "-Xmx2g"
+    depends_on:
+      demo-ehrbase-db:
+        condition: service_healthy
+    ports:
+      - "11871:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/ehrbase/"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks:
+      - b4-chain
+
+  migration-gateway:
+    image: ghcr.io/anderscarlius/nimloth-core-migration-gateway:${IMAGE_TAG:?IMAGE_TAG måste anges explicit, t.ex. sha-abc1234}
+    container_name: migration-gateway
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PGHOST: migration-gateway-db
+      PGPORT: "5432"
+      PGDATABASE: migration_gateway
+      PGUSER: migration_gateway
+      PGPASSWORD: migration_gateway
+      PORT: "11113"
+      # nimloth-legacy-sim-containern (annat repo, samma "b4-chain"-nät)
+      # — containernamnet, inte host-porten, eftersom kommunikationen
+      # sker inom Docker-nätverket.
+      LEGACY_SIM_BASE_URL: http://nimloth-legacy-sim:11601
+      EHRBASE_BASE_URL: http://demo-ehrbase:8080/ehrbase
+      KAFKA_BROKERS: disabled
+    depends_on:
+      migration-gateway-db:
+        condition: service_healthy
+      demo-ehrbase:
+        condition: service_healthy
+    ports:
+      - "11113:11113"
+    networks:
+      - b4-chain
+    labels:
+      - "com.nimloth.service=migration-gateway"
+      - "com.nimloth.demoInstance=true"
+      # Cloudflare-exponering (Grind 1, punkt g) — samma Traefik-mönster
+      # som nimloth-compose/nimloth-atlas. b4-demo.carlius.net måste
+      # registreras i Cloudflare Zero Trust separat (Anders, Fas C) om
+      # tunneln inte redan har en wildcard mot *.carlius.net.
+      - "traefik.enable=true"
+      - "traefik.http.routers.b4-demo.entrypoints=websecure"
+      - "traefik.http.routers.b4-demo.rule=Host(`b4-demo.carlius.net`)"
+      - "traefik.http.routers.b4-demo.service=b4-demo"
+      - "traefik.http.routers.b4-demo.tls=true"
+      - "traefik.http.services.b4-demo.loadbalancer.server.port=11113"
+
+networks:
+  b4-chain:
+    external: true
+
+volumes:
+  migration-gateway-db-data:
+  demo-ehrbase-db-data:
