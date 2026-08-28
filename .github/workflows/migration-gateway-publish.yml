@@ -152,6 +152,25 @@ jobs:
         # frisk, inte de andra tjänsterna.
         run: docker compose -f docker-compose.ci.yml up -d --wait --wait-timeout 180
 
+      # Grind 2-tillägg (3): gatewayens artefakt är redan spårbar via
+      # sha-<kort-sha>-taggen. legacy-sim dras med :latest (se motivering
+      # ovan) — den upplösta digesten loggas här så "vi testar den
+      # publicerade artefakten" går att bevisa i efterhand även för den,
+      # inte bara påstås.
+      - name: Logga upplösta image-digests
+        working-directory: services/migration-gateway/deploy/ci
+        # En loggningsbekvämlighet ska aldrig fälla jobbet — RepoDigests
+        # kan sakna värde om ett skal lokalt byggt (inte dragit) image
+        # råkar användas; degraderar till image-id i så fall i stället
+        # för att krascha steget.
+        run: |
+          echo "migration-gateway (${IMAGE_TAG_GATEWAY}):"
+          docker inspect --format='  {{if .RepoDigests}}{{index .RepoDigests 0}}{{else}}(ingen RepoDigest — inte en dragen image){{end}}' \
+            "$(docker compose -f docker-compose.ci.yml images -q migration-gateway)"
+          echo "nimloth-legacy-sim (:latest, upplöst denna körning):"
+          docker inspect --format='  {{if .RepoDigests}}{{index .RepoDigests 0}}{{else}}(ingen RepoDigest — inte en dragen image){{end}}' \
+            "$(docker compose -f docker-compose.ci.yml images -q legacy-sim)"
+
       - name: Kör B4-demot end-to-end, med skarpa asserts
         run: bash services/migration-gateway/deploy/ci/run-b4-chain-verification.sh
 

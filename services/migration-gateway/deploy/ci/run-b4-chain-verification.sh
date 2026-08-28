@@ -9,6 +9,16 @@ set -euo pipefail
 # Förutsätter: docker-compose.ci.yml uppe och friskt, node_modules
 # installerat i repo-roten (pnpm install körs av workflow-steget innan
 # detta skript). Körs FRÅN repo-roten (nimloth-core/).
+#
+# Grind 2-tillägg (2): alla asserts t.o.m. steg 9 är POSITIVA kontroller
+# — jobbet skulle gå grönt även med en trasig klassificerare (den skulle
+# aldrig rapportera en avvikelse den inte letar efter). Steg 10 är en
+# NEGATIV kontroll: korrumpera en post på riktigt, bevisa att
+# klassificeraren FAKTISKT fäller på den, städa, bevisa att den rena
+# körningen är ren igen. Samma reverseringsdisciplin som B4-etapperna
+# (S10) — inte blockerande för Moria-deployen enligt Anders.
+
+COMPOSE_FILE="services/migration-gateway/deploy/ci/docker-compose.ci.yml"
 
 GATEWAY_URL="http://localhost:11113"
 LEGACY_URL="http://localhost:11601"
@@ -74,10 +84,14 @@ curl -sf -X PUT "$GATEWAY_URL/routing/$DOMAIN/$CARE_UNIT" -H "Content-Type: appl
 DIR=$(curl -sf "$GATEWAY_URL/routing/$DOMAIN/$CARE_UNIT" | python3 -c "import json,sys; print(json.load(sys.stdin)['direction'])")
 [[ "$DIR" == "LEGACY_ONLY" ]] || fail "återgången till LEGACY_ONLY tog inte, läste tillbaka: $DIR"
 
-echo "=== 9/9 — paritetsdiff åt båda håll, exportpaket, självbärandetest ==="
-DIFF_OUT=$(GATEWAY_PGHOST=localhost GATEWAY_PGPORT=15432 GATEWAY_PGDATABASE=core GATEWAY_PGUSER=core GATEWAY_PGPASSWORD=core \
-  LEGACY_SIM_BASE_URL="$LEGACY_URL" EHRBASE_BASE_URL="$EHRBASE_URL" \
-  pnpm --filter @nimloth-core/fhir-facade exec tsx src/parity/scripts/run-anteckning-diff.ts "$PATIENT_NO" "$EHR_ID")
+run_diff() {
+  GATEWAY_PGHOST=localhost GATEWAY_PGPORT=15432 GATEWAY_PGDATABASE=core GATEWAY_PGUSER=core GATEWAY_PGPASSWORD=core \
+    LEGACY_SIM_BASE_URL="$LEGACY_URL" EHRBASE_BASE_URL="$EHRBASE_URL" \
+    pnpm --filter @nimloth-core/fhir-facade exec tsx src/parity/scripts/run-anteckning-diff.ts "$PATIENT_NO" "$EHR_ID"
+}
+
+echo "=== 9/10 — paritetsdiff åt båda håll, exportpaket, självbärandetest ==="
+DIFF_OUT=$(run_diff)
 echo "$DIFF_OUT"
 echo "$DIFF_OUT" | grep -qE "MISMATCH: [1-9]" && fail "paritetsdiffen visade en avvikelse — se utskriften ovan"
 echo "paritetsdiff: 0 avvikelser i båda riktningar"
@@ -98,5 +112,27 @@ ITEM_COUNT=$(python3 -c "import json; print(json.load(open('/tmp/b7-export-outpu
 pnpm --filter @nimloth-core/migration-gateway exec tsx src/scripts/verify-export-package.ts /tmp/b7-export-output \
   || fail "självbärandetestet misslyckades"
 
+echo "=== 10/10 — negativ kontroll: korrumpera på riktigt, bevisa att klassificeraren fäller ==="
+ORIGINAL_TEXT="B7 CI: skriven i Nimloth."
+LEGACY_NOTE_ID=$(docker compose -f "$COMPOSE_FILE" exec -T core-db \
+  psql -U core -d core -tAc "SELECT legacy_note_id FROM reverse_shadow_write_log WHERE ehr_id='$EHR_ID' AND status='SUCCESS' LIMIT 1;" | tr -d '\r')
+[[ -n "$LEGACY_NOTE_ID" ]] || fail "hittade ingen reverse-skuggad post att korrumpera"
+echo "korrumperar legacy-raden $LEGACY_NOTE_ID (reversering registrerad innan körning, S10)"
+
+docker compose -f "$COMPOSE_FILE" exec -T legacy-sim-db \
+  psql -U legacy_sim -d legacy_sim -c "UPDATE notes SET text = '[B7 CI — AVSIKTLIG KORRUPTION, NEGATIV KONTROLL]' WHERE id = '$LEGACY_NOTE_ID';" >/dev/null
+
+DIFF_OUT=$(run_diff)
+echo "$DIFF_OUT" | grep -qE "REVERSE_SHADOW_SUCCESS_MISMATCH: 1" \
+  || fail "negativ kontroll misslyckades: klassificeraren fällde INTE på en känd, avsiktlig avvikelse — se utskriften: $DIFF_OUT"
+echo "negativ kontroll bevisad: REVERSE_SHADOW_SUCCESS_MISMATCH: 1 fyrade mot den korrumperade posten"
+
+docker compose -f "$COMPOSE_FILE" exec -T legacy-sim-db \
+  psql -U legacy_sim -d legacy_sim -c "UPDATE notes SET text = '$ORIGINAL_TEXT' WHERE id = '$LEGACY_NOTE_ID';" >/dev/null
+
+DIFF_OUT=$(run_diff)
+echo "$DIFF_OUT" | grep -qE "MISMATCH: [1-9]" && fail "reverseringen misslyckades: fortfarande en avvikelse efter återställning: $DIFF_OUT"
+echo "reversering bekräftad: 0 avvikelser igen efter återställning"
+
 echo
-echo "=== B4-KEDJAN REST FRÅN NOLL: GRÖN ==="
+echo "=== B4-KEDJAN REST FRÅN NOLL: GRÖN (positiv OCH negativ kontroll bevisade) ==="
