@@ -79,40 +79,40 @@ describe("routinghistoriken", () => {
     expect(rows.rows.map((r) => r.direction)).toEqual(["SHADOW", "NIMLOTH"]);
   });
 
-  // Tidsstämplarna hämtas från Postgres själv (SELECT NOW()), inte från
-  // JS-klockan — routing_history.changed_at sätts av databasens NOW(),
-  // och en klientklocka som går ur synk med databascontainerns egen
-  // klocka (t.ex. Docker-värd vs. container) skulle annars göra testet
-  // flakigt av ett skäl som inte har med logiken att göra.
-  async function dbNow(): Promise<Date> {
-    const result = await pool.query("SELECT NOW() AS now");
-    return result.rows[0].now as Date;
+  // B7 (2026-08-28): den tidigare varianten satte tidsstämplar via
+  // SELECT NOW() + en riktig setTimeout-paus (10ms, sedan 100ms efter
+  // B4 Etapp 3) mellan skrivningarna — en race mot verklig väggklocka,
+  // inte mot data. Flakade två gånger under verklig belastning (lokal
+  // full svit, och sedan skarpt i GitHub Actions när tre workflow-körningar
+  // gick samtidigt) trots höjningen. Roten var fel klass av fix — mer
+  // marginal löser inte en race mot väggklockan, det gör den bara
+  // mer sällsynt. Skriver nu EXPLICITA changed_at-tidsstämplar direkt
+  // (bypassar setDirection helt för dessa två tester, som ändå bara
+  // testar getDirection:s punkt-i-tiden-rekonstruktion, inte skrivvägen)
+  // — ordningen avgörs av datat, aldrig av hur snabbt en frågeomgång
+  // råkar gå.
+  async function insertHistoryAt(direction: string, changedAt: Date, changedBy: string): Promise<void> {
+    await pool.query(
+      `INSERT INTO routing_history (domain, care_unit, direction, changed_at, changed_by)
+       VALUES ('anteckning', 'vc-lund-norr', $1, $2, $3)`,
+      [direction, changedAt, changedBy],
+    );
   }
 
-  // B4 Etapp 3: 10ms visade sig vara för tunn en marginal under full
-  // svit-belastning (många containrar + testfiler samtidigt) — testet
-  // flakade intermittent (verifierat: alltid grönt isolerat, ibland rött
-  // i full körning). Höjt till 100ms. Upptäckt medan denna fil ändå
-  // redigerades denna etapp, inte ett eget letande.
-
   it("auktoritetsproveniens över tid: atTime rekonstruerar vad som gällde vid en given tidpunkt, inte bara nu", async () => {
-    const audit = fakeAudit();
-    await setDirection(pool, audit, { domain: "anteckning", careUnit: "vc-lund-norr", direction: "SHADOW", updatedBy: "op1" });
-
-    const between = await dbNow();
-    await new Promise((r) => setTimeout(r, 100));
-
-    await setDirection(pool, audit, { domain: "anteckning", careUnit: "vc-lund-norr", direction: "NIMLOTH", updatedBy: "op2" });
+    const t1 = new Date(Date.now() - 60_000);
+    const between = new Date(Date.now() - 45_000);
+    const t2 = new Date(Date.now() - 30_000);
+    await insertHistoryAt("SHADOW", t1, "op1");
+    await insertHistoryAt("NIMLOTH", t2, "op2");
 
     expect(await getDirection(pool, "anteckning", "vc-lund-norr", between)).toBe("SHADOW");
     expect(await getDirection(pool, "anteckning", "vc-lund-norr")).toBe("NIMLOTH");
   });
 
   it("atTime före första ändringen ger DEFAULT_DIRECTION", async () => {
-    const before = await dbNow();
-    await new Promise((r) => setTimeout(r, 100));
-    const audit = fakeAudit();
-    await setDirection(pool, audit, { domain: "anteckning", careUnit: "vc-lund-norr", direction: "SHADOW", updatedBy: "op1" });
+    const before = new Date(Date.now() - 60_000);
+    await insertHistoryAt("SHADOW", new Date(Date.now() - 30_000), "op1");
     expect(await getDirection(pool, "anteckning", "vc-lund-norr", before)).toBe(DEFAULT_DIRECTION);
   });
 
