@@ -32,12 +32,14 @@ echo "Ny image-tagg:       $IMAGE_TAG"
 echo
 
 ENV_FILE="/opt/nimloth-deploy/.env"
-if [[ ! -f "$ENV_FILE" ]]; then
-  echo "FEL: $ENV_FILE saknas. Se deploy/RUNBOOK_DEPLOY.md för token-placering." >&2
+# Fynd (Fas C, 2026-08-28): katalogen ägs av nsf-agent, 0700 — inte
+# läsbar för anderscarlius trots docker/sudo-gruppmedlemskap. sudo cat
+# + eval i stället för ett vanligt `source`, som skulle misslyckas tyst.
+if ! sudo test -f "$ENV_FILE"; then
+  echo "FEL: $ENV_FILE saknas eller är oåtkomlig ens via sudo. Se deploy/RUNBOOK_DEPLOY.md." >&2
   exit 1
 fi
-# shellcheck source=/dev/null
-source "$ENV_FILE"
+eval "$(sudo cat "$ENV_FILE")"
 : "${GHCR_USER:?GHCR_USER saknas i $ENV_FILE}"
 : "${GHCR_PAT:?GHCR_PAT saknas i $ENV_FILE}"
 
