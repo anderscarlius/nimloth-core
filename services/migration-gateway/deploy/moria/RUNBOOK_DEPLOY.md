@@ -119,18 +119,51 @@ faktiska EHR:en skapats (samma `curl`-mönster som
 **Rollback:** en ny, namngiven demo-patient — ingen befintlig data
 rörs eller raderas (S5).
 
-## Steg 5 — Traefik/Cloudflare-exponering
+## Steg 5 — Cloudflare-exponering (INTE utförd, Anders' beslut)
 
-Traefik-labels är redan satta i `docker-compose.moria.yml` (steg 2).
-**Beroende som kan kräva Anders:** om `b4-demo.carlius.net` inte redan
-täcks av en wildcard-DNS mot tunneln, måste hostnamnet registreras i
-Cloudflare Zero Trust-dashboarden separat — se `B7_CICD_och_Moria_...md`
-för status. Går det inte att lösa: stanna här, rapportera "deployad,
-ej exponerad" (Anders, 2026-08-28).
+**Traefik-labels fanns ursprungligen i planen (Grind 1, punkt g) men
+togs bort igen** — upptäckt live i Fas C: Morias Traefik-container är
+ansluten till nätverket `carlius-net`, inte `b4-chain`. Traefiks
+Docker-provider upptäcker bara tjänster på nätverk den själv är
+ansluten till, så labels på migration-gateway hade aldrig kunnat
+routas dit oavsett innehåll. Att koppla `b4-chain` till `carlius-net`
+löser det tekniskt men bryter mot hela poängen med en isolerad kedja
+(Grind 1, punkt e) — inte gjort.
 
-**Rollback:** ta bort `traefik.*`-labels ur compose-filen och kör om
-`docker compose up -d` — Traefik slutar routa direkt, ingen Cloudflare-
-sidan behöver röras.
+**Ingen wildcard mot `*.carlius.net` finns** (bekräftat via
+`/opt/serveroperation/docs/tunnel-map.md`, framtaget 2026-08-10 direkt
+mot Cloudflare-API:t), och **ingen DNS-post för `b4-demo.carlius.net`
+finns än** (bekräftat via `cf-dns.py list`). Två steg krävs alltså, inte
+ett — verktygen finns redan på Moria (`/usr/local/bin/cf-*.py`, root,
+dry-run som standard); ingress-dry-runet kördes (utan `--apply`) för
+att bekräfta att kommandot fungerar, DNS-steget provades bara som en
+läsning (`list`):
+
+```bash
+# 1. DNS-post: peka subdomänen mot Moria-one-tunneln
+sudo /usr/local/bin/cf-dns.py point b4-demo.carlius.net 9cb4131e-0f5c-4a18-a572-75051cdd3e41 --apply
+
+# 2. Ingress-regel i tunnelns konfiguration
+sudo /usr/local/bin/cf-ingress.py set b4-demo.carlius.net http://127.0.0.1:11113 --apply
+```
+
+Direkt mot containerns egna host-port (samma mönster som
+`nimloth-atlas.carlius.net` → `127.0.0.1:11006`, ingen Traefik alls) —
+INTE Traefik-vägen, av skälet ovan.
+
+**Detta kommando är INTE körts.** `PUT` mot tunnelns ingress-endpoint
+ersätter HELA listan (28 andra subdomäner just nu) — en delad,
+svårlokal-fel-yta som ligger utanför den här etappens mandat att röra
+själv (S3/S8). Gränsen (Anders, 2026-08-28): går hostnamnet inte att
+lösa, stanna här och rapportera "deployad, ej exponerad" — inte
+improvisera en exponering. Se Fas D-rapporten för den fulla
+motiveringen.
+
+**Rollback (om Anders kör `--apply` och vill ångra):**
+```bash
+sudo /usr/local/bin/cf-ingress.py del b4-demo.carlius.net --apply
+sudo /usr/local/bin/cf-dns.py del b4-demo.carlius.net --apply
+```
 
 ## Verifiering efter hela deployen (S9 — inget annat på Moria påverkat)
 

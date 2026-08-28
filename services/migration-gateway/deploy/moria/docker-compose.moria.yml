@@ -114,16 +114,24 @@ services:
     labels:
       - "com.nimloth.service=migration-gateway"
       - "com.nimloth.demoInstance=true"
-      # Cloudflare-exponering (Grind 1, punkt g) — samma Traefik-mönster
-      # som nimloth-compose/nimloth-atlas. b4-demo.carlius.net måste
-      # registreras i Cloudflare Zero Trust separat (Anders, Fas C) om
-      # tunneln inte redan har en wildcard mot *.carlius.net.
-      - "traefik.enable=true"
-      - "traefik.http.routers.b4-demo.entrypoints=websecure"
-      - "traefik.http.routers.b4-demo.rule=Host(`b4-demo.carlius.net`)"
-      - "traefik.http.routers.b4-demo.service=b4-demo"
-      - "traefik.http.routers.b4-demo.tls=true"
-      - "traefik.http.services.b4-demo.loadbalancer.server.port=11113"
+      # Traefik-baserad exponering (som ursprungligen planerat i Grind 1,
+      # punkt g) VISADE SIG INTE FUNGERA, upptäckt live i Fas C: Morias
+      # Traefik-container är ansluten till "carlius-net", inte "b4-chain"
+      # — den kan aldrig upptäcka den här containern oavsett Traefik-
+      # labels, eftersom Docker-providern bara ser tjänster på nätverk
+      # den själv är med i. Att koppla b4-chain till carlius-net hade löst
+      # det, men bryter mot hela poängen med en isolerad kedja (Grind 1,
+      # punkt e). Traefik-labels borttagna (döda annars — vilseledande
+      # kod). Exponeringsvägen är i stället en DIREKT Cloudflare-ingress
+      # mot denna containers egna host-port, samma mönster som
+      # nimloth-atlas.carlius.net (127.0.0.1:11006, ingen Traefik alls):
+      #
+      #   sudo /usr/local/bin/cf-ingress.py set b4-demo.carlius.net http://127.0.0.1:11113 --apply
+      #
+      # Ingen wildcard mot *.carlius.net finns (bekräftat via
+      # /opt/serveroperation/docs/tunnel-map.md) — hostnamnet måste
+      # registreras explicit. Detta kommando är INTE körts av Claude
+      # (S8/etappens uttryckliga gräns: exponeringsbeslutet är Anders').
 
 networks:
   b4-chain:
