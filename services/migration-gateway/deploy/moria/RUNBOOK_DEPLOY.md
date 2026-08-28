@@ -27,11 +27,19 @@ Delad med nimloth-compose/cohort-service: `/opt/nimloth-deploy/.env`
 
 ## Steg 1 — nimloth-legacy-sim
 
+**Fynd, Fas C (2026-08-28): `/opt/nimloth-deploy` ägs av `nsf-agent`, 0700
+— varken läsbart eller skrivbart för `anderscarlius`, trots docker/sudo-
+gruppmedlemskap.** Underkatalogen skapas därför en gång via `sudo` och
+`chown`:as till `anderscarlius`, så att `scp` (som inte kan `sudo`)
+fungerar för denna och alla framtida deploys av samma tjänst. Det delade
+`.env`-token-filen förblir `nsf-agent`-ägd — `deploy.sh` läser den via
+`sudo cat` (redan inbyggt, `anderscarlius` har passwordless sudo).
+
 ```bash
 GIT_SHA=$(git -C ~/SynologyDrive/Hemmabasen/Kod/Nimloth/nimloth-legacy-sim rev-parse --short=7 HEAD)
 IMAGE_TAG="sha-${GIT_SHA}"
 
-ssh anderscarlius@192.168.1.220 "mkdir -p /opt/nimloth-deploy/nimloth-legacy-sim"
+ssh anderscarlius@192.168.1.220 "sudo mkdir -p /opt/nimloth-deploy/nimloth-legacy-sim && sudo chown anderscarlius:anderscarlius /opt/nimloth-deploy/nimloth-legacy-sim"
 scp ~/SynologyDrive/Hemmabasen/Kod/Nimloth/nimloth-legacy-sim/deploy/docker-compose.moria.yml \
     ~/SynologyDrive/Hemmabasen/Kod/Nimloth/nimloth-legacy-sim/deploy/deploy.sh \
     anderscarlius@192.168.1.220:/opt/nimloth-deploy/nimloth-legacy-sim/
@@ -58,7 +66,7 @@ ssh anderscarlius@192.168.1.220 "curl -sS http://127.0.0.1:11601/healthz"
 GIT_SHA=$(git rev-parse --short=7 HEAD)
 IMAGE_TAG="sha-${GIT_SHA}"
 
-ssh anderscarlius@192.168.1.220 "mkdir -p /opt/nimloth-deploy/migration-gateway"
+ssh anderscarlius@192.168.1.220 "sudo mkdir -p /opt/nimloth-deploy/migration-gateway && sudo chown anderscarlius:anderscarlius /opt/nimloth-deploy/migration-gateway"
 scp services/migration-gateway/deploy/moria/docker-compose.moria.yml \
     services/migration-gateway/deploy/moria/deploy.sh \
     anderscarlius@192.168.1.220:/opt/nimloth-deploy/migration-gateway/
