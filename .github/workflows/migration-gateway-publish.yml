@@ -105,6 +105,13 @@ jobs:
     permissions:
       contents: read
       packages: read
+    # Jobb-nivå, inte bara på ett enskilt steg — docker-compose.ci.yml
+    # interpolerar IMAGE_TAG_GATEWAY i VARJE `docker compose`-anrop i det
+    # här jobbet (upp, logga, riv ner), inte bara det första. Ett fel som
+    # upptäcktes i den första skarpa CI-körningen: "Riv ner"-steget
+    # kunde inte ens städa upp efter sig självt utan detta.
+    env:
+      IMAGE_TAG_GATEWAY: ${{ needs.publish.outputs.short-sha }}
     steps:
       - uses: actions/checkout@v4
 
@@ -137,8 +144,6 @@ jobs:
       # CI (test-jobbet i publish.yml) innan den någonsin publiceras —
       # bara inte med samma exakt-denna-körning-garanti som gatewayen får.
       - name: Res B4-kedjan
-        env:
-          IMAGE_TAG_GATEWAY: ${{ needs.publish.outputs.short-sha }}
         working-directory: services/migration-gateway/deploy/ci
         # Generös timeout: EHRbase (JVM) är den långsammaste att bli
         # frisk, inte de andra tjänsterna.
