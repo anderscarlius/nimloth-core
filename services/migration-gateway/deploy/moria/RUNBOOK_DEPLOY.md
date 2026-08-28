@@ -20,40 +20,53 @@ Moria är **engångskopior**, redigeras aldrig på plats. Källan är alltid
 respektive repo. `deploy.sh` loggar käll-SHA + compose-filens sha256 vid
 varje körning.
 
+## Deploysökväg — läs innan du kör (fynd, Fas C, 2026-08-28, provkört live)
+
+`/opt/nimloth-deploy` ägs av `nsf-agent`, 0700. Att `chown`:a en
+underkatalog räcker INTE — 0700 på FÖRÄLDERN blockerar all traversering
+för `anderscarlius` in i NÅGOT under den, oavsett underkatalogens egna
+rättigheter (bekräftat: `scp`/`chmod` gav "Permission denied" trots en
+korrekt `anderscarlius`-ägd underkatalog). Denna B4-kedja deployas
+därför till en helt NY, syskon-katalog **`/opt/nimloth-deploy-b4/`**
+(inte nästlad under den begränsade) — `/opt/nimloth-core`-stackens
+befintliga `/opt/nimloth-deploy/` (cohort-service, nimloth-compose)
+rörs aldrig (S3, inte vårt att ändra). Det delade `.env`-token-filen
+ligger kvar där den alltid legat och läses via `sudo cat` (redan
+inbyggt i `deploy.sh`, `anderscarlius` har passwordless sudo).
+
+**Engångsförberedelse (körd 2026-08-28, behöver inte köras om):**
+```bash
+ssh anderscarlius@192.168.1.220 "sudo mkdir -p /opt/nimloth-deploy-b4 && sudo chown anderscarlius:anderscarlius /opt/nimloth-deploy-b4 && chmod 755 /opt/nimloth-deploy-b4"
+```
+
 ## Engångsförberedelse — registry-token
 
 Delad med nimloth-compose/cohort-service: `/opt/nimloth-deploy/.env`
-(`GHCR_USER`/`GHCR_PAT`). Ingen ny token behövs.
+(`GHCR_USER`/`GHCR_PAT`). Ingen ny token behövs, inget nytt att skapa.
 
 ## Steg 1 — nimloth-legacy-sim
-
-**Fynd, Fas C (2026-08-28): `/opt/nimloth-deploy` ägs av `nsf-agent`, 0700
-— varken läsbart eller skrivbart för `anderscarlius`, trots docker/sudo-
-gruppmedlemskap.** Underkatalogen skapas därför en gång via `sudo` och
-`chown`:as till `anderscarlius`, så att `scp` (som inte kan `sudo`)
-fungerar för denna och alla framtida deploys av samma tjänst. Det delade
-`.env`-token-filen förblir `nsf-agent`-ägd — `deploy.sh` läser den via
-`sudo cat` (redan inbyggt, `anderscarlius` har passwordless sudo).
 
 ```bash
 GIT_SHA=$(git -C ~/SynologyDrive/Hemmabasen/Kod/Nimloth/nimloth-legacy-sim rev-parse --short=7 HEAD)
 IMAGE_TAG="sha-${GIT_SHA}"
 
-ssh anderscarlius@192.168.1.220 "sudo mkdir -p /opt/nimloth-deploy/nimloth-legacy-sim && sudo chown anderscarlius:anderscarlius /opt/nimloth-deploy/nimloth-legacy-sim"
+ssh anderscarlius@192.168.1.220 "mkdir -p /opt/nimloth-deploy-b4/nimloth-legacy-sim"
 scp ~/SynologyDrive/Hemmabasen/Kod/Nimloth/nimloth-legacy-sim/deploy/docker-compose.moria.yml \
     ~/SynologyDrive/Hemmabasen/Kod/Nimloth/nimloth-legacy-sim/deploy/deploy.sh \
-    anderscarlius@192.168.1.220:/opt/nimloth-deploy/nimloth-legacy-sim/
-ssh anderscarlius@192.168.1.220 "chmod +x /opt/nimloth-deploy/nimloth-legacy-sim/deploy.sh"
+    anderscarlius@192.168.1.220:/opt/nimloth-deploy-b4/nimloth-legacy-sim/
+ssh anderscarlius@192.168.1.220 "chmod +x /opt/nimloth-deploy-b4/nimloth-legacy-sim/deploy.sh"
 
-ssh anderscarlius@192.168.1.220 "cd /opt/nimloth-deploy/nimloth-legacy-sim && IMAGE_TAG=${IMAGE_TAG} DEPLOY_SOURCE_SHA=$(git -C ~/SynologyDrive/Hemmabasen/Kod/Nimloth/nimloth-legacy-sim rev-parse HEAD) ./deploy.sh"
+ssh anderscarlius@192.168.1.220 "cd /opt/nimloth-deploy-b4/nimloth-legacy-sim && IMAGE_TAG=${IMAGE_TAG} DEPLOY_SOURCE_SHA=$(git -C ~/SynologyDrive/Hemmabasen/Kod/Nimloth/nimloth-legacy-sim rev-parse HEAD) ./deploy.sh"
 ```
 
 **Rollback (steg 1 ensamt):** ingen befintlig container fanns innan —
 `deploy.sh` skriver ut "(ingen körande container — första deploy)".
-Rollback av ett MISSLYCKAT steg 1 = `docker compose -f
-docker-compose.moria.yml down -v` i `/opt/nimloth-deploy/nimloth-legacy-sim/`
-(tar bort den NYA, tomma volymen — ingen befintlig data finns att
-förlora, S5 kränks inte).
+Rollback av ett MISSLYCKAT steg 1 = `IMAGE_TAG=rollback docker compose
+-f docker-compose.moria.yml down -v` i
+`/opt/nimloth-deploy-b4/nimloth-legacy-sim/` (`IMAGE_TAG` krävs av
+filen även för `down` — värdet spelar ingen roll för nedrivning, se
+fyndet under "Rollback, hela kedjan"). Tar bort den NYA, tomma volymen
+— ingen befintlig data finns att förlora, S5 kränks inte.
 
 **Verifiera innan steg 2:**
 ```bash
@@ -66,24 +79,25 @@ ssh anderscarlius@192.168.1.220 "curl -sS http://127.0.0.1:11601/healthz"
 GIT_SHA=$(git rev-parse --short=7 HEAD)
 IMAGE_TAG="sha-${GIT_SHA}"
 
-ssh anderscarlius@192.168.1.220 "sudo mkdir -p /opt/nimloth-deploy/migration-gateway && sudo chown anderscarlius:anderscarlius /opt/nimloth-deploy/migration-gateway"
+ssh anderscarlius@192.168.1.220 "mkdir -p /opt/nimloth-deploy-b4/migration-gateway"
 scp services/migration-gateway/deploy/moria/docker-compose.moria.yml \
     services/migration-gateway/deploy/moria/deploy.sh \
-    anderscarlius@192.168.1.220:/opt/nimloth-deploy/migration-gateway/
-ssh anderscarlius@192.168.1.220 "chmod +x /opt/nimloth-deploy/migration-gateway/deploy.sh"
+    anderscarlius@192.168.1.220:/opt/nimloth-deploy-b4/migration-gateway/
+ssh anderscarlius@192.168.1.220 "chmod +x /opt/nimloth-deploy-b4/migration-gateway/deploy.sh"
 
-ssh anderscarlius@192.168.1.220 "cd /opt/nimloth-deploy/migration-gateway && IMAGE_TAG=${IMAGE_TAG} DEPLOY_SOURCE_SHA=$(git rev-parse HEAD) ./deploy.sh"
+ssh anderscarlius@192.168.1.220 "cd /opt/nimloth-deploy-b4/migration-gateway && IMAGE_TAG=${IMAGE_TAG} DEPLOY_SOURCE_SHA=$(git rev-parse HEAD) ./deploy.sh"
 ```
 
-**Rollback (steg 2 ensamt):** samma mönster — `docker compose -f
-docker-compose.moria.yml down -v` i `/opt/nimloth-deploy/migration-gateway/`.
-Rör INTE steg 1:s containrar/volymer.
+**Rollback (steg 2 ensamt):** samma mönster — `IMAGE_TAG=rollback
+docker compose -f docker-compose.moria.yml down -v` i
+`/opt/nimloth-deploy-b4/migration-gateway/`. Rör INTE steg 1:s
+containrar/volymer.
 
 ## Steg 3 — ladda progress_note.v1 i demo-EHRbase
 
 Engångsbootstrap, samma script som CI-jobbet kör (se
 `services/migration-gateway/deploy/ci/run-b4-chain-verification.sh`
-steg 2/9), riktat mot den nya demo-EHRbase-porten:
+steg 2/10), riktat mot den nya demo-EHRbase-porten:
 
 ```bash
 EHRBASE_URL="http://192.168.1.220:11871" \
@@ -111,7 +125,8 @@ Traefik-labels är redan satta i `docker-compose.moria.yml` (steg 2).
 **Beroende som kan kräva Anders:** om `b4-demo.carlius.net` inte redan
 täcks av en wildcard-DNS mot tunneln, måste hostnamnet registreras i
 Cloudflare Zero Trust-dashboarden separat — se `B7_CICD_och_Moria_...md`
-för status.
+för status. Går det inte att lösa: stanna här, rapportera "deployad,
+ej exponerad" (Anders, 2026-08-28).
 
 **Rollback:** ta bort `traefik.*`-labels ur compose-filen och kör om
 `docker compose up -d` — Traefik slutar routa direkt, ingen Cloudflare-
@@ -126,16 +141,27 @@ ssh anderscarlius@192.168.1.220 "curl -sS http://127.0.0.1:11113/healthz"
 ssh anderscarlius@192.168.1.220 "curl -sS http://127.0.0.1:11871/ehrbase/"
 
 # S3/S9 — bekräfta att INGET annat rördes:
-ssh anderscarlius@192.168.1.220 "docker ps --format '{{.Names}}' | grep -c '^' "  # samma antal + 4 (jämför mot Fas A:s inventering)
-ssh anderscarlius@192.168.1.220 "docker inspect ehrbase-core --format '{{.State.StartedAt}}'"   # OFÖRÄNDRAT — inte omstartad
-ssh anderscarlius@192.168.1.220 "docker inspect core-db --format '{{.State.StartedAt}}'"          # OFÖRÄNDRAT — inte omstartad
+ssh anderscarlius@192.168.1.220 "docker ps --format '{{.Names}}' | grep -c '^' "  # samma antal + 4 (jämför mot Fas A:s inventering: 94)
+ssh anderscarlius@192.168.1.220 "docker inspect ehrbase-core --format '{{.State.StartedAt}}'"   # OFÖRÄNDRAT — inte omstartad (baseline: 2026-08-16T19:05:38Z)
+ssh anderscarlius@192.168.1.220 "docker inspect core-db --format '{{.State.StartedAt}}'"          # OFÖRÄNDRAT — inte omstartad (baseline: 2026-08-16T19:03:32Z)
 ```
 
 ## Rollback, hela kedjan
 
+**Provkörd live 2026-08-28** (Anders begärde en verklig drill, inte bara
+en dokumenterad väg): körd efter steg 2, innan steg 3. Fynd:
+`docker compose ... down -v` misslyckas med samma
+`IMAGE_TAG`-interpolationsfel som CI-jobbet ursprungligen hade (fixat
+där i `de8e2fa`) om `IMAGE_TAG` inte sätts — filen kräver den även för
+`down`, trots att värdet är irrelevant för nedrivning. `IMAGE_TAG=rollback`
+(vilket värde som helst) löser det, nu inbakat nedan. Efter fixen: full
+nedrivning (båda repona + nätverket) lyckades, `ehrbase-core`/`core-db`
+StartedAt-tidsstämplar oförändrade (S9 bekräftat), och en omedelbar
+återuppresning (samma kommandon som steg 1–2) gav samma gröna slutläge.
+
 ```bash
-ssh anderscarlius@192.168.1.220 "cd /opt/nimloth-deploy/migration-gateway && docker compose -f docker-compose.moria.yml down -v"
-ssh anderscarlius@192.168.1.220 "cd /opt/nimloth-deploy/nimloth-legacy-sim && docker compose -f docker-compose.moria.yml down -v"
+ssh anderscarlius@192.168.1.220 "cd /opt/nimloth-deploy-b4/migration-gateway && IMAGE_TAG=rollback docker compose -f docker-compose.moria.yml down -v"
+ssh anderscarlius@192.168.1.220 "cd /opt/nimloth-deploy-b4/nimloth-legacy-sim && IMAGE_TAG=rollback docker compose -f docker-compose.moria.yml down -v"
 ssh anderscarlius@192.168.1.220 "docker network rm b4-chain"
 ```
 
