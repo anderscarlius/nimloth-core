@@ -1,0 +1,141 @@
+# B7 nivå 1 — B4-kedjan rest från noll i en ren CI-runner.
+#
+# Helt isolerad: egen Postgres för migration-gateway (INTE delad
+# core-db), egen Postgres för legacy-sim, egen EHRbase + egen Postgres
+# för den. Detta är avsiktligt samma isoleringsgrad som Moria-deployen
+# (Grind 1, punkt e, amenderad) — det som körs här ska vara EXAKT det
+# som körs på Moria, bara kortlivat. Ingen genväg som gör CI-jobbet
+# till ett annat system än det som deployas.
+#
+# migration-gateway och nimloth-legacy-sim körs som de PUBLICERADE
+# ghcr-imagerna (satta via env IMAGE_TAG_GATEWAY/IMAGE_TAG_LEGACY_SIM) —
+# inte byggda om i denna workflow. Se workflow-filens kommentar för
+# varför sha-<kort-sha>, inte :latest, används för migration-gateway.
+
+services:
+  legacy-sim-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: legacy_sim
+      POSTGRES_USER: legacy_sim
+      POSTGRES_PASSWORD: legacy_sim
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "legacy_sim"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  legacy-sim:
+    image: ghcr.io/anderscarlius/nimloth-legacy-sim:${IMAGE_TAG_LEGACY_SIM:-latest}
+    environment:
+      PGHOST: legacy-sim-db
+      PGPORT: "5432"
+      PGDATABASE: legacy_sim
+      PGUSER: legacy_sim
+      PGPASSWORD: legacy_sim
+      PORT: "11601"
+    ports:
+      - "11601:11601"
+    depends_on:
+      legacy-sim-db:
+        condition: service_healthy
+
+  ehrbase-db:
+    # ehrbase-v2-postgres, INTE plain postgres — EHRbase 2.x:s Flyway-
+    # migrationer kräver temporal_tables + jsquery-utökningarna paketet
+    # ger (och skapar ehrbase/ehrbase_admin-rollerna via initdb). Samma
+    # image som nimloth-core/docker-compose.yml redan använder lokalt.
+    # Upptäckt via ett misslyckat lokalt dry-run (plain postgres:16-alpine
+    # saknar uuid_generate_v4()) innan detta någonsin nådde CI.
+    image: ehrbase/ehrbase-v2-postgres:16.2@sha256:abe14e8f9ba33cabc9946c6c17c5aa95b64b35387f266cd20a894149203196d7
+    environment:
+      POSTGRES_PASSWORD: postgres
+      EHRBASE_USER: ehrbase
+      EHRBASE_PASSWORD: ehrbase
+      EHRBASE_USER_ADMIN: ehrbase_admin
+      EHRBASE_PASSWORD_ADMIN: ehrbase_admin
+    healthcheck:
+      # INTE bara pg_isready — upptäckt live (två av tre lokala dry-run-
+      # försök): pg_isready blir grön innan imagens egen init-sekvens
+      # hunnit skapa ext-schemat + uuid-ossp-extensionen, vilket lät
+      # ehrbase-tjänsten starta sin Flyway-migration för tidigt och
+      # falla på "function uuid_generate_v4() does not exist" — en
+      # riktig race, inte en tillfällighet (S10: framkalla på riktigt,
+      # fixa vad som faktiskt hittas). Healthchecken anropar nu exakt
+      # den funktion migrationen behöver, som exakt den roll som kör den.
+      test: ["CMD-SHELL", "PGPASSWORD=ehrbase psql -U ehrbase -d ehrbase -tAc 'SELECT uuid_generate_v4()' >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  ehrbase:
+    image: ehrbase/ehrbase:2.30.1@sha256:c08be93f41164bb6ba8e957532ce4cccd18e6b9d26e074ef97f3faff9c3cd52f
+    environment:
+      DB_URL: jdbc:postgresql://ehrbase-db:5432/ehrbase
+      DB_USER: ehrbase
+      DB_PASS: ehrbase
+      DB_USER_ADMIN: ehrbase_admin
+      DB_PASS_ADMIN: ehrbase_admin
+      # NONE, inte BASIC — matchar lokal dev (se Lägesnotering 19/8:
+      # "Auth-läget (SECURITY_AUTHTYPE: NONE lokalt) dokumenterad TODO
+      # mot Keycloak-spåret"). Ingen av B4-klienterna (openehr-client.ts,
+      # bridge-loadern) skickar Authorization-headers — att sätta BASIC
+      # här utan att koden stödjer det skulle bara göra jobbet flakigt
+      # av ett skäl som inte har med B4 att göra.
+      SECURITY_AUTHTYPE: NONE
+      # Fallback nämnd i Grind 1 om standard-runnern inte räcker (aldrig
+      # ta bort en assert i stället): begränsa JVM-heapen explicit så en
+      # OOM syns som ett tydligt Java-fel, inte en tyst runner-krasch.
+      JAVA_TOOL_OPTIONS: "-Xmx2g"
+    depends_on:
+      ehrbase-db:
+        condition: service_healthy
+    ports:
+      - "11401:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/ehrbase/"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  core-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: core
+      POSTGRES_USER: core
+      POSTGRES_PASSWORD: core
+    ports:
+      # Host-mappad (ovanligt för en intern db, §6.3) av ett specifikt
+      # skäl: paritetsdiff- och exportskripten körs på CI-runnerns värd
+      # via `pnpm exec tsx`, inte inuti ett containernätverk, och måste
+      # nå den utifrån.
+      - "15432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "core"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migration-gateway:
+    image: ghcr.io/anderscarlius/nimloth-core-migration-gateway:${IMAGE_TAG_GATEWAY:?IMAGE_TAG_GATEWAY måste anges}
+    environment:
+      PGHOST: core-db
+      PGPORT: "5432"
+      PGDATABASE: core
+      PGUSER: core
+      PGPASSWORD: core
+      PORT: "11113"
+      LEGACY_SIM_BASE_URL: http://legacy-sim:11601
+      EHRBASE_BASE_URL: http://ehrbase:8080/ehrbase
+      KAFKA_BROKERS: disabled
+    ports:
+      - "11113:11113"
+    depends_on:
+      core-db:
+        condition: service_healthy
+      legacy-sim:
+        condition: service_started
+      ehrbase:
+        condition: service_healthy

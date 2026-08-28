@@ -1,0 +1,160 @@
+name: Migration-gateway — bygg, pusha, B7-verifiering
+
+# B7. Samma mönster som cohort-service-publish.yml, plus ett tredje jobb
+# (verify-b4-chain-from-scratch — B7 nivå 1, etappens huvudleverans).
+# Path-filtrerad — triggar inte på orelaterade nimloth-core-commits.
+# Den tidigare migration-gateway-test.yml är retirerad (samma testjobb,
+# nu här — att köra dem två gånger per push vore ren dubblering).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/migration-gateway/**"
+      - "packages/**"
+      - ".github/workflows/migration-gateway-publish.yml"
+
+jobs:
+  test:
+    name: Unit-tester (Vitest)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: core
+          POSTGRES_USER: core
+          POSTGRES_PASSWORD: core
+        ports:
+          - 5435:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5435"
+      PGDATABASE: core
+      PGUSER: core
+      PGPASSWORD: core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm --filter "@nimloth-core/migration-gateway" build
+      - run: pnpm --filter "@nimloth-core/migration-gateway" test
+
+  publish:
+    name: Bygg och pusha till ghcr.io
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      # Beräknad direkt ur github.sha (samma 7-teckensformat som redan
+      # syns i sha-7f35299/sha-342cd55), inte ur metadata-actionens
+      # 'version'-output — det outputet blandar ihop version/prefix på
+      # ett sätt som inte är värt att lita blint på här.
+      short-sha: ${{ steps.short-sha.outputs.value }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: short-sha
+        run: echo "value=sha-${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/nimloth-core-migration-gateway
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/migration-gateway/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  verify-b4-chain-from-scratch:
+    name: B7 nivå 1 — B4-kedjan rest från noll
+    needs: [publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ATT DRA sha-<kort-sha> (den EXAKTA imagen publish-jobbet just
+      # byggde) I STÄLLET FÖR :latest ÄR HELA POÄNGEN — jobbet ska bevisa
+      # att den publicerade ARTEFAKTEN funkar, inte att källkoden gör
+      # det. :latest hade kunnat peka på en helt annan, tidigare byggd
+      # image om detta jobb råkade köra samtidigt med ett annat.
+      #
+      # nimloth-legacy-sim (ett ANNAT, separat repo) pinnas MEDVETET mot
+      # :latest, inte samma sha-disciplin — sann cross-repo sha-pinning
+      # hade krävt ett PAT med läsrättighet mot ett andra privat repo,
+      # utanför denna etapps minimala beroendeförändring (S12). Ärligt
+      # sagt: legacy-sims :latest är fortfarande grindad av SIN EGEN
+      # CI (test-jobbet i publish.yml) innan den någonsin publiceras —
+      # bara inte med samma exakt-denna-körning-garanti som gatewayen får.
+      - name: Res B4-kedjan
+        env:
+          IMAGE_TAG_GATEWAY: ${{ needs.publish.outputs.short-sha }}
+        working-directory: services/migration-gateway/deploy/ci
+        # Generös timeout: EHRbase (JVM) är den långsammaste att bli
+        # frisk, inte de andra tjänsterna.
+        run: docker compose -f docker-compose.ci.yml up -d --wait --wait-timeout 180
+
+      - name: Kör B4-demot end-to-end, med skarpa asserts
+        run: bash services/migration-gateway/deploy/ci/run-b4-chain-verification.sh
+
+      # Ordning avsiktlig: logga FÖRE nedrivning, annars finns inget
+      # kvar att logga när steget som faktiskt behöver loggarna körs.
+      - name: Logga containrar vid fel
+        if: failure()
+        working-directory: services/migration-gateway/deploy/ci
+        run: docker compose -f docker-compose.ci.yml logs --tail=200
+
+      - name: Riv ner
+        if: always()
+        working-directory: services/migration-gateway/deploy/ci
+        run: docker compose -f docker-compose.ci.yml down -v
