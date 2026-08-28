@@ -119,7 +119,39 @@ faktiska EHR:en skapats (samma `curl`-mönster som
 **Rollback:** en ny, namngiven demo-patient — ingen befintlig data
 rörs eller raderas (S5).
 
-## Steg 5 — Cloudflare-exponering (INTE utförd, Anders' beslut)
+## Steg 5 — Cloudflare-exponering (delvis förberedd, DNS/ingress INTE utfört)
+
+**Access-applikationen är skapad och verifierad (Anders, 2026-08-28).** `b4-demo`
+(policy-ID-app `270be213-ab27-46d5-a479-8ea15920d329`), destination exakt
+`b4-demo.carlius.net` (inte ett wildcard — bekräftat i "Destinations"-fliken,
+Subdomain-fältet innehåller `b4-demo`, inget `*`). Två policyer, båda `Allow`
+(OR-logik — det räcker att matcha EN):
+
+| Policy | Regel | Bedömning |
+|---|---|---|
+| `anderscarlius@gmail.com` | Include: Emails = `anderscarlius@gmail.com` | Snävt, som avsett |
+| `nimloth.carlius.com-OntimePIN` (återanvänd från en annan app) | Include: Login Method = One-time PIN, **ingen e-postrestriktion i regeln** | **Bredare än vad namnet antyder** — vem som helst som anger en e-postadress och slutför PIN-flödet matchar denna policy, oavsett vilken adress. Eftersom policyerna är OR:ade räcker den ensam för att komma in. |
+
+**Flaggat, inte åtgärdat:** given gatewayen har skrivande endpoints (`POST
+/gateway/notes`, `PUT /routing/...`), är den andra policyn värd att se över
+innan hostnamnet exponeras — antingen ta bort den, eller lägga till en
+e-postdomänrestriktion på den. Anders' beslut, inte gjort här.
+
+**Cloudflared-tunnelns token roterad (Claude, på Anders' begäran, 2026-08-28) —
+inte bara ersatt, verifierat ogiltigt:** `/etc/systemd/system/cloudflared.service`
+på Moria uppdaterad med ett nytt token efter en "Refresh token" i dashboarden.
+Det GAMLA tokenet testades EXPLICIT efteråt (en engångs-Docker-container,
+`cloudflare/cloudflared:latest`, körd lokalt på ACM4 — inte mot Moria) och
+avvisades konsekvent (`control stream encountered a failure while serving`,
+upprepade återförsök, aldrig `Registered tunnel connection`) — detta är ett
+verifierat faktum, inte ett antagande baserat på Cloudflares egen
+varningstext. Backupfilen med det gamla tokenet i klartext
+(`cloudflared.service.bak-20260828-230213`) raderad efter att det nya
+tokenet bekräftats fungera (tjänsten omstartad, `Registered tunnel
+connection` i loggen, tre stickprovade subdomäner — `fabrik`/`grafana`/
+`pm.carlius.net` — svarade `302` genom tunneln, dashboarden visar
+`Moria-one: Healthy`). Ingen observerad nedtid för tunnelns 19 befintliga
+hostnamn under omstarten.
 
 **Traefik-labels fanns ursprungligen i planen (Grind 1, punkt g) men
 togs bort igen** — upptäckt live i Fas C: Morias Traefik-container är
