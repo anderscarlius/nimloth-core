@@ -13,6 +13,9 @@ on:
       - "services/migration-gateway/**"
       - "packages/**"
       - ".github/workflows/migration-gateway-publish.yml"
+  # Manuell omkörning — t.ex. efter ett externt tillstånd ändrats (som
+  # ghcr-paketsynlighet) utan någon kodändring att pusha.
+  workflow_dispatch: {}
 
 jobs:
   test:
