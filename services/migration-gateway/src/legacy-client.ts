@@ -39,11 +39,27 @@ export interface LegacyClient {
 export function createLegacyClient(baseUrl: string): LegacyClient {
   return {
     async createNote(input) {
-      const resp = await fetch(`${baseUrl}/notes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
-      });
+      // B7 (2026-08-28) — upptäckt live genom att faktiskt stänga av
+      // legacy-sim under ett skrivförsök (samma disciplin som S4/S10 i
+      // B4-etapperna): ett rått nätverksfel här (ECONNREFUSED, DNS,
+      // timeout) är INTE en LegacyWriteError (den kastas bara för ett
+      // svar med fel HTTP-status) och kraschade tidigare HELA
+      // Node-processen — Express 4 fångar inte en unhandled rejection i
+      // en async route-handler, och den enda instanceof-koll som fanns
+      // (i index.ts) matchade aldrig ett rått fetch-fel. status=0
+      // signalerar "onåbar", skiljt från legacy-sims egna HTTP-statusar
+      // (alltid ≥200) — samma catch-väg i index.ts fångar båda utan
+      // ändring där.
+      let resp: Response;
+      try {
+        resp = await fetch(`${baseUrl}/notes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(input),
+        });
+      } catch (err) {
+        throw new LegacyWriteError(0, { fel: "legacy-sim onåbar", detalj: err instanceof Error ? err.message : String(err) });
+      }
       const body = await resp.json();
       if (resp.status !== 201) {
         throw new LegacyWriteError(resp.status, body);
