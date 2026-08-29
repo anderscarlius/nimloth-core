@@ -5,6 +5,8 @@
 import express, { type Request, type Response } from "express";
 import pino from "pino";
 import type pg from "pg";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { createPool, migrate } from "./db.js";
 import { loadConfig } from "./config.js";
 import { createGatewayAuditPublisher, type GatewayAuditPublisher } from "./audit.js";
@@ -16,6 +18,7 @@ import { IdentityNotFoundError, seedIdentity } from "./identity.js";
 import { getNoteByIdMerged, getNotesByPatientMerged, LegacyUnavailableError } from "./read-federation.js";
 
 const DOMAIN_NOTE = "anteckning"; // D2 — enda domänen denna etapp.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export function buildApp(
   pool: pg.Pool,
@@ -25,6 +28,16 @@ export function buildApp(
 ): express.Express {
   const app = express();
   app.use(express.json());
+
+  // B7 (2026-08-28) — "visningsbar" lämnades som TBD i Fas B: telefontestet
+  // nådde ända fram (Access, DNS, tunnel, Traefik, container) men GET /
+  // gav "Cannot GET /", eftersom gatewayen är ett rent JSON-API. En
+  // definition of done som bara säger "tjänsten svarar" missar att någon
+  // faktiskt ska SE något. Detta är den minsta möjliga rättningen: en
+  // statisk fil, ingen ny endpoint utöver vad som redan finns — sidans
+  // knappar anropar exakt samma /gateway/notes och /routing/... som allt
+  // annat i detta repo.
+  app.use(express.static(path.join(__dirname, "..", "public")));
 
   // Skrivvägen — S0/S1/S2. Body-formen är legacyns egen (author_sign
   // krävs alltid — legacy behöver den direkt i S0/S1, och den fungerar

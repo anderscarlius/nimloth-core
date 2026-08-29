@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B4 — reversibel skrivväg</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; max-width: 640px; margin: 0 auto; padding: 16px; background: #0b1220; color: #e6e9ef; }
+  h1 { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
+  p.sub { color: #8b93a7; font-size: 0.85rem; margin-top: 0; margin-bottom: 20px; }
+  button { display: block; width: 100%; text-align: left; padding: 14px 16px; margin-bottom: 10px; border: 1px solid #2a3550; border-radius: 8px; background: #141d33; color: #e6e9ef; font-size: 0.95rem; }
+  button:active { background: #1c2745; }
+  button .step { color: #6ea8fe; font-weight: 600; margin-right: 8px; }
+  #status { font-size: 0.8rem; color: #8b93a7; margin: 6px 0 16px; min-height: 1em; }
+  h2 { font-size: 0.85rem; color: #8b93a7; margin: 20px 0 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  pre { background: #05070d; border: 1px solid #2a3550; border-radius: 8px; padding: 12px; font-size: 0.75rem; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  td, th { text-align: left; padding: 6px 4px; border-bottom: 1px solid #2a3550; vertical-align: top; }
+  .tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; }
+  .tag-legacy { background: #26324f; color: #9fb3e0; }
+  .tag-pending { background: #4a2a2a; color: #f0a; }
+  .tag-richer { background: #2a4a2a; color: #7ee787; }
+</style>
+</head>
+<body>
+  <h1>B4 — reversibel skrivväg</h1>
+  <p class="sub">Demopatient 1001 / vc-lund-norr. Varje knapp anropar gatewayens riktiga API — inget här är simulerat.</p>
+
+  <button onclick="step1()"><span class="step">1</span>Skriv i legacy</button>
+  <button onclick="step2()"><span class="step">2</span>Växla till Nimloth</button>
+  <button onclick="step3()"><span class="step">3</span>Skriv i Nimloth</button>
+  <button onclick="step4()"><span class="step">4</span>Växla tillbaka till legacy</button>
+  <button onclick="step5()"><span class="step">5</span>Visa vad som finns kvar — och vad som gick förlorat</button>
+
+  <div id="status"></div>
+  <h2>Svar</h2>
+  <div id="out"><pre>(inget ännu)</pre></div>
+
+  <script>
+    const PATIENT_NO = "1001";
+    const CARE_UNIT = "vc-lund-norr";
+    const DOMAIN = "anteckning";
+
+    function setStatus(text) {
+      document.getElementById("status").textContent = text;
+    }
+
+    function showJson(data) {
+      document.getElementById("out").innerHTML = "<pre>" + JSON.stringify(data, null, 2).replace(/</g, "&lt;") + "</pre>";
+    }
+
+    async function call(method, url, body) {
+      setStatus(method + " " + url + " …");
+      try {
+        const resp = await fetch(url, {
+          method,
+          headers: body ? { "Content-Type": "application/json" } : undefined,
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        const data = await resp.json();
+        setStatus(method + " " + url + " → " + resp.status);
+        return data;
+      } catch (err) {
+        setStatus("Fel: " + err.message);
+        showJson({ fel: err.message });
+        throw err;
+      }
+    }
+
+    function timestamp() {
+      return new Date().toLocaleString("sv-SE");
+    }
+
+    async function step1() {
+      const data = await call("POST", "/gateway/notes", {
+        patient_no: PATIENT_NO, care_unit: CARE_UNIT,
+        text: "Demo (telefon): skriven i legacy " + timestamp(),
+        author_sign: "DEMO",
+      });
+      showJson(data);
+    }
+
+    async function step2() {
+      const data = await call("PUT", "/routing/" + DOMAIN + "/" + CARE_UNIT, {
+        direction: "NIMLOTH", updated_by: "demo-telefon",
+      });
+      showJson(data);
+    }
+
+    async function step3() {
+      const data = await call("POST", "/gateway/notes", {
+        patient_no: PATIENT_NO, care_unit: CARE_UNIT,
+        text: "Demo (telefon): skriven i Nimloth " + timestamp(),
+        author_sign: "DEMO",
+      });
+      showJson(data);
+    }
+
+    async function step4() {
+      const data = await call("PUT", "/routing/" + DOMAIN + "/" + CARE_UNIT, {
+        direction: "LEGACY_ONLY", updated_by: "demo-telefon",
+      });
+      showJson(data);
+    }
+
+    async function step5() {
+      const data = await call("GET", "/gateway/notes/by-patient/" + PATIENT_NO);
+      const notes = data.notes || [];
+      let rows = notes.map(function (n) {
+        const tag = n.source === "openehr_pending_shadow"
+          ? '<span class="tag tag-pending">ej skuggad än</span>'
+          : '<span class="tag tag-legacy">legacy</span>';
+        const richer = n.richer_version_available
+          ? '<span class="tag tag-richer">rikare version finns</span>'
+          : "";
+        const text = (n.text || "").length > 60 ? n.text.slice(0, 60) + "…" : n.text;
+        return "<tr><td>" + (n.created_at || "") + "</td><td>" + text + "</td><td>" + tag + " " + richer + "</td></tr>";
+      }).join("");
+      const legacyDown = data.legacy_unavailable ? "<p>⚠️ legacy var otillgänglig när denna lista hämtades.</p>" : "";
+      document.getElementById("out").innerHTML =
+        "<table><tr><th>Skriven</th><th>Text</th><th>Källa</th></tr>" + rows + "</table>" + legacyDown +
+        "<h2>Rådata</h2><pre>" + JSON.stringify(data, null, 2).replace(/</g, "&lt;") + "</pre>";
+    }
+  </script>
+</body>
+</html>
