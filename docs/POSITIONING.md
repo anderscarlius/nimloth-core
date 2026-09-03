@@ -17,10 +17,10 @@
 
 Konceptet växer ur artikelserien *Nästa generations journalsystem* och dess argument att svensk sjukvård är ett distribuerat system av lag, klinisk praxis och politisk kultur — och att varje IT-arkitektur som behandlar det som ett centraliserat system kommer att misslyckas.
 
-Inom Nimloth-familjen finns idag två aktivt utvecklade produkter:
+Inom Nimloth-familjen finns idag två produkter i skilda faser:
 
-- **Nimloth Core** — full journal- och vårdplattform
-- **Nimloth Flow** — integrationsmotor för befintliga källsystem
+- **Nimloth Core** — full journal- och vårdplattform. Under aktiv arkitekturell utbyggnad.
+- **Nimloth Flow** — integrationsmotor för befintliga källsystem. Stabiliserad, skopfryst på integrationsfunktionalitet (se avsnitt 3, "Mognadsgrad").
 
 ---
 

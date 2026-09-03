@@ -21,7 +21,9 @@ Båda scripts kör `docker compose up -d --build` för applikationstjänster. **
 
 Förväntat ≤2 min för hela appstack-rebuild med varma cache. Om det tar märkbart längre — kolla buildx-cache-storlek (`docker buildx du`) och eventuellt rensa (`docker buildx prune`).
 
-## CarliusFyra (Synology NAS) — prod-deploy
+## CarliusFyra (Synology NAS) — prod-deploy (legacy-väg, huvudstacken)
+
+**Legacy-väg för huvudstacken (26 tjänster).** Dokumenterad nuvarande värd för huvudstacken är Moria — se `docs/ROADMAP.md` §"Levererade bevis efter Sprint 2" och `nimloth-docs/Portstrategi.md` §8.1 (INTE SSH-verifierad denna session). Den här sektionen behålls som historisk referens för det manuella flödet nedan. Den påverkar INTE §"cf4 — co-lokaliserade Fas 2/3-tjänster" nedan, som fortsatt är sann och oförändrad (composition-mapper, med-review, aql-template-service körs verkligen co-lokaliserat på cf4).
 
 Manuell process — se [INSTALL.md sektion A](INSTALL.md#a-carliusfyra-synology-nas) för fullständig guide. Tre huvudsteg:
 
@@ -30,6 +32,10 @@ Manuell process — se [INSTALL.md sektion A](INSTALL.md#a-carliusfyra-synology-
 3. **Starta containers** på NAS via `docker compose up -d` (NAS får färdiga images, så ingen `--build`-flagga där)
 
 Inga automatiserade webhooks eller watchtower-mekanismer. Deploy är medveten manuell process.
+
+## Moria — förberedd målväg (ghcr pull-deploy)
+
+**Dokumenterad, INTE SSH-verifierad denna session.** Bevisat mönster för 2 av 19 tjänster i `services/` — `cohort-service` och `migration-gateway`, se respektive `services/<tjänst>/deploy/RUNBOOK_DEPLOY.md` och `nimloth-docs/CICD_Tema_ghcr_2026-08-19.md`. Detta är INTE en generell huvudstack-deploy-väg än — endast dessa två tjänster är verifierat flyttade dit. Övriga 17 tjänster saknar `deploy/`-motsvarighet. Se `docs/ROADMAP.md` §"Levererade bevis efter Sprint 2" för B4a/B7 nivå 1-status.
 
 ## cf4 — co-lokaliserade Fas 2/3-tjänster (intern backend + Access-gated demo)
 

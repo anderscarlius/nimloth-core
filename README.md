@@ -99,7 +99,7 @@ Nimloth Core befinner sig i tidig arkitekturell uppbyggnad. Den nuvarande koden 
 | 4 | 0.5.0 | Lakehouse + OMOP + datakvalitet | ⏳ Planerad |
 | 5 | 0.6.0 | CDS-regler med CQL-motor + portabilitet | ⏳ Planerad |
 
-Detaljer i [`docs/ROADMAP.md`](docs/ROADMAP.md).
+Utöver sprintplanen: B4a och B7 nivå 1 (Nordstjärnans bevislager, en separat axel — se `nimloth-docs/Malbild_Nimloth_Nordstjarna_v0.1.md`) har levererats efter Sprint 2. Detaljer i [`docs/ROADMAP.md`](docs/ROADMAP.md) §"Levererade bevis efter Sprint 2".
 
 ---
 

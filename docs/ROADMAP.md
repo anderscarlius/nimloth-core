@@ -118,6 +118,17 @@ Prompts körs parallellt — de är oberoende.
 
 ---
 
+## Levererade bevis efter Sprint 2
+
+**Detta är inte en ny sprint.** Sprintnumreringen ovan och Nordstjärnans block-/bevisnumrering (`nimloth-docs/Malbild_Nimloth_Nordstjarna_v0.1.md`) är två separata axlar — den här sektionen speglar den senare. Sprint 3 nedan (Inera-stacken) är fortsatt planerad och opåbörjad; ingenting här förskjuter den.
+
+- **B4a** (2026-08-27, `migration-gateway`) — reversibel skrivväg-flytt från legacy till Nimloth och tillbaka, S0→S1→S2→S3 verifierat live, exportpaket självbärande och signaturverifierat. B4b (full återföring i legacyns egen tabell) är en distinkt, ej uppnådd nästa nivå.
+- **B7 nivå 1** (2026-08-28–2026-08-29) — B4-kedjan rest från noll i CI, deployad isolerad på dokumenterad Moria-värd (se `nimloth-docs/Portstrategi.md` §8.1 — INTE SSH-verifierad denna session), exponerad via Cloudflare Access med namngiven e-postpolicy, verifierat visningsbar. B7 nivå 2 (hela 26-tjänstersstacken rest från noll) är obyggd.
+
+Detaljer och fullständig bevisstatus: `nimloth-docs/B7_CICD_och_Moria_2026-08-19.md`, `nimloth-docs/Malbild_Nimloth_Nordstjarna_v0.1.md`. (Rapportfilens datum i namnet är sessionens startdatum, inte genomförandedatumet — det senare står i rapportens egen header. Avsiktlig konvention, inte en avvikelse.)
+
+---
+
 ## 5. Sprint 3 — Inera-stacken (3 veckor)
 
 **Mål:** Bygg in strukturellt stöd för identitets- och katalogstacken. Lyft PDL till egen microservice. Förbered för SITHS-verifiering även om det initialt körs med testcertifikat.
