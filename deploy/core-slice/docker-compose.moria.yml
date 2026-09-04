@@ -1,0 +1,258 @@
+# ============================================================================
+# SKISS — EJ KÖRD, EJ VERIFIERAD LIVE. Kör INTE denna fil.
+#
+# fru-andersson-slice — minsta sammanhängande core-runtime-slice, godkänd
+# 2026-09-03 som FÖRSTA MALL för Block 8-mönstret på huvudstacken (26
+# tjänster). Detta är INTE /opt/nimloth-core, INTE B4-kedjan, INTE
+# openEHR-kanoniska lagret. CANONICAL_STORE=postgres är en medveten
+# avgränsning för denna slice, inte Core:s identitet — nästa slice (egen,
+# framtida session) lägger till ehrbase + ehrbase-db + openehr-composer
+# med CANONICAL_STORE=both.
+#
+# Endast fhir-facade har en skissad ghcr-publish-väg denna session, se
+# fhir-facade-publish.yml.skiss i samma mapp (medvetet INTE lagd i
+# .github/workflows/ — en fil där blir en LIVE workflow så fort den
+# committas och pushas). ingest/transform/cds-hooks/audits image-
+# referenser nedan är ASPIRATIONELLA — inga workflows byggda för dem än.
+#
+# Grindar (G1–G5) och öppna frågor (init-SQL/connector-registrering,
+# port-reservation, /opt/nimloth-deploy/-kollisionen) i
+# nimloth-docs/NOW_Block8_FruAnderssonSlice_forberedelse.md.
+# ============================================================================
+
+services:
+  # --- Infra (5) ---
+
+  melior-db:
+    image: postgres:16-alpine
+    container_name: melior-db-slice
+    # wal_level=logical krävs för Debezium — samma flaggor som root docker-compose.yml.
+    command: ["postgres", "-c", "wal_level=logical", "-c", "max_wal_senders=10", "-c", "max_replication_slots=10"]
+    environment:
+      POSTGRES_DB: melior
+      POSTGRES_USER: melior
+      POSTGRES_PASSWORD: melior
+    volumes:
+      - melior-slice-data:/var/lib/postgresql/data
+      # init-melior.sql måste följa med till Moria (scp) — se runbook G4, oöst.
+      - ./init-melior.sql:/docker-entrypoint-initdb.d/init-melior.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U melior -d melior"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [core-slice]
+
+  asynja-db:
+    image: postgres:16-alpine
+    container_name: asynja-db-slice
+    command: ["postgres", "-c", "wal_level=logical", "-c", "max_wal_senders=10", "-c", "max_replication_slots=10"]
+    environment:
+      POSTGRES_DB: asynja
+      POSTGRES_USER: asynja
+      POSTGRES_PASSWORD: asynja
+    volumes:
+      - asynja-slice-data:/var/lib/postgresql/data
+      - ./init-asynja.sql:/docker-entrypoint-initdb.d/init-asynja.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U asynja -d asynja"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [core-slice]
+
+  core-db:
+    image: postgres:16-alpine
+    container_name: core-db-slice
+    environment:
+      POSTGRES_DB: core
+      POSTGRES_USER: core
+      POSTGRES_PASSWORD: core
+    volumes:
+      - core-slice-data:/var/lib/postgresql/data
+      - ./init-core.sql:/docker-entrypoint-initdb.d/init-core.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U core -d core"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [core-slice]
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka-slice
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:29092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      # Egen CLUSTER_ID, skild från huvudstackens (NimlothCoreKr4FtClustr) —
+      # de två stackarna delar inte nätverk i denna skiss, men skilj ändå åt.
+      CLUSTER_ID: "NimlothCoreSliceKr4Ft1"
+    volumes:
+      - kafka-slice-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:29092 --list >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+    networks: [core-slice]
+
+  kafka-connect:
+    image: debezium/connect:2.6
+    platform: linux/amd64
+    container_name: kafka-connect-slice
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: core-slice-connect
+      CONFIG_STORAGE_TOPIC: _connect_configs
+      OFFSET_STORAGE_TOPIC: _connect_offsets
+      STATUS_STORAGE_TOPIC: _connect_statuses
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+    depends_on:
+      kafka: { condition: service_healthy }
+      melior-db: { condition: service_healthy }
+      asynja-db: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8083/connectors >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks: [core-slice]
+    # Debezium-connectorer registreras EFTER upp, via samma
+    # infra/debezium/register-connectors.sh som start.sh använder lokalt —
+    # måste scp:as till Moria och köras separat. Ej löst i denna skiss, G4.
+
+  # --- App (5) — endast fhir-facade har en skissad publish-väg denna session ---
+
+  ingest:
+    image: ghcr.io/anderscarlius/nimloth-core-ingest:${IMAGE_TAG_INGEST:?ASPIRATIONELLT — ingen ghcr-workflow byggd för ingest än, se runbook}
+    container_name: ingest-slice
+    environment:
+      NODE_ENV: production
+      INGEST_PORT: "3001"
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: core-slice-ingest
+      KAFKA_GROUP_ID: core-slice-ingest-group
+      CONNECT_URL: http://kafka-connect:8083
+      LOG_LEVEL: info
+    depends_on:
+      kafka: { condition: service_healthy }
+    networks: [core-slice]
+
+  transform:
+    image: ghcr.io/anderscarlius/nimloth-core-transform:${IMAGE_TAG_TRANSFORM:?ASPIRATIONELLT — ingen ghcr-workflow byggd för transform än, se runbook}
+    container_name: transform-slice
+    environment:
+      NODE_ENV: production
+      TRANSFORM_PORT: "3002"
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: core-slice-transform
+      KAFKA_GROUP_ID: core-slice-transform-group
+      MELIOR_DB_HOST: melior-db
+      MELIOR_DB_PORT: "5432"
+      MELIOR_DB_NAME: melior
+      MELIOR_DB_USER: melior
+      MELIOR_DB_PASSWORD: melior
+      ASYNJA_DB_HOST: asynja-db
+      ASYNJA_DB_PORT: "5432"
+      ASYNJA_DB_NAME: asynja
+      ASYNJA_DB_USER: asynja
+      ASYNJA_DB_PASSWORD: asynja
+      LOG_LEVEL: info
+    depends_on:
+      kafka: { condition: service_healthy }
+      melior-db: { condition: service_healthy }
+      asynja-db: { condition: service_healthy }
+    networks: [core-slice]
+
+  fhir-facade:
+    image: ghcr.io/anderscarlius/nimloth-core-fhir-facade:${IMAGE_TAG_FHIR_FACADE:?Sätt explicit, t.ex. sha-abc1234 — enda tjänsten med skissad publish-väg denna session}
+    container_name: fhir-facade-slice
+    environment:
+      NODE_ENV: production
+      FHIR_FACADE_PORT: "3003"
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: core-slice-fhir-facade
+      KAFKA_GROUP_ID: core-slice-fhir-materializer
+      CORE_DB_HOST: core-db
+      CORE_DB_PORT: "5432"
+      CORE_DB_NAME: core
+      CORE_DB_USER: core
+      CORE_DB_PASSWORD: core
+      LOG_LEVEL: info
+      # Medveten avgränsning för denna slice — se runbook G1. Ingen ehrbase här.
+      CANONICAL_STORE: postgres
+    ports:
+      # Placeholder, EJ ÄNNU RESERVERAD i nimloth-docs/Portstrategi.md — se runbook.
+      - "11121:3003"
+    depends_on:
+      kafka: { condition: service_healthy }
+      core-db: { condition: service_healthy }
+    networks: [core-slice]
+
+  cds-hooks:
+    image: ghcr.io/anderscarlius/nimloth-core-cds-hooks:${IMAGE_TAG_CDS_HOOKS:?ASPIRATIONELLT — ingen ghcr-workflow byggd för cds-hooks än, se runbook}
+    container_name: cds-hooks-slice
+    environment:
+      NODE_ENV: production
+      CDS_HOOKS_PORT: "3004"
+      FHIR_BASE_URL: http://fhir-facade:3003/fhir/r4
+    ports:
+      - "11122:3004"   # Placeholder, EJ ÄNNU RESERVERAD.
+    depends_on:
+      - fhir-facade
+    networks: [core-slice]
+
+  audit:
+    image: ghcr.io/anderscarlius/nimloth-core-audit:${IMAGE_TAG_AUDIT:?ASPIRATIONELLT — ingen ghcr-workflow byggd för audit än, se runbook}
+    container_name: audit-slice
+    environment:
+      NODE_ENV: production
+      AUDIT_PORT: "3005"
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: core-slice-audit
+      KAFKA_GROUP_ID: core-slice-audit-group
+      AUDIT_TOPIC: core.audit.access
+      AUDIT_BATCH_SIZE: "100"
+      AUDIT_BATCH_LATENCY_MS: "1000"
+      ENFORCE_ADMIN: "false"
+      CORE_DB_HOST: core-db
+      CORE_DB_PORT: "5432"
+      CORE_DB_NAME: core
+      CORE_DB_USER: core
+      CORE_DB_PASSWORD: core
+      LOG_LEVEL: info
+    ports:
+      - "11123:3005"   # Placeholder, EJ ÄNNU RESERVERAD.
+    depends_on:
+      kafka: { condition: service_healthy }
+      core-db: { condition: service_healthy }
+    networks: [core-slice]
+
+volumes:
+  melior-slice-data:
+  asynja-slice-data:
+  core-slice-data:
+  kafka-slice-data:
+
+networks:
+  core-slice:
+    driver: bridge

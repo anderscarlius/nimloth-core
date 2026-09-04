@@ -1,0 +1,83 @@
+# ============================================================================
+# SKISS — INTE en aktiv workflow. Medvetet EJ lagd i .github/workflows/ och
+# EJ döpt .yml där: en fil i den mappen blir en LIVE GitHub Actions-workflow
+# så fort den committas och pushas till main (triggar på push). Flytta och
+# döp om ENDAST efter explicit godkännande i en session där publish är
+# tillåtet.
+#
+# Mall: samma tvåjobbs-mönster som .github/workflows/cohort-service-publish.yml
+# (test → publish till ghcr.io), tillämpat på fhir-facade — den enda
+# app-tjänsten i fru-andersson-slice som får en publish-väg denna session.
+# ingest/transform/cds-hooks/audit får motsvarande workflow i en framtida,
+# separat, godkänd omgång — inte alla fem på en gång.
+#
+# Dockerfile finns redan (services/fhir-facade/Dockerfile) och test-scriptet
+# (`vitest run`) finns redan i package.json — men multi-arch-bygget och
+# ghcr-publiceringen är ALDRIG körda för denna tjänst. Första körningen kan
+# avslöja samma typ av friktion som cohort-service/migration-gateway hade
+# (t.ex. healthcheck-fixen för localhost→127.0.0.1) — okänt tills det körs.
+# ============================================================================
+
+name: FHIR-facade — bygg och pusha
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/fhir-facade/**"
+      - "packages/**"
+      - ".github/workflows/fhir-facade-publish.yml"
+
+jobs:
+  test:
+    name: Unit-tester (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm --filter "@nimloth-core/fhir-facade" build
+      - run: pnpm --filter "@nimloth-core/fhir-facade" test
+
+  publish:
+    name: Bygg och pusha till ghcr.io
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/nimloth-core-fhir-facade
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/fhir-facade/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
