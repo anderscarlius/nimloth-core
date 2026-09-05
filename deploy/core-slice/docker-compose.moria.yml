@@ -15,9 +15,27 @@
 # committas och pushas). ingest/transform/cds-hooks/audits image-
 # referenser nedan är ASPIRATIONELLA — inga workflows byggda för dem än.
 #
-# Grindar (G1–G5) och öppna frågor (init-SQL/connector-registrering,
-# port-reservation, /opt/nimloth-deploy/-kollisionen) i
-# nimloth-docs/NOW_Block8_FruAnderssonSlice_forberedelse.md.
+# G4 (init-SQL/topics/connector-registrering byggt för lokal git-checkout,
+# inte pull-deploy) är LÖST PÅ PAPPER i denna version — mekanism i git,
+# aldrig körd live. G1/G2/G3/G5 kvar olästa. Se
+# nimloth-docs/NOW_Block8_FruAnderssonSlice_forberedelse.md för alla fem.
+#
+# G4-lösning: INGEN kopia av init-SQL/topics/connector-scripten i detta
+# repo — infra/ förblir sanningskällan (ingen duplicering i git). Denna
+# fil förutsätter att en deploy-sekvens (se runbooken §8) har scp:at
+# originalfilerna till NAMNGIVNA undermappar bredvid denna compose-fil på
+# Moria, under /opt/nimloth-deploy-core-slice/:
+#
+#   /opt/nimloth-deploy-core-slice/
+#     docker-compose.moria.yml   (denna fil)
+#     init/init-melior.sql       (scp:ad från infra/postgres/)
+#     init/init-asynja.sql       (scp:ad från infra/postgres/)
+#     init/init-core.sql         (scp:ad från infra/postgres/)
+#     kafka/create-topics.sh     (scp:ad från infra/kafka/)
+#     debezium/register-connectors.sh  (scp:ad från infra/debezium/)
+#
+# Volymmonteringarna nedan är relativa mot DENNA fils mapp på Moria —
+# alltså mot de landade undermapparna ovan, inte mot en git-checkout.
 # ============================================================================
 
 services:
@@ -34,8 +52,10 @@ services:
       POSTGRES_PASSWORD: melior
     volumes:
       - melior-slice-data:/var/lib/postgresql/data
-      # init-melior.sql måste följa med till Moria (scp) — se runbook G4, oöst.
-      - ./init-melior.sql:/docker-entrypoint-initdb.d/init-melior.sql:ro
+      # Landad från infra/postgres/init-melior.sql via scp — se runbook §8.
+      # Fullt idempotent (DROP PUBLICATION IF EXISTS + CREATE ROLE-guard +
+      # CREATE TABLE IF NOT EXISTS) — verifierat i Fas 1-inventeringen.
+      - ./init/init-melior.sql:/docker-entrypoint-initdb.d/init-melior.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U melior -d melior"]
       interval: 10s
@@ -53,7 +73,8 @@ services:
       POSTGRES_PASSWORD: asynja
     volumes:
       - asynja-slice-data:/var/lib/postgresql/data
-      - ./init-asynja.sql:/docker-entrypoint-initdb.d/init-asynja.sql:ro
+      # Landad från infra/postgres/init-asynja.sql via scp — se runbook §8.
+      - ./init/init-asynja.sql:/docker-entrypoint-initdb.d/init-asynja.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U asynja -d asynja"]
       interval: 10s
@@ -70,7 +91,16 @@ services:
       POSTGRES_PASSWORD: core
     volumes:
       - core-slice-data:/var/lib/postgresql/data
-      - ./init-core.sql:/docker-entrypoint-initdb.d/init-core.sql:ro
+      # Landad från infra/postgres/init-core.sql via scp — se runbook §8.
+      # Rent schema, ingen CDC-roll/publikation (core-db är målet, inte källan).
+      #
+      # Framtida alternativ, INTE valt/implementerat denna session:
+      # cohort-service och migration-gateway äger sitt eget schema via
+      # migrate(pool) i appkoden (self-migrating, inget init-SQL, inget
+      # scp-behov). transform/fhir-facade/audit skulle kunna göra samma
+      # sak för core-db — men det är en ändring av applikationskod, inte
+      # en deploy-artefakt, och rörs inte i denna G4-omgång.
+      - ./init/init-core.sql:/docker-entrypoint-initdb.d/init-core.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U core -d core"]
       interval: 10s
@@ -100,6 +130,12 @@ services:
       CLUSTER_ID: "NimlothCoreSliceKr4Ft1"
     volumes:
       - kafka-slice-data:/var/lib/kafka/data
+      # Landad från infra/kafka/create-topics.sh via scp — se runbook §8.
+      # Saknades i förra versionen av denna skiss (Fas 1-fyndet: ≈30
+      # domän-topics med explicit partitions/retention/cleanup-policy,
+      # t.ex. core.audit.access behöver compact,delete + obegränsad
+      # retention — KAFKA_AUTO_CREATE_TOPICS_ENABLE räcker INTE för det).
+      - ./kafka/create-topics.sh:/opt/kafka/create-topics.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:29092 --list >/dev/null 2>&1 || exit 1"]
       interval: 15s
@@ -107,6 +143,11 @@ services:
       retries: 20
       start_period: 30s
     networks: [core-slice]
+    # Efter healthy: kör EN gång, exakt som start.sh gör lokalt —
+    #   docker compose -f docker-compose.moria.yml exec kafka \
+    #     bash /opt/kafka/create-topics.sh
+    # Idempotent (--if-not-exists per topic). Ingen separat compose-tjänst
+    # behövs — mount + exec speglar det bevisade lokala mönstret exakt.
 
   kafka-connect:
     image: debezium/connect:2.6
@@ -125,6 +166,10 @@ services:
       CONFIG_STORAGE_REPLICATION_FACTOR: 1
       OFFSET_STORAGE_REPLICATION_FACTOR: 1
       STATUS_STORAGE_REPLICATION_FACTOR: 1
+    ports:
+      # Publicerad till Moria-hosten AV SKÄL — se register-kommentaren
+      # nedan. Samma port som root docker-compose.yml använder lokalt.
+      - "8083:8083"
     depends_on:
       kafka: { condition: service_healthy }
       melior-db: { condition: service_healthy }
@@ -136,9 +181,19 @@ services:
       retries: 10
       start_period: 20s
     networks: [core-slice]
-    # Debezium-connectorer registreras EFTER upp, via samma
-    # infra/debezium/register-connectors.sh som start.sh använder lokalt —
-    # måste scp:as till Moria och köras separat. Ej löst i denna skiss, G4.
+    # Debezium-connectorer registreras EFTER healthy, via
+    # infra/debezium/register-connectors.sh (landad på Moria som
+    # ./debezium/register-connectors.sh via scp — se runbook §8).
+    #
+    # Körs DIREKT PÅ MORIA-HOSTEN (ssh, inte ett nytt compose-jobb) mot
+    # den publicerade porten ovan — exakt samma sätt som start.sh redan
+    # kör scriptet lokalt (på utvecklarens Mac, inte i en container).
+    # Moria är precis som devmaskinen en vanlig Linux-host med bash+curl.
+    # Ett containeriserat register-jobb övervägdes (Fas 2) men avfärdades:
+    # det hade krävt en ny, oprövad image (debezium/connect:2.6 har inte
+    # verifierat bash+curl; curlimages/curl saknar bash som scriptet
+    # kräver) för att lösa något Moria-hosten redan kan göra utan extra
+    # beroenden. Redan idempotent (PUT /connectors/{name}/config).
 
   # --- App (5) — endast fhir-facade har en skissad publish-väg denna session ---
 
