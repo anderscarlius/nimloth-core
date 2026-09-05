@@ -36,6 +36,11 @@
 #
 # Volymmonteringarna nedan är relativa mot DENNA fils mapp på Moria —
 # alltså mot de landade undermapparna ovan, inte mot en git-checkout.
+#
+# Block 8 steg 2 (2026-09-05): host-portarna 11121/11122/11123 är nu
+# RESERVERADE i nimloth-docs/Portstrategi.md §4 (111xx) — inte längre
+# placeholders. 8083 (kafka-connect) är avsiktligt UTANFÖR 11xxx-registret,
+# se Portstrategi.md §8.1-fotnoten.
 # ============================================================================
 
 services:
@@ -256,7 +261,8 @@ services:
       # Medveten avgränsning för denna slice — se runbook G1. Ingen ehrbase här.
       CANONICAL_STORE: postgres
     ports:
-      # Placeholder, EJ ÄNNU RESERVERAD i nimloth-docs/Portstrategi.md — se runbook.
+      # Reserverad — Portstrategi.md §4 (111xx), fru-andersson-slice, skiss
+      # ej deployad. INTE huvudstackens egen 11101-reservation.
       - "11121:3003"
     depends_on:
       kafka: { condition: service_healthy }
@@ -271,7 +277,9 @@ services:
       CDS_HOOKS_PORT: "3004"
       FHIR_BASE_URL: http://fhir-facade:3003/fhir/r4
     ports:
-      - "11122:3004"   # Placeholder, EJ ÄNNU RESERVERAD.
+      # Reserverad — Portstrategi.md §4 (111xx), fru-andersson-slice.
+      # INTE huvudstackens egen 11109-reservation (Sprint 5 P7).
+      - "11122:3004"
     depends_on:
       - fhir-facade
     networks: [core-slice]
@@ -296,7 +304,9 @@ services:
       CORE_DB_PASSWORD: core
       LOG_LEVEL: info
     ports:
-      - "11123:3005"   # Placeholder, EJ ÄNNU RESERVERAD.
+      # Reserverad — Portstrategi.md §4 (111xx), fru-andersson-slice.
+      # Ny rad — huvudstackens audit-tjänst hade ingen egen reservation.
+      - "11123:3005"
     depends_on:
       kafka: { condition: service_healthy }
       core-db: { condition: service_healthy }
