@@ -1,31 +1,30 @@
-# ============================================================================
-# SKISS — INTE en aktiv workflow. Medvetet EJ lagd i .github/workflows/ och
-# EJ döpt .yml där: en fil i den mappen blir en LIVE GitHub Actions-workflow
-# så fort den committas och pushas till main (triggar på push). Flytta och
-# döp om ENDAST efter explicit godkännande i en session där publish är
-# tillåtet.
-#
-# Mall: samma tvåjobbs-mönster som .github/workflows/cohort-service-publish.yml
-# (test → publish till ghcr.io), tillämpat på fhir-facade — den enda
-# app-tjänsten i fru-andersson-slice som får en publish-väg denna session.
-# ingest/transform/cds-hooks/audit får motsvarande workflow i en framtida,
-# separat, godkänd omgång — inte alla fem på en gång.
-#
-# Dockerfile finns redan (services/fhir-facade/Dockerfile) och test-scriptet
-# (`vitest run`) finns redan i package.json — men multi-arch-bygget och
-# ghcr-publiceringen är ALDRIG körda för denna tjänst. Första körningen kan
-# avslöja samma typ av friktion som cohort-service/migration-gateway hade
-# (t.ex. healthcheck-fixen för localhost→127.0.0.1) — okänt tills det körs.
-# ============================================================================
-
 name: FHIR-facade — bygg och pusha
+
+# Block 8 steg 3 (2026-09-06) — fru-andersson-slice, mönsterbevis för
+# huvudstacken. Egen, path-filtrerad workflow, samma tvåjobbs-mönster som
+# cohort-service-publish.yml (test → publish till ghcr.io) — vald mall
+# eftersom fhir-facades testsvit är hermetisk precis som cohort-services:
+# den enda DB-beroende testen (dual-store-e2e.test.ts) är describe.skip
+# om inte E2E_LIVE=1 sätts, vilket den aldrig gör här. Inget Postgres-
+# services:-block behövs, till skillnad från migration-gateway-publish.yml.
+#
+# paths nedan är SKÄRPT mot vad services/fhir-facade/Dockerfile faktiskt
+# COPY:ar (packages/shared + packages/kafka-utils, inte hela packages/) —
+# inte en blank packages/**-kopia av cohort-service/migration-gateway-
+# mallen, som själva kopierar hela packages/ i sina Dockerfiles och därför
+# korrekt använder ett bredare filter.
+#
+# Medvetet UTAN: workflow_dispatch (cohort-service-mallen saknar den
+# också), verify-from-scratch/B4-jobb (hör bara hemma i migration-gateway,
+# se S3 i den styrande sessionen).
 
 on:
   push:
     branches: [main]
     paths:
       - "services/fhir-facade/**"
-      - "packages/**"
+      - "packages/shared/**"
+      - "packages/kafka-utils/**"
       - ".github/workflows/fhir-facade-publish.yml"
 
 jobs:

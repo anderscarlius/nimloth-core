@@ -9,11 +9,12 @@
 # framtida session) lägger till ehrbase + ehrbase-db + openehr-composer
 # med CANONICAL_STORE=both.
 #
-# Endast fhir-facade har en skissad ghcr-publish-väg denna session, se
-# fhir-facade-publish.yml.skiss i samma mapp (medvetet INTE lagd i
-# .github/workflows/ — en fil där blir en LIVE workflow så fort den
-# committas och pushas). ingest/transform/cds-hooks/audits image-
-# referenser nedan är ASPIRATIONELLA — inga workflows byggda för dem än.
+# Endast fhir-facade har en riktig ghcr-publish-väg (Block 8 steg 3,
+# 2026-09-06): .github/workflows/fhir-facade-publish.yml — finns i git,
+# men INTE körd på GitHub Actions ännu (väntar på push, se runbook).
+# Den tidigare skissfilen (fhir-facade-publish.yml.skiss) är borttagen,
+# ersatt av den riktiga. ingest/transform/cds-hooks/audits image-
+# referenser nedan är fortsatt ASPIRATIONELLA — inga workflows byggda för dem än.
 #
 # G4 (init-SQL/topics/connector-registrering byggt för lokal git-checkout,
 # inte pull-deploy) är LÖST PÅ PAPPER i denna version — mekanism i git,
@@ -200,7 +201,7 @@ services:
     # kräver) för att lösa något Moria-hosten redan kan göra utan extra
     # beroenden. Redan idempotent (PUT /connectors/{name}/config).
 
-  # --- App (5) — endast fhir-facade har en skissad publish-väg denna session ---
+  # --- App (5) — endast fhir-facade har en riktig publish-workflow (ej pushad än) ---
 
   ingest:
     image: ghcr.io/anderscarlius/nimloth-core-ingest:${IMAGE_TAG_INGEST:?ASPIRATIONELLT — ingen ghcr-workflow byggd för ingest än, se runbook}
@@ -244,7 +245,7 @@ services:
     networks: [core-slice]
 
   fhir-facade:
-    image: ghcr.io/anderscarlius/nimloth-core-fhir-facade:${IMAGE_TAG_FHIR_FACADE:?Sätt explicit, t.ex. sha-abc1234 — enda tjänsten med skissad publish-väg denna session}
+    image: ghcr.io/anderscarlius/nimloth-core-fhir-facade:${IMAGE_TAG_FHIR_FACADE:?Sätt explicit, t.ex. sha-abc1234 — enda tjänsten med en riktig publish-workflow (ej pushad/körd än)}
     container_name: fhir-facade-slice
     environment:
       NODE_ENV: production
