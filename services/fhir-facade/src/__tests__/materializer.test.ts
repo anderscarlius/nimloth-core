@@ -84,7 +84,7 @@ describe('Materializer dual-key-läsning (Sprint 2.5 B1)', () => {
     const event = {
       event_id: '11111111-1111-4111-8111-111111111111',
       event_type: 'core.clinical.medication.prescribed',
-      patient_pnr: '19500315-2384', // ← INTE patient_id
+      patient_id: '19500315-2384', // canonical wire-format sedan B10-konvergensen
       source_system: 'kafka-test-producer',
       occurred_at: '2026-05-03T10:00:00Z',
       payload: { drug: 'Warfarin', dose: '5mg' },
@@ -92,7 +92,7 @@ describe('Materializer dual-key-läsning (Sprint 2.5 B1)', () => {
     await dispatch(m, 'core.clinical.medication.prescribed', event);
     expect(queries).toHaveLength(1);
     expect(queries[0].sql).toContain('INSERT INTO fhir_medication_statements');
-    // patient_pnr-värdet ska vara extraherat från event.patient_pnr
+    // patient_pnr-kolumnen ska vara ifylld med event.patient_id
     expect(queries[0].params[1]).toBe('19500315-2384');
   });
 
@@ -129,10 +129,10 @@ describe('Materializer dual-key-läsning (Sprint 2.5 B1)', () => {
     expect(queries).toHaveLength(0);
     // ETT warn-loggmeddelande
     expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy.mock.calls[0][1]).toContain('saknar patient_id/patient_pnr');
+    expect(warnSpy.mock.calls[0][1]).toContain('saknar patient_id');
   });
 
-  it('alla 6 dispatchade resurstyper accepterar patient_pnr-format', async () => {
+  it('alla 7 dispatchade resurstyper accepterar patient_id-format', async () => {
     const cases: Array<{ topic: string; event_type: string; payload?: Record<string, unknown>; tableName: string }> = [
       { topic: 'core.clinical.encounter.started', event_type: 'enc', tableName: 'fhir_encounters' },
       { topic: 'core.clinical.observation.vitals', event_type: 'obs', tableName: 'fhir_observations' },
@@ -147,7 +147,7 @@ describe('Materializer dual-key-läsning (Sprint 2.5 B1)', () => {
       const event = {
         event_id: `aaaa-${c.event_type}`,
         event_type: c.event_type,
-        patient_pnr: '19500315-2384',
+        patient_id: '19500315-2384',
         source_system: 'kafka-test-producer',
         occurred_at: '2026-05-03T10:00:00Z',
         payload: c.payload ?? {},
