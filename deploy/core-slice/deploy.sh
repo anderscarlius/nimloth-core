@@ -28,9 +28,17 @@ set -euo pipefail
 #
 #   3. Eget tokenfile: /opt/nimloth-deploy-core-slice/.env — INTE
 #      /opt/nimloth-deploy/.env (den mappen ägs av nsf-agent, 0700 — S4
-#      förbjuder att röra den). Tokeninnehållet är olöst (G5 i runbooken,
-#      Anders' beslut, inte det här scriptets). Scriptet läser filen om
-#      den finns, felar tydligt med hänvisning till G5 om den inte gör det.
+#      förbjuder att röra den). Scriptet läser filen om den finns, felar
+#      tydligt med hänvisning till G5 om den inte gör det.
+#
+#      Patch (Block 8 steg 5, 2026-09-09): `pull infra`/`up infra` kräver
+#      INTE längre `.env`/ghcr-login. melior-db/asynja-db/core-db
+#      (postgres:16-alpine), kafka (confluentinc/cp-kafka) och
+#      kafka-connect (debezium/connect) är ALLA publika Docker Hub-images
+#      — ingen ghcr-autentisering behövs för att dra eller starta dem.
+#      Bara `pull fhir-facade`/`up fhir-facade`/`rollback` (ghcr.io/…-image)
+#      kräver `.env`+login, fail-closed. `bootstrap`/`status`/`down` har
+#      aldrig behövt login.
 #
 # Användning (på Moria, efter scp enligt runbook §8):
 #
@@ -155,10 +163,11 @@ cmd_pull() {
   set_aspirational_placeholders
   if [[ "$scope" == "infra" ]]; then
     set_fhir_facade_placeholder_if_unset
+    # Ingen ghcr_login — infra-images är publika (Docker Hub), se header.
   else
     require_real_fhir_facade_tag
+    ghcr_login
   fi
-  ghcr_login
   docker compose -f "$COMPOSE_FILE" pull "${services[@]}"
 }
 
@@ -170,7 +179,7 @@ cmd_up() {
 
   if [[ "$scope" == "infra" ]]; then
     set_fhir_facade_placeholder_if_unset
-    ghcr_login
+    # Ingen ghcr_login — infra-images är publika (Docker Hub), se header.
     echo "=== fru-andersson-slice: up infra (5 tjänster) ==="
     docker compose -f "$COMPOSE_FILE" up -d --wait --wait-timeout 90 "${services[@]}"
   else
