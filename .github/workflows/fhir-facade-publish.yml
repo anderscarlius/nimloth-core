@@ -17,6 +17,17 @@ name: FHIR-facade — bygg och pusha
 # Medvetet UTAN: workflow_dispatch (cohort-service-mallen saknar den
 # också), verify-from-scratch/B4-jobb (hör bara hemma i migration-gateway,
 # se S3 i den styrande sessionen).
+#
+# Fix (Block 8 steg 5, 2026-09-08): build-steget använder nu
+# "@nimloth-core/fhir-facade..." (pnpm-filter, dependencies-riktning
+# — empiriskt verifierat lokalt: väljer fhir-facade + packages/shared +
+# packages/kafka-utils, byggda i rätt topologisk ordning). Utan detta
+# föll steget på "Cannot find module '@nimloth-core/shared/types'" —
+# packages/shareds exports pekar på ./dist/..., som bara finns efter att
+# paketet byggt sig själv. cohort-service-mallen (kopierad ursprungligen)
+# råkade aldrig träffa detta hål eftersom cohort-service inte importerar
+# @nimloth-core/shared i sin källkod. test-steget behöver INTE samma
+# suffix — det bygger inget, bara kör redan byggda dist/-filer.
 
 on:
   push:
@@ -41,7 +52,7 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile=false
-      - run: pnpm --filter "@nimloth-core/fhir-facade" build
+      - run: pnpm --filter "@nimloth-core/fhir-facade..." build
       - run: pnpm --filter "@nimloth-core/fhir-facade" test
 
   publish:
