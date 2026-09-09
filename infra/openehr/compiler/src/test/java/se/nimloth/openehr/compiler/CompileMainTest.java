@@ -101,6 +101,60 @@ class CompileMainTest {
         assertTrue(missing.isEmpty(), "node_id utan matchande term_definitions (orsakar EHRbase-NPE): " + missing);
     }
 
+    /**
+     * P3.0c: ACTION-arketypers ism_transition (RM ISM_TRANSITION,
+     * current_state/careflow_step) — tidigare (P3.0b) dokumenterat FAILED
+     * med UnsupportedOperationException, nu riktig, EHRbase-verifierad OPT.
+     * Se {@link OperationalTemplateXmlBuilder}-klassens Javadoc,
+     * "ACTION/ism_transition — löst"-avsnittet, för rotorsak.
+     */
+    @Test
+    void compilesProcedureActionWithIsmTransition() throws Exception {
+        Path adl = ARCHETYPES_DIR.resolve("openEHR-EHR-ACTION.procedure.v1.adl");
+        assertTrue(Files.exists(adl), "Förväntad, incheckad arketyp saknas: " + adl.toAbsolutePath());
+
+        CompileMain.CompileResult result = CompileMain.compileOne(adl);
+
+        assertEquals("procedure.v1.p3_0b", result.templateId);
+        assertTrue(result.archetypeId.startsWith("openEHR-EHR-ACTION.procedure.v1"));
+
+        Document doc = parseXml(result.optXml);
+        assertEquals("template", doc.getDocumentElement().getLocalName());
+        assertTrue(result.optXml.contains("ism_transition"), "ism_transition-attributet saknas i OPT-utdatan");
+        // Riktig careflow-etikett hämtad ur ADL-källans ontologi, inte gissad.
+        assertTrue(result.optXml.contains("Procedure planned"),
+            "Förväntade en riktig careflow-etikett ('Procedure planned') i OPT-utdatan");
+    }
+
+    /**
+     * Regressionstest för den ANDRA NPE-orsaken som hittades ikväll (P3.0c):
+     * EHRbase slår upp etiketten för varje KOD-VÄRDE i en {@code code_list}
+     * (t.ex. "at9000") via en karta keyad på kod-strängen — inte via nodens
+     * node_id. Utan en matchande term_definitions-post för varje kod-värde
+     * kraschar EHRbase:s ISM_TRANSITION-specialhantering med
+     * IndexOutOfBoundsException. Se {@link OperationalTemplateXmlBuilder#
+     * collectTermForCode}.
+     */
+    @Test
+    void everyCodeListValueHasAMatchingTermDefinition() throws Exception {
+        Path adl = ARCHETYPES_DIR.resolve("openEHR-EHR-ACTION.procedure.v1.adl");
+        CompileMain.CompileResult result = CompileMain.compileOne(adl);
+        Document doc = parseXml(result.optXml);
+
+        Set<String> codeListValues = new HashSet<>();
+        collectNonEmptyTextContent(doc.getElementsByTagNameNS("*", "code_list"), codeListValues);
+
+        Set<String> termCodes = new HashSet<>();
+        NodeList termDefs = doc.getElementsByTagNameNS("*", "term_definitions");
+        for (int i = 0; i < termDefs.getLength(); i++) {
+            termCodes.add(((Element) termDefs.item(i)).getAttribute("code"));
+        }
+
+        Set<String> missing = new HashSet<>(codeListValues);
+        missing.removeAll(termCodes);
+        assertTrue(missing.isEmpty(), "code_list-värden utan matchande term_definitions (orsakar EHRbase-NPE i ISM_TRANSITION-hantering): " + missing);
+    }
+
     @Test
     void malformedAdlProducesClearErrorInsteadOfSilentGarbage() throws Exception {
         URL resource = getClass().getResource("broken-header.adl");

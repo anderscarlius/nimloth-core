@@ -2,8 +2,10 @@ package se.nimloth.openehr.compiler;
 
 import com.nedap.archie.aom.ArchetypeSlot;
 import com.nedap.archie.aom.CAttribute;
+import com.nedap.archie.aom.CAttributeTuple;
 import com.nedap.archie.aom.CComplexObject;
 import com.nedap.archie.aom.CObject;
+import com.nedap.archie.aom.CPrimitiveTuple;
 import com.nedap.archie.aom.OperationalTemplate;
 import com.nedap.archie.aom.primitives.CReal;
 import com.nedap.archie.aom.primitives.CString;
@@ -56,20 +58,28 @@ import java.util.UUID;
  * men producerar den genom att vandra ett riktigt AOM-träd istället för att
  * skriva ett facit för hand per arketyp.</p>
  *
- * <h2>ACTION/ism_transition — ytterligare känd lucka (2026-09-09/10)</h2>
+ * <h2>ACTION/ism_transition — löst (P3.0c, 2026-09-10)</h2>
  *
  * <p>ACTION-arketyper (t.ex. {@code openEHR-EHR-ACTION.procedure.v1}) har ett
  * {@code ism_transition}-attribut (RM-klass ISM_TRANSITION, med
- * {@code current_state}/{@code careflow_step}) som EHRbase:s egen
- * {@code OPTParser}/WebTemplate-byggare hanterar som specialfall och kräver
- * minst ett riktigt kodat värde för. Vår generiska trädvandring producerar
- * en strukturellt giltig men värdemässigt tom DV_CODED_TEXT där, vilket får
- * EHRbase att krascha med IndexOutOfBoundsException vid malluppladdning
- * ({@code OPTParser.parseComplexObjectSingle}) — empiriskt verifierat mot
- * en lokal EHRbase 2.30.1-instans ikväll. 8 av 9 arketyper i
- * infra/openehr/archetypes/ laddar rent mot en riktig EHRbase; ACTION-
- * arketyper med ism_transition är en dokumenterad P3.0c-uppföljning, inte
- * en gissning som göms.</p>
+ * {@code current_state}/{@code careflow_step}, vardera bundna till lokala
+ * eller externa terminologikoder via en {@code CTerminologyCode}-constraint).
+ * P3.0b:s första version kraschade EHRbase:s {@code OPTParser} vid
+ * malluppladdning ({@code IndexOutOfBoundsException} i
+ * {@code parseComplexObjectSingle}, {@code .getInputs().get(0).getList()
+ * .get(0)}). Rotorsaken (verifierad genom att läsa web-template-sdk:ns
+ * källkod, 2.31.0, inte gissad): EHRbase slår upp etiketten för varje
+ * KOD-VÄRDE i en {@code code_list} (t.ex. "at9000") via en
+ * term-definitions-karta keyad på KOD-STRÄNGEN — inte via nodens egen
+ * node_id. {@link #collectTerm(String, CObject)} registrerade bara
+ * struktur-noders egna etiketter; {@link #collectTermForCode(String)}
+ * lades till för att ÄVEN registrera en etikett per faktiskt kod-värde
+ * (uppslagen via arketypens egen {@code ArchetypeTerminology.
+ * getTermDefinition}). Fixen är generisk — gäller alla
+ * {@code CTerminologyCode}-fält, inte bara ism_transition. 9/9 arketyper i
+ * infra/openehr/archetypes/ laddar nu rent mot en riktig EHRbase (verifierat
+ * lokalt), inklusive procedure.v1 med fullt fungerande, riktiga
+ * careflow-etiketter i WebTemplate-utdatan.</p>
  *
  * <h2>Känd begränsning (dokumenterad, inte gömd)</h2>
  *
@@ -92,6 +102,9 @@ public class OperationalTemplateXmlBuilder {
     private final Document doc;
     private final List<String> warnings = new ArrayList<>();
     private final LinkedHashMap<String, String[]> termDefinitions = new LinkedHashMap<>();
+    /** Satt i {@link #build}. Behövs för att slå upp etiketter för KOD-VÄRDEN
+     * (t.ex. "at9000"), inte bara för nod-identiteter — se {@link #collectTermForCode}. */
+    private OperationalTemplate sourceArchetype;
 
     public OperationalTemplateXmlBuilder() throws ParserConfigurationException {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -117,6 +130,7 @@ public class OperationalTemplateXmlBuilder {
     public String build(OperationalTemplate flattened, String sourceArchetypeId, String templateId, String concept) {
         termDefinitions.clear();
         warnings.clear();
+        this.sourceArchetype = flattened;
 
         Element template = el("template");
         doc.appendChild(template);
@@ -189,6 +203,12 @@ public class OperationalTemplateXmlBuilder {
     }
 
     private Element buildCategoryConstraint() {
+        // "433" = openEHR-terminologins "event"-kod. EHRbase löser openehr::-
+        // terminologikoder via sin egen inbyggda TerminologyProvider (behöver
+        // inte vår term_definitions-karta) — men vi registrerar en post ändå
+        // så invarianten "varje code_list-värde har en term_definitions-post"
+        // gäller universellt, utan specialfall för just denna hårdkodade kod.
+        termDefinitions.putIfAbsent("433", new String[]{"event", "Event category"});
         Element attributes = el("attributes");
         setXsiType(attributes, "C_SINGLE_ATTRIBUTE");
         attributes.appendChild(simple("rm_attribute_name", "category"));
@@ -256,20 +276,6 @@ public class OperationalTemplateXmlBuilder {
      * @return null om attributet inte ska serialiseras alls (se nedan).
      */
     private Element buildAttribute(CAttribute attribute) {
-        if ("ism_transition".equals(attribute.getRmAttributeName())) {
-            // ACTION-arketypers ism_transition (RM ISM_TRANSITION, current_state/
-            // careflow_step) kräver riktiga kodade värden — EHRbase:s egen
-            // OPTParser kraschar annars vid malluppladdning (se klassens
-            // Javadoc, "ACTION/ism_transition"-avsnittet, för fullt
-            // empiriskt underlag). Hellre ett tydligt, fångbart fel här än
-            // en OPT som ser giltig ut men avvisas av EHRbase — CI:s
-            // openehr:load-templates-steg skulle annars gå rött på en
-            // artefakt som SER klar ut.
-            throw new UnsupportedOperationException(
-                "ism_transition (ACTION-arketyper) stöds inte än av P3.0b — kräver riktiga "
-                    + "kodade current_state/careflow_step-värden, inte generisk vidgning. "
-                    + "P3.0c-uppföljning.");
-        }
         if (attribute.getChildren().isEmpty()) {
             // EHRbase:s OPTParser (parseComplexObjectSingle) förutsätter minst
             // ett <children>-element under en C_SINGLE_ATTRIBUTE — en tom
@@ -304,6 +310,12 @@ public class OperationalTemplateXmlBuilder {
     private Element buildChild(CObject child) {
         if (child instanceof CComplexObject) {
             CComplexObject complex = (CComplexObject) child;
+            // collectTerm måste köras oavsett vilken gren nedan hanterar
+            // resten av noden — tryBuildDvQuantity returnerar tidigt vid
+            // lyckad C_DV_QUANTITY-serialisering och skulle annars hoppa
+            // över noden egen term_definitions-post (regressionsfynd
+            // 2026-09-10, fångat av everyRealNodeIdHasAMatchingTermDefinition).
+            collectTerm(complex.getNodeId(), complex);
             Element dvQuantity = tryBuildDvQuantity(complex);
             if (dvQuantity != null) {
                 return dvQuantity;
@@ -313,7 +325,6 @@ public class OperationalTemplateXmlBuilder {
             el.appendChild(simple("rm_type_name", complex.getRmTypeName()));
             el.appendChild(intervalElement("occurrences", complex.getOccurrences()));
             el.appendChild(nodeIdElement(complex.getNodeId()));
-            collectTerm(complex.getNodeId(), complex);
             for (CAttribute attribute : complex.getAttributes()) {
                 appendIfPresent(el, buildAttribute(attribute));
             }
@@ -374,26 +385,43 @@ public class OperationalTemplateXmlBuilder {
         if (!"DV_QUANTITY".equals(complex.getRmTypeName())) {
             return null;
         }
+
+        List<Element> listItems = new ArrayList<>();
         CAttribute magnitudeAttr = complex.getAttribute("magnitude");
         CAttribute unitsAttr = complex.getAttribute("units");
-        if (magnitudeAttr == null || unitsAttr == null
-            || magnitudeAttr.getChildren().size() != 1 || unitsAttr.getChildren().size() != 1) {
-            return null;
+        if (magnitudeAttr != null && unitsAttr != null
+            && magnitudeAttr.getChildren().size() == 1 && unitsAttr.getChildren().size() == 1) {
+            // Enkel-enhets-fallet: magnitude/units är vanliga CAttribute-par
+            // (se Adl14CComplexObjectParser.parseCDVQuantity, en-post-grenen).
+            Element item = buildQuantityListItem(magnitudeAttr.getChildren().get(0), unitsAttr.getChildren().get(0));
+            if (item != null) {
+                listItems.add(item);
+            }
+        } else {
+            // Flera-enheter-fallet: samma parser lägger då constrainten i en
+            // CAttributeTuple (magnitude+units hör ihop radvis) istället för
+            // vanliga CAttribute — en post per tillåten enhet (P3.0c, fixat
+            // 2026-09-10; tidigare vidgades detta helt utan att ens en
+            // varning loggades, eftersom getAttributeTuples() aldrig lästes).
+            for (CAttributeTuple tuple : complex.getAttributeTuples()) {
+                int magnitudeIdx = tuple.getMemberIndex("magnitude");
+                int unitsIdx = tuple.getMemberIndex("units");
+                if (magnitudeIdx < 0 || unitsIdx < 0) {
+                    continue;
+                }
+                for (CPrimitiveTuple row : tuple.getTuples()) {
+                    Element item = buildQuantityListItem(row.getMember(magnitudeIdx), row.getMember(unitsIdx));
+                    if (item != null) {
+                        listItems.add(item);
+                    }
+                }
+            }
         }
-        CObject magnitudeChild = magnitudeAttr.getChildren().get(0);
-        CObject unitsChild = unitsAttr.getChildren().get(0);
-        if (!(magnitudeChild instanceof CReal) || !(unitsChild instanceof CString)) {
-            return null;
-        }
-        CReal magnitude = (CReal) magnitudeChild;
-        CString units = (CString) unitsChild;
-        List<Interval<Double>> magnitudeConstraint = magnitude.getConstraint();
-        List<String> unitsConstraint = units.getConstraint();
-        if (magnitudeConstraint == null || magnitudeConstraint.size() != 1
-            || unitsConstraint == null || unitsConstraint.size() != 1) {
+
+        if (listItems.isEmpty()) {
             warnings.add("DV_QUANTITY vid node_id=" + complex.getNodeId()
-                + " har fler än en list-post (flera tillåtna enheter) — vidgad till obegränsad."
-                + " P3.0c-uppföljning: stöd för multi-enhets DV_QUANTITY.");
+                + " gav inga tolkningsbara list-poster — vidgad till obegränsad."
+                + " P3.0c-uppföljning kvarstår för denna specifika struktur.");
             return null;
         }
 
@@ -402,15 +430,29 @@ public class OperationalTemplateXmlBuilder {
         el.appendChild(simple("rm_type_name", "DV_QUANTITY"));
         el.appendChild(intervalElement("occurrences", complex.getOccurrences()));
         el.appendChild(nodeIdElement(complex.getNodeId()));
+        for (Element item : listItems) {
+            el.appendChild(item);
+        }
+        return el;
+    }
 
-        Interval<Double> magInterval = magnitudeConstraint.get(0);
+    /** Bygger ETT {@code <list>}-element (magnitude+units) för C_DV_QUANTITY. Returnerar null om paret inte är CReal/CString. */
+    private Element buildQuantityListItem(CObject magnitudeChild, CObject unitsChild) {
+        if (!(magnitudeChild instanceof CReal) || !(unitsChild instanceof CString)) {
+            return null;
+        }
+        List<Interval<Double>> magnitudeConstraint = ((CReal) magnitudeChild).getConstraint();
+        List<String> unitsConstraint = ((CString) unitsChild).getConstraint();
+        if (magnitudeConstraint == null || magnitudeConstraint.isEmpty()
+            || unitsConstraint == null || unitsConstraint.isEmpty()) {
+            return null;
+        }
         Element list = el("list");
         Element magnitudeEl = el("magnitude");
-        appendMagnitudeIntervalFields(magnitudeEl, magInterval);
+        appendMagnitudeIntervalFields(magnitudeEl, magnitudeConstraint.get(0));
         list.appendChild(magnitudeEl);
         list.appendChild(simple("units", unitsConstraint.get(0)));
-        el.appendChild(list);
-        return el;
+        return list;
     }
 
     /**
@@ -440,7 +482,48 @@ public class OperationalTemplateXmlBuilder {
             warnings.add("CTerminologyCode vid node_id=" + code.getNodeId()
                 + " saknade constraint-lista — vidgad till obegränsad code_phrase.");
         }
+        for (String c : codes) {
+            collectTermForCode(c);
+        }
         return buildCodePhrase(terminology, codes);
+    }
+
+    /**
+     * EHRbase:s egen OPTParser slår upp etiketten för ett kod-VÄRDE (t.ex.
+     * "at9000" i en ism_transition/careflow_step-lista) via
+     * termDefinitionMap.get(kodsträngen) — INTE via nodens egen node_id.
+     * Utan en term_definitions-post keyad på exakt kod-strängen (samma
+     * sträng som hamnar i &lt;code_list&gt;) lämnas EHRbase:s
+     * {@code WebTemplateInput.getList()} tom, vilket kraschar
+     * ISM_TRANSITION-specialhanteringen i {@code OPTParser.
+     * parseComplexObjectSingle} med en IndexOutOfBoundsException
+     * ({@code .getInputs().get(0).getList().get(0)}). Hittad genom att
+     * jämföra mot web-template-sdk:ns källkod (2.31.0) — inte gissad.
+     * Detta är skilt från {@link #collectTerm(String, CObject)}, som
+     * indexerar på strukturell node_id för nodens EGEN etikett.
+     */
+    private void collectTermForCode(String code) {
+        if (code == null || sourceArchetype == null) {
+            return;
+        }
+        try {
+            var terminology = sourceArchetype.getTerminology();
+            if (terminology == null) {
+                return;
+            }
+            var term = terminology.getTermDefinition("en", code);
+            if (term != null) {
+                termDefinitions.putIfAbsent(code, new String[]{
+                    term.getText() != null ? term.getText() : code,
+                    term.getDescription() != null ? term.getDescription() : "",
+                });
+            } else {
+                warnings.add("Ingen term_definition hittades för kodvärde=" + code
+                    + " — EHRbase:s webtemplate kan sakna etikett/lista för detta värde.");
+            }
+        } catch (RuntimeException e) {
+            warnings.add("Kunde inte slå upp term_definition för kodvärde=" + code + ": " + e.getMessage());
+        }
     }
 
     /**
