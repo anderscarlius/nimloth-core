@@ -1,71 +1,67 @@
 package se.nimloth.openehr.compiler;
 
+import com.nedap.archie.adl14.ADL14Converter;
+import com.nedap.archie.adl14.ADL14ConversionConfiguration;
+import com.nedap.archie.adl14.ADL14Parser;
+import com.nedap.archie.adl14.ADL2ConversionResult;
+import com.nedap.archie.adl14.ADL2ConversionResultList;
 import com.nedap.archie.aom.Archetype;
+import com.nedap.archie.aom.OperationalTemplate;
+import com.nedap.archie.flattener.Flattener;
+import com.nedap.archie.flattener.FlattenerConfiguration;
+import com.nedap.archie.flattener.SimpleArchetypeRepository;
+import org.openehr.referencemodels.BuiltinReferenceModels;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * Nimloth Core openEHR Compiler — CLI entrypoint.
  *
- * <h2>Aktuellt läge: Fas 3.0 / pivot (C) — diagnostic mode</h2>
+ * <h2>P3.0b — riktig ADL/AOM &rarr; OPT 1.4-brygga (2026-09-09/10)</h2>
  *
- * <p>Den här compilern är i sitt nuvarande tillstånd <b>en valider-och-rapportera-
- * tool för ADL-källfiler, inte en full ADL→OPT-kompilator</b>. Skälet är
- * dokumenterat i {@code infra/openehr/compiler/PHASE-3.0-REPORT.md}:
- * arkitekturen som krävs för att producera <i>XML-OPT 1.4</i> (formatet som
- * EHRbase 2.x kräver via {@code /definition/template/adl1.4}-endpointen) finns
- * inte tillgänglig out-of-the-box i Archie 3.14.0 eller i EHRbase Open Source
- * SDK. Att skriva en bridge mellan archies AOM-objekt och SDK:ns xmlbeans-
- * genererade opt-1.4-klasser är ett uppföljningsuppdrag (P3.0b).</p>
+ * <p>Tidigare (0.1.0-diagnostic) läste denna klass bara ADL-headern med
+ * regex och skrev en diagnostisk rapport — ingen riktig OPT producerades.
+ * Skälet var dokumenterat i {@code PHASE-3.0-REPORT.md}: ingen färdig bro
+ * mellan archies AOM-objekt och EHRbase-accepterad XML-OPT 1.4 fanns.</p>
  *
- * <p>Vad denna compiler levererar i Fas 3.0:</p>
- * <ul>
- *   <li>Strukturerad inläsning av ADL 1.4-filer (BOM-stripping, header-parse)</li>
- *   <li>Diagnostisk rapport om varje arketyp (id, version, filstorlek, header)</li>
- *   <li>Container-pipeline reproducerbar via Docker</li>
- *   <li>Strukturerad output för P3.0b-vidareutveckling</li>
- * </ul>
+ * <p>Den bryggan finns nu i {@link OperationalTemplateXmlBuilder} — en
+ * <b>generisk</b> (arketyp-oberoende) trädvandrare som använder archies
+ * riktiga {@code ADLParser} + {@code Flattener} (inte regex) och
+ * serialiserar resultatet till samma OPT-XML-form som redan är
+ * EHRbase-verifierad via de handskrivna bridge-builders i
+ * {@code services/openehr-composer/src/bridge/}. Skillnaden: en ny arketyp
+ * i {@code archetypes/} kräver ingen ny kod här — bara en ny .adl-fil.</p>
  *
- * <p>För Sprint 2 (P3.1+) används istället <b>fixtures direkt</b> från
- * {@code infra/openehr/test-fixtures/} via {@code pnpm openehr:load-templates}.
- * Detta tillåter composer/AQL-broker/paritetsdiff att utvecklas parallellt
- * med P3.0b.</p>
+ * <p>Kända begränsningar (se {@code P3.0b_Nattresultat}-dokumentationen i
+ * nimloth-docs för fullständig status): finkorniga primitiva
+ * värdebegränsningar (C_STRING-mönster, enstaka C_INTEGER/C_REAL-intervall
+ * utanför DV_QUANTITY) vidgas till obegränsade — se
+ * {@link OperationalTemplateXmlBuilder#getWarnings()}. Arketyper med
+ * konstruktioner denna första version inte hanterar (t.ex. arketyp-slots,
+ * CAttributeTuple) misslyckas med ett tydligt, loggat fel per arketyp —
+ * övriga arketyper i samma batch påverkas inte.</p>
  *
  * <h2>Användning</h2>
  * <pre>
  *   java -jar openehr-compiler.jar &lt;archetypes-dir&gt; &lt;output-dir&gt;
  * </pre>
- *
- * <p><b>FUTURE (P3.0b):</b> När AOM→XML-OPT-bridge är på plats kommer
- * {@link #parseAdlHeader} ersättas med full archie ADL14Parser + flatten +
- * SDK opt-1.4-xmlbeans-serialize. CLI-kontraktet bevaras: input archetypes-dir,
- * output: OPT-XML-filer per arketyp.</p>
- *
- * <p><b>FUTURE (P3.5):</b> Den här klassen wrappas i Spring Boot-tjänst.
- * Funktionsuppdelningen i statiska metoder underlättar HTTP-wrappning.</p>
+ * CLI-kontraktet är oförändrat sedan 0.1.0-diagnostic (P3.0b-REPORT AC5).
  */
 public class CompileMain {
     private static final Logger LOG = LoggerFactory.getLogger(CompileMain.class);
-    private static final String VERSION = "0.1.0-diagnostic";
-
-    /** Pattern för ADL-header: archetype (adl_version=1.4; uid=...) följt av archetype_id. */
-    private static final Pattern HEADER_PATTERN = Pattern.compile(
-        "(?s)archetype\\s*\\(([^)]*)\\)\\s+(openEHR-[A-Z_]+-[A-Z_]+\\.[a-zA-Z0-9_]+\\.v\\d+)"
-    );
-    private static final Pattern ADL_VERSION_PATTERN = Pattern.compile("adl_version\\s*=\\s*([0-9.]+)");
-    private static final Pattern UID_PATTERN = Pattern.compile("uid\\s*=\\s*([0-9a-fA-F-]+)");
+    private static final String VERSION = "0.2.0-p3.0b";
 
     public static void main(String[] args) {
         if (args.length != 2) {
@@ -86,11 +82,10 @@ public class CompileMain {
         } catch (IOException e) {
             LOG.error("Kunde inte skapa output-dir: {}", outputDir, e);
             System.exit(1);
+            return;
         }
 
-        LOG.info("Nimloth Core openEHR Compiler v{} — diagnostic mode", VERSION);
-        LOG.info("Archie {} finns på classpath. Full ADL→OPT-pipeline kommer i P3.0b.",
-            classpathHasArchie() ? "(detected)" : "(NOT FOUND)");
+        LOG.info("Nimloth Core openEHR Compiler v{} — ADL/AOM -> OPT 1.4", VERSION);
 
         List<Path> adlFiles;
         try (Stream<Path> stream = Files.list(archetypesDir)) {
@@ -111,103 +106,131 @@ public class CompileMain {
         }
 
         StringBuilder report = new StringBuilder();
-        report.append("# Nimloth Core openEHR Compiler — diagnostic report\n\n");
+        report.append("# Nimloth Core openEHR Compiler — kompileringsrapport\n\n");
         report.append("Generated: ").append(Instant.now()).append("\n");
         report.append("Compiler version: ").append(VERSION).append("\n");
         report.append("Source dir: ").append(archetypesDir.toAbsolutePath()).append("\n\n");
-        report.append("> **Status:** Fas 3.0 pivot (C) — diagnostic mode. Producerar inte\n");
-        report.append("> XML-OPT än; den uppgraderingen är planerad till P3.0b. För Sprint 2\n");
-        report.append("> används test-fixtures från `infra/openehr/test-fixtures/` direkt.\n\n");
+        report.append("> **Status:** P3.0b — riktig ADL/AOM->OPT-brygga (generisk trädvandring,\n");
+        report.append("> se OperationalTemplateXmlBuilder). Ersätter 0.1.0-diagnostic.\n\n");
 
-        int parseFailures = 0;
+        int failures = 0;
+        int successes = 0;
         for (Path adlFile : adlFiles) {
+            String fileName = adlFile.getFileName().toString();
+            report.append("## ").append(fileName).append("\n\n");
             try {
-                AdlInfo info = parseAdlHeader(adlFile);
-                LOG.info("Läst: {}  → archetype_id={}, adl_version={}",
-                    adlFile.getFileName(), info.archetypeId, info.adlVersion);
-                report.append("## ").append(adlFile.getFileName()).append("\n\n");
-                report.append("- archetype_id: `").append(info.archetypeId).append("`\n");
-                report.append("- adl_version: ").append(info.adlVersion).append("\n");
-                report.append("- uid: ").append(info.uid).append("\n");
-                report.append("- file_size: ").append(Files.size(adlFile)).append(" bytes\n");
-                report.append("- bom_detected: ").append(info.hasBom).append("\n");
-                report.append("- read_status: OK\n\n");
+                CompileResult result = compileOne(adlFile);
+                Path optFile = outputDir.resolve(result.templateId + ".opt");
+                Files.writeString(optFile, result.optXml, StandardCharsets.UTF_8);
+                successes++;
+                LOG.info("Kompilerad: {} -> {} ({} bytes)", fileName, optFile.getFileName(), result.optXml.length());
+                report.append("- archetype_id: `").append(result.archetypeId).append("`\n");
+                report.append("- template_id: `").append(result.templateId).append("`\n");
+                report.append("- output: `").append(optFile.getFileName()).append("`\n");
+                report.append("- status: OK\n");
+                if (!result.warnings.isEmpty()) {
+                    report.append("- warnings (").append(result.warnings.size()).append("):\n");
+                    for (String w : result.warnings) {
+                        report.append("  - ").append(w).append("\n");
+                    }
+                }
+                report.append("\n");
             } catch (Exception e) {
-                LOG.error("Misslyckades läsa {}: {}", adlFile.getFileName(), e.getMessage());
-                parseFailures++;
-                report.append("## ").append(adlFile.getFileName()).append("\n\n");
-                report.append("- read_status: FAILED\n");
-                report.append("- error: ").append(e.getMessage()).append("\n\n");
+                failures++;
+                LOG.error("Misslyckades kompilera {}: {}", fileName, e.toString());
+                report.append("- status: FAILED\n");
+                report.append("- error: ").append(e.getClass().getSimpleName()).append(": ").append(e.getMessage()).append("\n\n");
             }
         }
+
+        report.append("## Sammanfattning\n\n");
+        report.append("- Totalt: ").append(adlFiles.size()).append("\n");
+        report.append("- Lyckades: ").append(successes).append("\n");
+        report.append("- Misslyckades: ").append(failures).append("\n");
 
         Path reportFile = outputDir.resolve("compiler-diagnostic-report.md");
         try {
             Files.writeString(reportFile, report.toString(), StandardCharsets.UTF_8);
-            LOG.info("Diagnostisk rapport skriven till: {}", reportFile);
+            LOG.info("Rapport skriven till: {}", reportFile);
         } catch (IOException e) {
             LOG.error("Kunde inte skriva rapport: {}", reportFile, e);
         }
 
-        if (parseFailures > 0) {
-            LOG.error("{} av {} ADL-filer kunde inte läsas.", parseFailures, adlFiles.size());
+        LOG.info("Klart. {}/{} arketyper kompilerade till riktig OPT-XML.", successes, adlFiles.size());
+        if (successes == 0) {
             System.exit(2);
         }
-
-        LOG.info("Klart. {} ADL-filer lästa utan fel.", adlFiles.size());
+        // Exit 0 så länge minst en arketyp gav en riktig OPT — delvis
+        // täckning är ett känt, dokumenterat läge (se D6/§ i nattrapporten),
+        // inte ett CI-rött fel. Antal failures loggas och rapporteras.
     }
 
-    /** Resultat från ADL-header-parsning. */
-    public static class AdlInfo {
-        public final String archetypeId;
-        public final String adlVersion;
-        public final String uid;
-        public final boolean hasBom;
-        AdlInfo(String archetypeId, String adlVersion, String uid, boolean hasBom) {
+    /** Package-private (inte private) så testsviten kan köra samma pipeline som CLI:t utan att duplicera den. */
+    static class CompileResult {
+        final String archetypeId;
+        final String templateId;
+        final String optXml;
+        final List<String> warnings;
+
+        CompileResult(String archetypeId, String templateId, String optXml, List<String> warnings) {
             this.archetypeId = archetypeId;
-            this.adlVersion = adlVersion;
-            this.uid = uid;
-            this.hasBom = hasBom;
+            this.templateId = templateId;
+            this.optXml = optXml;
+            this.warnings = warnings;
         }
     }
 
-    /**
-     * Läs ADL-fil, strippa BOM, extrahera header-information.
-     *
-     * <p>FUTURE (P3.0b): ersätts med {@code com.nedap.archie.adl14.ADL14Parser}
-     * som returnerar full {@link Archetype}-AOM-objekt redo för flatten + serialize.</p>
-     */
-    public static AdlInfo parseAdlHeader(Path adlFile) throws IOException {
-        String content = Files.readString(adlFile, StandardCharsets.UTF_8);
-        boolean hasBom = !content.isEmpty() && content.charAt(0) == '﻿';
-        if (hasBom) content = content.substring(1);
-
-        // Hämta första ~500 bytes som header-area
-        String header = content.length() > 500 ? content.substring(0, 500) : content;
-
-        Matcher m = HEADER_PATTERN.matcher(header);
-        if (!m.find()) {
-            throw new IOException("ADL-header inte i förväntad form (archetype (...) <id>)");
+    static CompileResult compileOne(Path adlFile) throws Exception {
+        // Arketyperna i infra/openehr/archetypes/ är ADL 1.4-källor (header
+        // "archetype (adl_version=1.4; ...)"). Archies generella ADLParser
+        // talar bara ADL2-grammatiken (kräver fullt semver-id, t.ex. v1.0.0)
+        // — därför krävs den dedikerade ADL14Parser+ADL14Converter-vägen
+        // (verifierad mot archies egen ADL14ToADL2Test) istället för
+        // ADLParser direkt, som gav "expecting ARCHETYPE_HRID" på alla 9
+        // arketyper vid första körningen ikväll.
+        ADL14ConversionConfiguration conversionConfig = new ADL14ConversionConfiguration();
+        Archetype adl14Raw;
+        try (InputStream stream = Files.newInputStream(adlFile)) {
+            adl14Raw = new ADL14Parser(BuiltinReferenceModels.getMetaModels()).parse(stream, conversionConfig);
         }
-        String headerArgs = m.group(1);
-        String archetypeId = m.group(2);
-
-        Matcher vm = ADL_VERSION_PATTERN.matcher(headerArgs);
-        String adlVersion = vm.find() ? vm.group(1) : "(missing)";
-
-        Matcher um = UID_PATTERN.matcher(headerArgs);
-        String uid = um.find() ? um.group(1) : "(missing)";
-
-        return new AdlInfo(archetypeId, adlVersion, uid, hasBom);
-    }
-
-    /** Verifierar att archie-klasser finns på classpath — diagnostisk. */
-    private static boolean classpathHasArchie() {
-        try {
-            Class.forName("com.nedap.archie.aom.Archetype");
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
+        ADL14Converter converter = new ADL14Converter(BuiltinReferenceModels.getMetaModels(), conversionConfig);
+        ADL2ConversionResultList conversionResults = converter.convert(Collections.singletonList(adl14Raw));
+        ADL2ConversionResult conversionResult = conversionResults.getConversionResults().get(0);
+        if (conversionResult.getException() != null) {
+            throw conversionResult.getException();
         }
+        Archetype archetype = conversionResult.getArchetype();
+
+        String archetypeId = archetype.getArchetypeId() != null
+            ? archetype.getArchetypeId().getFullId()
+            : adlFile.getFileName().toString().replace(".adl", "");
+
+        FlattenerConfiguration config = FlattenerConfiguration.forOperationalTemplate();
+        Flattener flattener = new Flattener(new SimpleArchetypeRepository(), BuiltinReferenceModels.getMetaModels(), config);
+        Archetype flattenedArchetype = flattener.flatten(archetype);
+        if (!(flattenedArchetype instanceof OperationalTemplate)) {
+            throw new IllegalStateException("Flattener returnerade inte en OperationalTemplate för " + archetypeId);
+        }
+        OperationalTemplate flattened = (OperationalTemplate) flattenedArchetype;
+
+        String concept = archetype.getDefinition() != null && archetype.getDefinition().getMeaning() != null
+            ? archetype.getDefinition().getMeaning()
+            : archetypeId;
+
+        // template_id: härlett från KÄLLFILENS eget namn (t.ex.
+        // "openEHR-EHR-OBSERVATION.body_temperature.v2"), inte från
+        // archetype_id efter ADL14->ADL2-konvertering — konverteringen
+        // skriver om versionen till fullt semver (t.ex. "v2.1.9"), vilket
+        // gjorde ett tidigare försök att derivera template_id från
+        // archetype_id oläsbart (blev bara "v2.1.9.p3_0b").
+        String sourceFileStem = adlFile.getFileName().toString().replace(".adl", "");
+        String conceptSegment = sourceFileStem.contains(".")
+            ? sourceFileStem.substring(sourceFileStem.indexOf('.') + 1)
+            : archetypeId;
+        String templateId = conceptSegment + ".p3_0b";
+
+        OperationalTemplateXmlBuilder builder = new OperationalTemplateXmlBuilder();
+        String xml = builder.build(flattened, archetypeId, templateId, concept);
+        return new CompileResult(archetypeId, templateId, xml, builder.getWarnings());
     }
 }

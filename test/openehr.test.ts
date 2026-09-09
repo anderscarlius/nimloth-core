@@ -1,12 +1,15 @@
-// openEHR-pipeline smoke-tester (Sprint 2 P3.0).
+// openEHR-pipeline smoke-tester (Sprint 2 P3.0, uppdaterad P3.0b 2026-09-09/10).
 //
 // Kör mot live EHRbase + lokal compiler. Förutsätter:
 //   - docker compose up -d ehrbase-db ehrbase
 //   - infra/openehr/compiler-image byggd (annars triggar testet bygge)
 //
-// Anpassad för (C)-leverabeln efter SDK-utforskning visade att archie 3.14.0
-// inte har out-of-the-box AOM→XML-OPT-bridge. Compilern är i diagnostic mode;
-// fixtures används som "templates" i Sprint 2.
+// P3.0b ersatte diagnostic-mode-compilern med en riktig ADL/AOM->OPT-brygga
+// (se infra/openehr/compiler/src/main/java/.../OperationalTemplateXmlBuilder.java).
+// Rapportformatet nedan matchar den nya, riktiga kompileringsrapporten
+// (archetype_id/template_id/status), inte den gamla diagnostic-headerns
+// adl_version/uid/read_status-fält. Fixtures laddas fortsatt parallellt
+// med compiler-output (se load-templates.mjs) för bakåtkompatibilitet.
 //
 // Kör: pnpm --filter @nimloth-core/e2e exec vitest run openehr.test.ts
 
@@ -53,19 +56,36 @@ describe('openEHR compiler — image build', () => {
 });
 
 // ============================================================
-// 2. Compiler kör end-to-end på body_temperature
+// 2. Compiler kör end-to-end på body_temperature (P3.0b: riktig OPT, inte
+//    bara diagnostic-header — se OperationalTemplateXmlBuilder)
 // ============================================================
-describe('openEHR compiler — diagnostic mode end-to-end', () => {
-  it('producerar compiler-diagnostic-report.md för body_temperature.v2', () => {
+describe('openEHR compiler — P3.0b end-to-end', () => {
+  it('producerar en riktig OPT + rapport för body_temperature.v2', () => {
     execSync('pnpm openehr:compile', { cwd: REPO_ROOT, stdio: 'pipe' });
+
+    const optPath = join(TEMPLATES_DIR, 'body_temperature.v2.p3_0b.opt');
+    expect(existsSync(optPath)).toBe(true);
+    const opt = readFileSync(optPath, 'utf-8');
+    expect(opt).toContain('xmlns="http://schemas.openehr.org/v1"');
+    expect(opt).toContain('openEHR-EHR-OBSERVATION.body_temperature.v2');
+    // Ontologi-etikett hämtad ur ADL-källans egen terminologi, inte gissad.
+    expect(opt).toContain('Body temperature');
+
     const reportPath = join(TEMPLATES_DIR, 'compiler-diagnostic-report.md');
     expect(existsSync(reportPath)).toBe(true);
     const report = readFileSync(reportPath, 'utf-8');
-    expect(report).toContain('openEHR-EHR-OBSERVATION.body_temperature.v2');
-    expect(report).toContain('adl_version: 1.4');
-    expect(report).toContain('uid: fbff84f3-2b33-4245-94f1-6dafe6679c54');
-    expect(report).toContain('read_status: OK');
+    expect(report).toContain('openEHR-EHR-OBSERVATION.body_temperature.v2.adl');
+    expect(report).toContain('template_id: `body_temperature.v2.p3_0b`');
+    expect(report).toContain('status: OK');
   }, 120_000);
+
+  it('minst 8 av 9 arketyper kompilerar (känd lucka: ACTION/ism_transition, se P3.0c)', () => {
+    const reportPath = join(TEMPLATES_DIR, 'compiler-diagnostic-report.md');
+    const report = readFileSync(reportPath, 'utf-8');
+    const match = report.match(/Lyckades: (\d+)/);
+    expect(match).not.toBeNull();
+    expect(Number(match?.[1])).toBeGreaterThanOrEqual(8);
+  });
 });
 
 // ============================================================

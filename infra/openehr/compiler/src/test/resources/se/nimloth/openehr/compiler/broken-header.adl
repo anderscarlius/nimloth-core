@@ -1,0 +1,7 @@
+archetype (adl_version=1.4; uid=00000000-0000-0000-0000-000000000000)
+DETTA-AR-INTE-ETT-GILTIGT-ARCHETYPE-ID
+
+concept
+[at0000]
+-- Trasig fixture: id:t saknar korrekt "openEHR-EHR-<KLASS>.<namn>.vN"-form,
+-- avsiktligt för P3.0b:s negativa test (malformedAdlProducesClearError).

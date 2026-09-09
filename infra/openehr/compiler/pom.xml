@@ -20,9 +20,23 @@
          GitHub-releases finns på 3.15+ men är ej publicerade. -->
     <archie.version>3.14.0</archie.version>
     <slf4j.version>2.0.13</slf4j.version>
+    <junit.version>5.10.2</junit.version>
   </properties>
 
   <dependencies>
+    <!-- Testberoenden: JUnit 5, endast test-scope. -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
     <!-- archie-all: paraplyartefakt som transitivt drar in alla submoduler
          (aom, openehr-rm, tools, grammars, etc) i exakt matchande version. -->
     <dependency>
@@ -49,6 +63,10 @@
   <build>
     <finalName>openehr-compiler</finalName>
     <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+      </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.5.2</version>
