@@ -16,6 +16,7 @@
     "clean": "pnpm -r clean",
     "seed:all": "pnpm --filter @nimloth-core/test-data seed:all",
     "openehr:compile": "bash infra/openehr/compiler/scripts/run-compile.sh",
+    "openehr:import-adl": "node infra/openehr/scripts/import-adl.mjs",
     "openehr:load-templates": "node infra/openehr/scripts/load-templates.mjs",
     "openehr:load-bridge-templates": "pnpm --filter @nimloth-core/openehr-composer exec tsx src/bridge/scripts/load-bridge-templates.ts",
     "mapper:propose": "pnpm --filter @nimloth-core/mapping-assistant cli:propose --",
