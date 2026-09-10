@@ -1,0 +1,127 @@
+# ============================================================================
+# SKISS — EJ KÖRD, EJ VERIFIERAD LIVE. Kör INTE denna fil (varken ensam
+# eller tillsammans med docker-compose.moria.yml) utan Anders uttryckliga ja.
+#
+# DP-E8 (kö-körning 2026-09-10) — "nästa slice" enligt
+# NOW_Block8_FruAnderssonSlice_forberedelse.md §5: lägger till ehrbase +
+# ehrbase-db + openehr-composer ovanpå fru-andersson-slice, med
+# CANONICAL_STORE=both (postgres + openEHR i parallell, ParityRunner).
+#
+# Detta är ett COMPOSE-FRAGMENT, inte en fristående fil — avsett att köras
+# tillsammans med docker-compose.moria.yml (samma nätverk `core-slice`,
+# samma container-namnmönster `*-slice`):
+#
+#   docker compose -f docker-compose.moria.yml -f docker-compose.ehrbase-slice.yml ...
+#
+# Anledningen till ett separat fragment i stället för att redigera
+# docker-compose.moria.yml direkt: fru-andersson-slice (Block 8 steg 1-5)
+# är LIVE på Moria och ska förbli orörd (S6 i den styrande sessionen som
+# skrev detta) — denna fil lägger bara till nya tjänster, ändrar inget
+# befintligt.
+#
+# Image-status (samma mönster som redan etablerat i docker-compose.moria.yml
+# för ingest/transform/cds-hooks/audit):
+#   - ehrbase, ehrbase-db: PUBLIKA Docker Hub-images, samma pinnade digest
+#     som huvudstackens docker-compose.yml. Genuint startbara utan ny
+#     ghcr-publish-workflow — ingen kod att bygga, bara offentliga images.
+#   - openehr-composer: ASPIRATIONELL. Ingen ghcr-publish-workflow finns än
+#     (`.github/workflows/` saknar en openehr-composer-publish.yml) — samma
+#     kategori som ingest/transform/cds-hooks/audit i bas-filen. IMAGE_TAG
+#     nedan är required-men-aspirationell (`:?`-guard) exakt som de andra
+#     — compose-parsern kräver att variabeln är satt (till en placeholder)
+#     för att ens tolka filen, men tjänsten startas aldrig i praktiken förrän
+#     en riktig workflow finns. Se G-lista nedan.
+#
+# Grindar (speglade mot fhir-facade-slicens G1-G5, se
+# NOW_Block8_EhrbaseSlice_forberedelse.md för fullständig text):
+#   G1'. CANONICAL_STORE=both fungerar med ehrbase startad bredvid
+#        postgres-vägen — oläst live (samma sorts fråga som bas-slicens G1,
+#        fast omvänd riktning).
+#   G2'. openehr-composer saknar ghcr-image — måste lösas (ny
+#        publish-workflow) innan denna tjänst kan startas alls, oavsett
+#        övriga grindar.
+#   G3'. ParityRunner (postgres vs openEHR-mätning) — kod finns i
+#        fhir-facade (se docker-compose.yml `stores/index.ts`/ParityTrend)
+#        men aldrig körd mot DENNA slice.
+#   G4'. Samma pull-deploy-mönster som G4 i bas-slicen (landade paths,
+#        inte git-checkout) gäller automatiskt för denna fils volymer också
+#        — ingen ny volymmontering behövs (ehrbase/ehrbase-db har inga
+#        init-SQL-filer att landa, bara docker-native volymer).
+#   G5'. Ingen ny hemlighet behövs — ehrbase/ehrbase-db är publika images
+#        (ingen ghcr-login), openehr-composer skulle ÅTERANVÄNDA samma
+#        GHCR_USER/GHCR_PAT som redan löstes för fhir-facade (G5) den dagen
+#        en riktig publish-workflow finns.
+# ============================================================================
+
+services:
+  ehrbase-db:
+    image: ehrbase/ehrbase-v2-postgres:16.2@sha256:abe14e8f9ba33cabc9946c6c17c5aa95b64b35387f266cd20a894149203196d7
+    container_name: ehrbase-db-slice
+    environment:
+      EHRBASE_USER: ehrbase
+      EHRBASE_PASSWORD: ehrbase
+      EHRBASE_USER_ADMIN: ehrbase_admin
+      EHRBASE_PASSWORD_ADMIN: ehrbase_admin
+    volumes:
+      - ehrbase-slice-data:/var/lib/postgresql/data
+    networks: [core-slice]
+    # Ingen host-port — matchar huvudstackens ehrbase-db (internt-bara,
+    # se Portstrategi.md rad 237). Inget nytt att reservera.
+
+  ehrbase:
+    image: ehrbase/ehrbase:2.30.1@sha256:c08be93f41164bb6ba8e957532ce4cccd18e6b9d26e074ef97f3faff9c3cd52f
+    container_name: ehrbase-slice
+    environment:
+      DB_URL: jdbc:postgresql://ehrbase-db:5432/ehrbase
+      DB_USER: ehrbase
+      DB_PASS: ehrbase
+      DB_USER_ADMIN: ehrbase_admin
+      DB_PASS_ADMIN: ehrbase_admin
+      SECURITY_AUTHTYPE: NONE
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m"
+    ports:
+      # NY reservation — Portstrategi.md §4 (111xx), core-slice.
+      # INTE B4-kedjans demo-ehrbase (11871, separat nätverk/mönster).
+      - "11124:8080"
+    depends_on:
+      ehrbase-db:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/ehrbase/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    networks: [core-slice]
+
+  openehr-composer:
+    # ASPIRATIONELL — se header. Denna tjänst kan inte startas förrän en
+    # publish-workflow finns; IMAGE_TAG-guarden nedan är avsiktligt sträng
+    # (matchar cds-hooks/audit/ingest/transform-mönstret i bas-filen).
+    image: ghcr.io/anderscarlius/nimloth-core-openehr-composer:${IMAGE_TAG_OPENEHR_COMPOSER:?ASPIRATIONELLT — ingen ghcr-workflow byggd för openehr-composer än, se G2' i denna fils header}
+    container_name: openehr-composer-slice
+    environment:
+      NODE_ENV: production
+      EHRBASE_URL: http://ehrbase:8080
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: core-slice-openehr-composer
+      KAFKA_GROUP_ID: core-slice-openehr-composer
+      CORE_DB_HOST: core-db
+      CORE_DB_PORT: "5432"
+      CORE_DB_NAME: core
+      CORE_DB_USER: core
+      CORE_DB_PASSWORD: core
+      LOG_LEVEL: info
+    depends_on:
+      ehrbase:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      core-db:
+        condition: service_healthy
+    networks: [core-slice]
+    # Ingen host-port — openehr-composer exponeras aldrig externt i
+    # huvudstacken heller (Portstrategi.md: bara dev-port 3002 finns).
+
+volumes:
+  ehrbase-slice-data:
