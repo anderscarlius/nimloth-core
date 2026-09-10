@@ -129,6 +129,18 @@ Varje arketyp dokumenteras med:
 - **Användning:** "Vårdkontakt" — kompositions-omslag runt `OBSERVATION.progress_note.v1` för anteckningskomponenten.
 - **Licens:** CC-BY-SA **4.0** International (samma auktoritetsanmärkning som ovan).
 
+## openEHR-EHR-OBSERVATION.body_weight.v2.adl
+
+- **CKM-id:** `openEHR-EHR-OBSERVATION.body_weight.v2`
+- **Hämtad från:** https://raw.githubusercontent.com/openEHR/CKM-mirror/master/local/archetypes/entry/observation/openEHR-EHR-OBSERVATION.body_weight.v2.adl
+- **Källrepo:** `openEHR/CKM-mirror`
+- **Hämtningsdatum:** 2026-09-10 (via `pnpm openehr:import-adl`, DP-MS2)
+- **SHA256:** `ba10bcf45bf0855ee636f42b89f2296e23881072896b4fbdc33c7aa32be47e89`
+- **Filstorlek:** 91 997 bytes
+- **ADL-version:** 1.4
+- **Användning:** Importerad via DP-MS2:s självbetjäningsflöde (nimloth-modelling → import-adl.mjs) — verifierar att en region kan lägga till en modell utan att kontakta Northfactor eller logga in på tools.openehr.org.
+- **Licens:** CC-BY-SA (openEHR Foundation / Modellbiblioteket — se filens egen `other_details["licence"]` för exakt version).
+
 ---
 
 ## Reproduktionssteg
