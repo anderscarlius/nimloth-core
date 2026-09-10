@@ -1,0 +1,10 @@
+archetype (adl_version=1.4; uid=00000000-0000-0000-0000-000000000000)
+openEHR-EHR-OBSERVATION.helt_fel_arketyp.v1
+
+concept
+[at0000]
+-- Trasig/felaktig fixture för DP-MS2:s negativa test: filen SER ut som en
+-- giltig ADL 1.4-header, men dess arketyp-id matchar avsiktligt INTE det
+-- id som begärs vid import (openEHR-EHR-OBSERVATION.body_weight.v3 nedan)
+-- — simulerar en mirror som av misstag serverar fel/korrupt innehåll för
+-- en efterfrågad sökväg.

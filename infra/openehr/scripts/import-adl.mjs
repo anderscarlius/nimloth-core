@@ -11,6 +11,7 @@
  *
  * Användning:
  *   node infra/openehr/scripts/import-adl.mjs <archetype-id> <rm-class-mapp> [mirror]
+ *   node infra/openehr/scripts/import-adl.mjs <archetype-id> --from-file <path>
  *
  * Exempel:
  *   node infra/openehr/scripts/import-adl.mjs \
@@ -18,6 +19,11 @@
  *
  *   node infra/openehr/scripts/import-adl.mjs \
  *     openEHR-EHR-OBSERVATION.progress_note.v1 observation modellbiblioteket
+ *
+ * `--from-file` läser en redan lokalt sparad ADL-fil i stället för att
+ * hämta från en mirror — täcker D3:s fallback ("om du inte kan hämta utan
+ * login: använd en lokal kopia") och gör den korrupt-ADL-valideringen
+ * testbar utan nätverk (se modelling/fixtures/broken-header.adl).
  *
  * Exit codes:
  *   0 = importerad, PROVENANCE.md uppdaterad
@@ -55,22 +61,20 @@ function fail(message) {
 }
 
 async function main() {
-  const [archetypeId, rmClassFolder, mirrorKey = 'ckm'] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const fromFileIdx = args.indexOf('--from-file');
+  const fromFile = fromFileIdx >= 0 ? args[fromFileIdx + 1] : null;
+  const archetypeId = args[0];
 
-  if (!archetypeId || !rmClassFolder) {
+  if (!archetypeId) {
     fail('Användning: import-adl.mjs <archetype-id> <rm-class-mapp> [ckm|modellbiblioteket]');
+    fail('       eller: import-adl.mjs <archetype-id> --from-file <path>');
     return;
   }
 
   const idMatch = archetypeId.match(ARCHETYPE_ID_PATTERN);
   if (!idMatch) {
     fail(`archetype-id "${archetypeId}" matchar inte formen openEHR-EHR-<KLASS>.<namn>.vN — inget hämtat.`);
-    return;
-  }
-
-  const mirror = MIRRORS[mirrorKey];
-  if (!mirror) {
-    fail(`Okänd mirror "${mirrorKey}". Kända: ${Object.keys(MIRRORS).join(', ')}`);
     return;
   }
 
@@ -82,24 +86,59 @@ async function main() {
     return;
   }
 
-  const url = `${mirror.base}/${rmClassFolder}/${fileName}`;
-  console.log(`Hämtar ${archetypeId} från ${mirror.label}...`);
-  console.log(`  ${url}`);
+  let content;
+  let sourceLabel;
+  let sourceUrl;
+  let mirrorRepo;
 
-  let response;
-  try {
-    response = await fetch(url);
-  } catch (err) {
-    fail(`Nätverksfel vid hämtning: ${err.message}`);
-    return;
+  if (fromFile) {
+    // D3-fallback: lokal fil i stället för nätverksfetch (och den enda
+    // vägen att testa korrupt-ADL-valideringen utan att bero på en
+    // extern mirror faktiskt serverar trasigt innehåll).
+    if (!existsSync(fromFile)) {
+      fail(`Lokal fil "${fromFile}" finns inte.`);
+      return;
+    }
+    content = await readFile(fromFile, 'utf-8');
+    sourceLabel = `lokal fil (${fromFile})`;
+    sourceUrl = fromFile;
+    mirrorRepo = 'lokal fil, ingen mirror';
+    console.log(`Läser ${archetypeId} från ${sourceLabel}...`);
+  } else {
+    const rmClassFolder = args[1];
+    const mirrorKey = args[2] ?? 'ckm';
+    if (!rmClassFolder) {
+      fail('Användning: import-adl.mjs <archetype-id> <rm-class-mapp> [ckm|modellbiblioteket]');
+      return;
+    }
+    const mirror = MIRRORS[mirrorKey];
+    if (!mirror) {
+      fail(`Okänd mirror "${mirrorKey}". Kända: ${Object.keys(MIRRORS).join(', ')}`);
+      return;
+    }
+
+    const url = `${mirror.base}/${rmClassFolder}/${fileName}`;
+    console.log(`Hämtar ${archetypeId} från ${mirror.label}...`);
+    console.log(`  ${url}`);
+
+    let response;
+    try {
+      response = await fetch(url);
+    } catch (err) {
+      fail(`Nätverksfel vid hämtning: ${err.message}`);
+      return;
+    }
+
+    if (!response.ok) {
+      fail(`Mirror svarade HTTP ${response.status} — arketypen finns troligen inte på denna sökväg/mirror.`);
+      return;
+    }
+
+    content = await response.text();
+    sourceLabel = mirror.label;
+    sourceUrl = url;
+    mirrorRepo = mirror.repo;
   }
-
-  if (!response.ok) {
-    fail(`Mirror svarade HTTP ${response.status} — arketypen finns troligen inte på denna sökväg/mirror.`);
-    return;
-  }
-
-  const content = await response.text();
 
   // Sanity-kontroll INNAN något skrivs till disk: ett 404-svar från GitHub
   // Pages kan komma som HTTP 200 med en HTML-felsida (vanligt gotcha) —
@@ -128,12 +167,12 @@ async function main() {
     await appendProvenanceEntry({
       fileName,
       archetypeId,
-      url,
+      url: sourceUrl,
       sha256,
       fileSize,
       adlVersion,
       today,
-      mirrorRepo: mirror.repo,
+      mirrorRepo,
     });
   } catch (err) {
     // Om PROVENANCE.md inte kunde uppdateras: städa bort den halvfärdiga
