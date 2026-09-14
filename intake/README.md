@@ -23,6 +23,16 @@ tests/contracts/, CI            ← bevis att kontraktet hålls
 
 ## Så här lägger du till något
 
+**Enklast:** kör `tools/smedjan-console` lokalt (`pnpm --filter
+@nimloth-core/smedjan-console dev`, http://127.0.0.1:3019) och använd
+fliken "Nytt intag" — den skapar mappen och skriver `README.md` åt dig.
+Samma konsol har en "Status"-flik som listar/visar `intake/`, `spec/` och
+`backlog/stories/`, och en "Beroenden"-flik med en graf över
+`services/*`/`packages/*`-beroenden (härledd från `package.json`, inte
+faktiska kodimporter).
+
+**För hand, om du hellre gör det själv:**
+
 1. Skapa `intake/<ÅÅÅÅ-MM-DD>-<kort-beskrivande-slug>/`.
 2. Lägg materialet där rakt av — `.pptx`, `.png`/`.jpg`, `.md`, `.pdf`,
    vad som helst. Om det bara är en textrad räcker en `README.md` med
