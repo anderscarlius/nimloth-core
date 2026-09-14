@@ -1,0 +1,77 @@
+# Smedjan — agentkonfiguration för nimloth-core
+#
+# STATUS: förstautkast, uppfunnet för detta repo 2026-09-14 — inte validerat
+# mot något officiellt Smedjan-processschema (inget sådant fanns tillgängligt
+# när detta skrevs). Justera fritt när/om det riktiga processdokumentet finns
+# att jämföra mot.
+#
+# Grundregler (låsta i nimloth-docs/NOW_Beslut_2026-09-14_Discovery_Uppfoljning.md):
+#   - Modul = services/<namn> i detta repo (1:1). packages/* är delad grund,
+#     inte egna moduler.
+#   - Modellval: billiga modeller default för klass 0-data (icke-känslig,
+#     syntetisk) — vilket är ALL data i detta repo idag. Ingen känslig data,
+#     ingen dyr modell krävs som standard.
+#   - Gate-bemanning: tre nivåer efter reversibilitet, inte efter G-nummer.
+
+model_pools:
+  class_0:
+    description: >
+      Standardpoolen. All kod och all data i nimloth-core är icke-känslig
+      och syntetisk (Maria/Ingrid-demopatienter m.fl.) — billiga modeller
+      är default, inte undantag.
+    models:
+      - anthropic/claude-haiku
+      - openrouter/*  # billigaste tillgängliga för uppgiften
+    default: true
+
+  class_1_reserved:
+    description: >
+      Reserverad för om/när en modul faktiskt hanterar känslig eller
+      icke-syntetisk data. INGEN modul gör det idag (verifierat i
+      discovery-rapporten 2026-09-14, med ett öppet undantag: se
+      "known_risks" nedan). Inga modeller specificerade än — beslutas
+      när/om behovet faktiskt uppstår.
+    models: []
+    default: false
+
+gates:
+  # Tre nivåer, inte fyra G-nummer — se Anders svar 2026-09-14 ("vi får
+  # hitta en pragmatisk lösning", operationaliserat här.
+  low_risk:
+    description: "Reversibelt, lokalt, ingen delad state. Agent beslutar själv."
+    examples:
+      - "Lägga till en ny testfil"
+      - "Skriva ett nytt story-dokument i backlog/stories/"
+      - "Köra tester lokalt eller i CI"
+      - "Läsa/inspektera (aldrig skriva) mot Moria eller Cloudflare"
+    approval: agent_decides
+    notify: async
+
+  medium_risk:
+    description: "Påverkar delad state men är reversibelt utan dataförlust."
+    examples:
+      - "Merga en PR till main"
+      - "Skriva till en redan körande, icke-produktionskritisk tjänst (t.ex. ladda en ny OPT-mall i EHRbase)"
+      - "Skapa en ny testdeploy-slice på Moria (fru-andersson-slice-mönstret)"
+    approval: agent_batches_for_review
+    notify: batched_summary
+
+  high_risk:
+    description: "Irreversibelt, eller påverkar något utanför detta repo/denna miljö."
+    examples:
+      - "Radera data eller köra --reset/TRUNCATE mot en delad databas"
+      - "Ändra repo-synlighet (privat/publikt)"
+      - "Cloudflare Access-policyer eller DNS"
+      - "Allt som rör riktig eller misstänkt riktig persondata"
+      - "Force-push, branch protection-ändringar, secrets"
+    approval: anders_required_realtime
+    notify: blocking
+
+known_risks:
+  - id: hemmabasen-patientjournaler
+    description: >
+      /volume2/homes/Anders/Nimloth-patientjournaler på Hemmabasen —
+      oinspekterad, flaggad i discovery-rapporten 2026-09-14 §8.2.
+      Ingen agent får öppna denna sökväg utan Anders uttryckliga
+      instruktion, oavsett vilken gate-nivå uppgiften i övrigt har.
+    status: open
