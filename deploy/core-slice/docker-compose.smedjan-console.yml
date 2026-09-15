@@ -1,0 +1,67 @@
+# ============================================================================
+# SKISS — EJ KÖRD PÅ MORIA, EJ VERIFIERAD LIVE. Kör INTE denna fil (varken
+# ensam eller tillsammans med docker-compose.moria.yml) utan Anders
+# uttryckliga ja. Byggkedjan (Dockerfile, entrypoint, server) ÄR verifierad
+# lokalt 2026-09-15 (se tools/smedjan-console/README eller PR-historik):
+# `docker build` grönt, containern startar, klonar nimloth-core (publikt
+# repo, ingen auth behövs för själva klonen), healthcheck blir "healthy",
+# och ett riktigt test-intag gick igenom hela vägen (branch -> push -> PR)
+# mot den verkliga repot och städades bort direkt efteråt. Det som INTE är
+# verifierat är drift på Moria specifikt (nätverk, volym-persistens över
+# omstart, Cloudflare-routning).
+#
+# Compose-FRAGMENT, samma mönster som docker-compose.ehrbase-slice.yml:
+# avsett att köras tillsammans med docker-compose.moria.yml (samma nätverk
+# `core-slice`):
+#
+#   docker compose -f docker-compose.moria.yml -f docker-compose.smedjan-console.yml ...
+#
+# Bakgrund: Malbild_Smedjan_v0.1.md (nimloth-docs) §4-5. Detta är den
+# hostade versionen av tools/smedjan-console — samma tre vyer (Nytt intag/
+# Status/Beroenden), men "Nytt intag" öppnar en RIKTIG PR i stället för
+# att bara skriva till en lokal arbetskopia, via en dedikerad git-klon på
+# denna slice (INTE /opt/nimloth-core, som är fryst legacy sedan
+# discovery-rapporten 2026-09-14).
+#
+# Image-status: ASPIRATIONELL, samma kategori som openehr-composer i
+# docker-compose.ehrbase-slice.yml — ingen ghcr-publish-workflow finns än
+# för smedjan-console. Två vägar framåt, inget beslutat:
+#   (a) bygg .github/workflows/smedjan-console-publish.yml, samma
+#       tvåjobbsmönster som fhir-facade-publish.yml/migration-gateway-
+#       publish.yml — matchar hur allt annat i denna repo blir
+#       deploybart, rekommenderas som den riktiga vägen.
+#   (b) snabbare, interimistiskt: `docker save`/`docker load` av den
+#       lokalt byggda imagen direkt till Moria, utan ghcr — fungerar för
+#       en första körning men ger ingen spårbar revision/digest.
+# IMAGE_TAG-guarden nedan matchar väg (a) — sätt en riktig sha-tagg när
+# den finns, eller byt ut `image:` mot en lokalt taggad image för väg (b).
+#
+# Hemligheter denna slice behöver, utöver vad fru-andersson-slice redan
+# har (se Malbild_Smedjan_v0.1.md §4): SMEDJAN_GITHUB_TOKEN — en
+# fine-grained personal access token scopead ENDAST till nimloth-core,
+# `contents: write` + `pull-requests: write`. Läggs i samma `.env`-mönster
+# som GHCR_USER/GHCR_PAT redan används på Moria (0600, aldrig i git).
+# ============================================================================
+
+services:
+  smedjan-console:
+    image: ghcr.io/anderscarlius/nimloth-core-smedjan-console:${IMAGE_TAG_SMEDJAN_CONSOLE:?ASPIRATIONELLT — ingen ghcr-workflow byggd för smedjan-console än, se header ovan}
+    container_name: smedjan-console-slice
+    environment:
+      PORT: "11125"
+      SMEDJAN_REPO_ROOT: /data/repo
+      SMEDJAN_GITHUB_REPO: anderscarlius/nimloth-core
+      SMEDJAN_BASE_BRANCH: main
+      SMEDJAN_GITHUB_TOKEN: ${SMEDJAN_GITHUB_TOKEN:?SMEDJAN_GITHUB_TOKEN saknas — fine-grained token scopead till nimloth-core (contents+pull-requests write)}
+    volumes:
+      - smedjan-console-repo:/data/repo
+    ports:
+      # NY reservation — Portstrategi.md §4 (111xx), core-slice.
+      - "11125:11125"
+    networks: [core-slice]
+    # Ingen depends_on mot övriga core-slice-tjänster -- smedjan-console
+    # pratar bara med sin egen git-klon och GitHubs API, inte med
+    # ehrbase/kafka/core-db. Delar bara nätverket för konsekvens.
+
+volumes:
+  smedjan-console-repo:
