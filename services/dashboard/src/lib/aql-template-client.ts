@@ -17,6 +17,10 @@ export interface TrendPoint {
   analyte: string;
   magnitude: number;
   unit: string;
+  /** EHRbase composition-UID (lineage) -- mallen har returnerat detta sedan
+   *  KU Steg 2 (2026-06-01), men fältet saknades här i typen och ignorerades
+   *  därför tyst av alla konsumenter. Se B6 Etapp 2. */
+  composition_uid: string;
 }
 
 export interface ResponderRow {

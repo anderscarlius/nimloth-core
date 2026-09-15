@@ -25,7 +25,7 @@ En story här är EN nedbruten, exekverbar bit av en godkänd spec i
 | Story | Modul | Status |
 |---|---|---|
 | `B6-etapp1-hba1c-kedjan` | omop-projector, aql-template-service, data-generator | ✅ done |
-| `B6-etapp2-source-honesty-ui` | dashboard | 🔵 open |
+| `B6-etapp2-source-honesty-ui` | dashboard | ✅ done |
 
 **Öppen fråga, inte löst här:** ska detta i stället bli GitHub Issues
 (discovery-rapporten §7.2 flaggade att Issues idag inte används alls i

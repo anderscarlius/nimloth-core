@@ -69,6 +69,7 @@ export default function ObservationTrend({
   const chartData = rows.map((p) => ({
     date: p.timestamp.slice(0, 10),
     value: p.magnitude,
+    compositionUid: p.composition_uid,
   }));
 
   return (
@@ -114,11 +115,7 @@ export default function ObservationTrend({
                 label={{ value: unit, angle: -90, position: 'insideLeft', fontSize: 11 }}
                 domain={['dataMin - 5', 'dataMax + 5']}
               />
-              <Tooltip
-                formatter={(v: number) => [`${v} ${unit}`, analyte]}
-                labelFormatter={(d) => `Datum: ${d}`}
-                contentStyle={{ fontSize: 12 }}
-              />
+              <Tooltip content={<LineageTooltip analyte={analyte} unit={unit} />} />
               <Line
                 type="monotone"
                 dataKey="value"
@@ -132,9 +129,43 @@ export default function ObservationTrend({
             {rows.length} mätning{rows.length === 1 ? '' : 'ar'} · enhet {unit} ·{' '}
             mall <code className="font-mono">observation_trend_by_period</code> ({trend.data?.meta.total_ms} ms)
           </p>
+          <p className="text-[11px] text-ink-3 mt-0.5">
+            Varje punkt är spårbar till en EHRbase-komposition — håll muspekaren
+            över en punkt för dess komposition-UID.
+          </p>
         </>
       )}
     </section>
+  );
+}
+
+/** Tooltip som visar mätvärdet OCH komposition-UID:t det kommer från — B6
+ *  Etapp 2 (demo-ärlighet). Mallen har returnerat lineage sedan KU Steg 2
+ *  (2026-06-01); den låg oanvänd i typen fram till denna ändring. */
+function LineageTooltip({
+  active,
+  payload,
+  label,
+  analyte,
+  unit,
+}: {
+  active?: boolean;
+  payload?: { payload: { compositionUid: string; value: number } }[];
+  label?: string;
+  analyte: string;
+  unit: string;
+}) {
+  if (!active || !payload?.length) return null;
+  const point = payload[0].payload;
+  return (
+    <div className="bg-white border border-line rounded-[3px] px-3 py-2 text-[11px] shadow-sm max-w-[260px]">
+      <p className="font-medium text-ink-1">
+        Datum: {label} · {point.value} {unit} {analyte}
+      </p>
+      <p className="text-ink-3 mt-1 font-mono break-all">
+        komposition: {point.compositionUid}
+      </p>
+    </div>
   );
 }
 
