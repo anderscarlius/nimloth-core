@@ -872,6 +872,9 @@ importers:
 
   tools/smedjan-console:
     dependencies:
+      express:
+        specifier: ^4.21.1
+        version: 4.22.1
       mermaid:
         specifier: ^10.9.1
         version: 10.9.8
@@ -885,6 +888,9 @@ importers:
         specifier: ^9.0.1
         version: 9.1.0(@types/react@18.3.28)(react@18.3.1)
     devDependencies:
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.25
       '@types/node':
         specifier: ^22.10.0
         version: 22.20.2
