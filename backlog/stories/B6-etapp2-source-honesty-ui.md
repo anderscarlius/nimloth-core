@@ -1,35 +1,30 @@
-# Story: B6 Etapp 2 — `_source`-ärlighet i dashboard-UI
+# Story: B6 Etapp 2 — lineage synlig i dashboard-UI
 
-**Modul:** `dashboard` (troligen även `fhir-facade` om `_source` behöver
-exponeras via ett API dashboard läser från — inte verifierat än)
-**Spec:** saknas ännu — detta är en QUEUED story, inte en godkänd en.
-Kräver en riktig spec i `../../spec/` innan kodning börjar (se
-`../../spec/README.md`).
-**Status:** 🔵 open — inte påbörjad, inte godkänd för exekvering.
-**Gate-nivå (preliminär):** sannolikt `low_risk` (UI-ändring, ingen
-skrivning mot delad state) — bekräftas när specen skrivs.
+**Modul:** `dashboard`
+**Spec:** ingen separat spec skrevs — se `nimloth-docs/KU_B6_Etapp2_Rapport.md`
+§1 för spec-granskningen (gjord inline, eftersom den avslöjade att den
+ursprungliga formuleringen byggde på fel antagande om arkitekturen).
+**Status:** ✅ done (2026-09-15)
+**Gate-nivå:** `low_risk` — UI-ändring i en redan fristående demo-vy
+(`/compose-demo`), ingen skrivning mot delad state.
 
-## Bakgrund (från B6 Etapp 1:s öppna trådar)
+## Vad som faktiskt gjordes (avviker från ursprunglig formulering)
 
-`omop.measurement._source` (`live_transform` vs `preloaded`) existerar
-redan i databasen och gör en verklig, viktig skillnad (4 rader med äkta
-EHRbase→OMOP-lineage mot 114 314 bulk-genererade). **Oklart om detta syns
-för en mänsklig granskare någonstans i dashboarden**, eller om det bara
-lever i en databaskolumn ingen läser — vilket vore precis den typen av
-"demo-ärlighet"-glapp Nordstjärnan varnar för.
+Ursprunglig formulering pekade på `omop.measurement._source`
+(`live_transform`/`preloaded`). Investigationen visade att dashboarden
+strukturellt aldrig läser OMOP — dess enda tidsseriedata kommer via AQL
+direkt mot EHRbase, som inte kan returnera de "preloaded"-bulkraderna
+över huvud taget. Den verkliga, jämförbara luckan: `observation_trend_
+by_period`-mallen har returnerat `composition_uid` sedan KU Steg 2, men
+dashboardens typ och komponent kastade tyst bort det.
 
-## Vad en spec för detta skulle behöva svara på (inte svarat här)
+**Fix:** `TrendPoint`-typen inkluderar nu `composition_uid`;
+`ObservationTrend.tsx` visar det i en ny tooltip vid hover.
 
-1. Var i dashboarden är detta relevant — patientvy, mätvärdes-trend,
-   någon administratörsyta?
-2. Exponerar `fhir-facade` (eller vad dashboarden faktiskt läser ifrån)
-   `_source` idag i sitt API-svar, eller behöver det läggas till där först?
-3. Vad ska det se ut som — en badge, en tooltip, en filtreringsmöjlighet?
+## Acceptans
 
-## Varför denna story inte bara kördes direkt
-
-Anders bad specifikt om att scaffolda `intake/`→`spec/`→`backlog/stories/`
--flödet (2026-09-14) snarare än att köra Etapp 2 direkt. Denna story är
-alltså ett konkret exempel på "något som väntar på en riktig spec-
-granskning" i den nya strukturen, inte ett löfte om att den redan är
-godkänd.
+Verifierat live mot Moria (`/compose-demo`, patient Ingrid Andersson):
+tooltipen visar `8589a831-76df-48a4-b54a-e8e112c796fb::local.ehrbase.org::1`
+— exakt samma komposition-UID som verifierades via SQL i B6 Etapp 1. Se
+`nimloth-docs/KU_B6_Etapp2_Rapport.md` för fullständig verifiering
+(build, live-webbläsartest, konsolfel-check).
