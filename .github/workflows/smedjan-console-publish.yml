@@ -1,0 +1,77 @@
+name: Smedjan-konsol — bygg och pusha
+
+# Samma tvåjobbsmönster som fhir-facade-publish.yml/cohort-service-publish.yml
+# (typecheck+build → publish till ghcr.io). smedjan-console har inga interna
+# @nimloth-core/*-paketberoenden (bekräftat via beroendegrafen i verktyget
+# självt) -- path-filtret nedan behöver därför bara verktygets egen mapp och
+# denna workflow-fil, till skillnad från fhir-facade som också bevakar
+# packages/shared + packages/kafka-utils.
+#
+# Ingen vitest-testsvit finns än (rent Vite/Express-verktyg, 0 testfiler) --
+# "test"-jobbet nedan kör typecheck (klient + server) som grind istället,
+# vilket redan fångade riktiga fel under utvecklingen (tsc -p
+# tsconfig.server.json).
+#
+# Detta löser G2-motsvarigheten som flaggades i
+# deploy/core-slice/docker-compose.smedjan-console.yml: utan denna workflow
+# fanns ingen ghcr-image att peka IMAGE_TAG_SMEDJAN_CONSOLE mot.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/smedjan-console/**"
+      - ".github/workflows/smedjan-console-publish.yml"
+
+jobs:
+  typecheck:
+    name: Typecheck (klient + server)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm --filter "@nimloth-core/smedjan-console" typecheck
+
+  publish:
+    name: Bygg och pusha till ghcr.io
+    needs: [typecheck]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/nimloth-core-smedjan-console
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: tools/smedjan-console/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
