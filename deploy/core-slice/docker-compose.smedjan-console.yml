@@ -23,16 +23,15 @@
 # denna slice (INTE /opt/nimloth-core, som är fryst legacy sedan
 # discovery-rapporten 2026-09-14).
 #
-# Image-status: ASPIRATIONELL, samma kategori som openehr-composer i
-# docker-compose.ehrbase-slice.yml — ingen ghcr-publish-workflow finns än
-# för smedjan-console. Två vägar framåt, inget beslutat:
-#   (a) bygg .github/workflows/smedjan-console-publish.yml, samma
-#       tvåjobbsmönster som fhir-facade-publish.yml/migration-gateway-
-#       publish.yml — matchar hur allt annat i denna repo blir
-#       deploybart, rekommenderas som den riktiga vägen.
-#   (b) snabbare, interimistiskt: `docker save`/`docker load` av den
-#       lokalt byggda imagen direkt till Moria, utan ghcr — fungerar för
-#       en första körning men ger ingen spårbar revision/digest.
+# Image-status: `.github/workflows/smedjan-console-publish.yml` finns nu
+# (samma tvåjobbsmönster som fhir-facade-publish.yml) -- den publicerar
+# ghcr.io/anderscarlius/nimloth-core-smedjan-console första gången denna
+# PR mergas till main (path-filtret träffar workflow-filen själv). Sätt
+# IMAGE_TAG_SMEDJAN_CONSOLE till en riktig `sha-<hash>`-tagg från den
+# körningen innan detta fragment faktiskt körs -- guarden nedan är kvar
+# tills dess, av samma skäl som övriga aspirationella tjänster i denna
+# repo: hellre ett tydligt fel vid `docker compose up` än en tyst fel-
+# konfiguration.
 # IMAGE_TAG-guarden nedan matchar väg (a) — sätt en riktig sha-tagg när
 # den finns, eller byt ut `image:` mot en lokalt taggad image för väg (b).
 #
