@@ -6,7 +6,7 @@ import { TemplateRegistry } from "../registry.js";
 import { ALL_TEMPLATES } from "../templates/index.js";
 
 const EHRBASE_BASE_URL =
-  process.env.EHRBASE_BASE_URL ?? "http://192.168.1.189:11401/ehrbase";
+  process.env.EHRBASE_BASE_URL ?? "http://192.168.1.220:11401/ehrbase";
 
 describe("server — endpoints (unit, no EHRbase)", () => {
   const logger = pino({ level: "silent" });

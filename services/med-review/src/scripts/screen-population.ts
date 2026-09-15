@@ -7,8 +7,8 @@
 // Därför taggas varje fynd med `kind` så demo-ytan kan särskilja åldersoberoende
 // fynd (interaktion/kontraindikation = solida) från Beers/STOPP (ålder antagen).
 //
-// Kör (lokalt mot cf4):
-//   AQL_TEMPLATE_BASE_URL=http://192.168.1.189:11402 npx tsx src/scripts/screen-population.ts
+// Kör (lokalt mot Moria):
+//   AQL_TEMPLATE_BASE_URL=http://192.168.1.220:11402 npx tsx src/scripts/screen-population.ts
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -20,7 +20,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const MANIFEST = resolve(__dirname, "../../../data-generator/data/population_manifest.json");
 const OUT = resolve(__dirname, "../../../dashboard/public/screening-results.json");
 
-const BASE = process.env.AQL_TEMPLATE_BASE_URL ?? "http://192.168.1.189:11402";
+const BASE = process.env.AQL_TEMPLATE_BASE_URL ?? "http://192.168.1.220:11402";
 const CONCURRENCY = Number(process.env.SCREEN_CONCURRENCY ?? 4);
 
 interface ManifestPatient { ehrId: string; patientId: string; profileId: string; compositionCount: number }

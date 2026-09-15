@@ -1,5 +1,5 @@
 export const EHRBASE_BASE_URL =
-  process.env.EHRBASE_BASE_URL ?? "http://192.168.1.189:11401/ehrbase";
+  process.env.EHRBASE_BASE_URL ?? "http://192.168.1.220:11401/ehrbase";
 
 export const OPENEHR_REST = `${EHRBASE_BASE_URL}/rest/openehr/v1`;
 export const ADMIN_REST = `${EHRBASE_BASE_URL}/rest/admin`;

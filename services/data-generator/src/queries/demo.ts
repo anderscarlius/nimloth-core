@@ -12,6 +12,7 @@ import {
   type AqlCategory,
 } from "./aql_queries.js";
 import { runQuery, type AqlRunResult } from "./AqlRunner.js";
+import { EHRBASE_BASE_URL } from "../config.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = resolve(__dirname, "..", "..");
@@ -37,7 +38,7 @@ function selectQueries(args: string[]): AqlSpec[] {
 function buildMarkdown(results: AqlRunResult[]): string {
   let md = `# SDG-08 — AQL-demofrågor\n\n`;
   md += `Genererad: ${new Date().toISOString()}\n`;
-  md += `EHRbase: http://192.168.1.189:11401/ehrbase\n\n`;
+  md += `EHRbase: ${EHRBASE_BASE_URL}\n\n`;
   md += `## Sammanfattning\n\n`;
   md += `| ID | Tier | Titel | Resultat | Tid (ms) |\n|---|---|---|---:|---:|\n`;
   for (const r of results) {
