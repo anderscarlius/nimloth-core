@@ -13,7 +13,7 @@ export interface ServiceConfig {
 export function loadConfig(): ServiceConfig {
   return {
     port: Number(process.env.PORT ?? 3010),
-    ehrbaseBaseUrl: process.env.EHRBASE_BASE_URL ?? "http://192.168.1.189:11401/ehrbase",
+    ehrbaseBaseUrl: process.env.EHRBASE_BASE_URL ?? "http://192.168.1.220:11401/ehrbase",
     logLevel: process.env.LOG_LEVEL ?? "info",
     corsAllowedOrigins: (process.env.CORS_ALLOWED_ORIGINS ?? "")
       .split(",")

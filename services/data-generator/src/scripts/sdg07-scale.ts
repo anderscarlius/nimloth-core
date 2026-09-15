@@ -6,6 +6,7 @@ import { generateTimelines } from "../engine/TimelineGenerator.js";
 import { loadTimelines, type PatientLoadResult } from "../loader/LoadPipeline.js";
 import { spotCheck } from "../loader/RoundTripVerifier.js";
 import { runAql } from "../ehrbase-client.js";
+import { EHRBASE_BASE_URL } from "../config.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = resolve(__dirname, "..", "..");
@@ -129,7 +130,7 @@ async function main() {
 
   let md = `# SDG-07 — Populationsrapport\n\n`;
   md += `Genererad: ${new Date().toISOString()}\n`;
-  md += `EHRbase: http://192.168.1.189:11401/ehrbase\n\n`;
+  md += `EHRbase: ${EHRBASE_BASE_URL}\n\n`;
   md += `## Sammanfattning\n\n`;
   md += `- Patienter: **${totalPatients}**\n`;
   md += `- Compositions: **${totalCompositions}**\n`;

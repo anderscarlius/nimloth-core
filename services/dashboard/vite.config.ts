@@ -10,13 +10,14 @@ const REPLICATION = process.env.REPLICATION_BASE_URL ?? 'http://replication:3007
 const EDGE_FHIR = process.env.EDGE_FHIR_BASE_URL ?? 'http://edge-su:3003';
 const TERMINOLOGY = process.env.TERMINOLOGY_BASE_URL ?? 'http://terminology:3008';
 const MAPPING_ASSISTANT = process.env.MAPPING_ASSISTANT_BASE_URL ?? 'http://mapping-assistant:3009';
-// Fas 3 AC1: aql-template-service är nu co-located på cf4 (container
-// aql-template-service-core, LAN-port 11402, service→EHRbase loopback).
-// Default pekar dit; sätt AQL_TEMPLATE_BASE_URL=http://localhost:3010 för
-// lokal dev mot en lokalt körande tjänst.
-const AQL_TEMPLATE = process.env.AQL_TEMPLATE_BASE_URL ?? 'http://192.168.1.189:11402';
-// Fas 3 AC6: med-review-orkestratorn (co-located på cf4, LAN-port 11403).
-const MED_REVIEW = process.env.MED_REVIEW_BASE_URL ?? 'http://192.168.1.189:11403';
+// aql-template-service-core kör nu på Moria (LAN-port 11402,
+// service→EHRbase loopback) -- CarliusFyra är nedlagd för Nimloth sedan
+// 2026-09 (se discovery-nimloth-2026-09-14-1800.md §4.10). Default pekar
+// dit; sätt AQL_TEMPLATE_BASE_URL=http://localhost:3010 för lokal dev mot
+// en lokalt körande tjänst.
+const AQL_TEMPLATE = process.env.AQL_TEMPLATE_BASE_URL ?? 'http://192.168.1.220:11402';
+// med-review-orkestratorn, samma flytt (LAN-port 11403 på Moria).
+const MED_REVIEW = process.env.MED_REVIEW_BASE_URL ?? 'http://192.168.1.220:11403';
 
 export default defineConfig({
   plugins: [react()],
