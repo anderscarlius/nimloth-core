@@ -1,0 +1,79 @@
+name: openEHR CI Nivå 1 — Modellfabriken (DP-MF1)
+
+# DP-MF1: Modellfabrikens tekniska CI nivå 1
+# Validerar ADL-syntax och genererar OPT på varje PR som rör openEHR-artefakter.
+# Processgräns: mänsklig process = Verkstaden (github.com/anderscarlius/vgr-datahubb-verkstad);
+# teknisk CI = detta workflow.
+
+on:
+  pull_request:
+    paths:
+      - 'infra/openehr/archetypes/**'
+      - 'infra/openehr/templates/**'
+      - 'infra/openehr/compiler/**'
+      - '.github/workflows/openehr-ci-level1.yml'
+
+jobs:
+  validate-and-compile:
+    name: Validera ADL och generera OPT
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout kod
+        uses: actions/checkout@v4
+      
+      - name: Sätt upp Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+      
+      - name: Kör Java-tester (validerar både giltiga och korrupta ADL)
+        run: |
+          cd infra/openehr/compiler
+          mvn test
+        
+      - name: Bygg compiler Docker-image
+        run: |
+          cd infra/openehr/compiler
+          bash scripts/build-image.sh
+        
+      - name: Kompilera alla ADL → OPT
+        run: |
+          bash infra/openehr/compiler/scripts/run-compile.sh
+        
+      - name: Verifiera att OPT genererades
+        run: |
+          if [ ! -f infra/openehr/templates/compiler-diagnostic-report.md ]; then
+            echo "❌ Kompileringsrapport saknas"
+            exit 1
+          fi
+          
+          # Räkna genererade OPT-filer (exkluderar .gitkeep, README, PROVENANCE, etc)
+          opt_count=$(find infra/openehr/templates -name "*.opt" -type f | wc -l)
+          echo "📊 Genererade OPT-filer: $opt_count"
+          
+          if [ "$opt_count" -eq 0 ]; then
+            echo "❌ Inga OPT-filer genererades"
+            cat infra/openehr/templates/compiler-diagnostic-report.md
+            exit 1
+          fi
+          
+          echo "✅ OPT-generering lyckades"
+        
+      - name: Ladda upp OPT som artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: openehr-operational-templates
+          path: |
+            infra/openehr/templates/*.opt
+            infra/openehr/templates/compiler-diagnostic-report.md
+          retention-days: 30
+        
+      - name: Logga kompileringsresultat
+        if: always()
+        run: |
+          echo "=== Kompileringsrapport ==="
+          cat infra/openehr/templates/compiler-diagnostic-report.md
