@@ -1,0 +1,47 @@
+name: FHIR IG — Modellfabriken (DP-MF3)
+
+# DP-MF3: SUSHI-only PR-gate for minimal IG stub under infra/fhir/ig/.
+# Separate from openEHR MF1/MF2 and from fhir-facade-publish (runtime image).
+# Process boundary: human IG design = Verkstaden; technical CI = this workflow.
+
+on:
+  pull_request:
+    paths:
+      - 'infra/fhir/**'
+      - '.github/workflows/fhir-ig.yml'
+
+jobs:
+  sushi-stub-ig:
+    name: SUSHI stub-IG + fail-case
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/fhir
+
+    steps:
+      - name: Checkout kod
+        uses: actions/checkout@v4
+
+      - name: Sätt upp Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: infra/fhir/package-lock.json
+
+      - name: Installera SUSHI (lokal pin)
+        run: npm ci
+
+      - name: SUSHI grön väg (stub-IG)
+        run: bash scripts/verify-sushi-green.sh
+
+      - name: Fail-case — ogiltig FSH ska avvisas
+        run: bash scripts/verify-sushi-fail-case.sh
+
+      - name: Ladda upp genererade StructureDefinitions
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: fhir-ig-fsh-generated
+          path: infra/fhir/ig/fsh-generated/resources/StructureDefinition-*.json
+          retention-days: 14
