@@ -19,11 +19,25 @@ roadmap där den här mappen rymmer Nivå 1 (batch compiler) i sin nuvarande for
 4. `pnpm openehr:load-templates` POSTar OPT till EHRbase
 5. EHRbase verifierar och accepterar (eller returnerar fel)
 
+## Processgräns: Verkstaden ↔ Nimloth Core (DP-MF1)
+
+**Modellfabrikens Nivå 1** etablerar en tydlig processgräns mellan mänsklig och teknisk kvalitetssäkring:
+
+- **Mänsklig process (Verkstaden):** Arketypdesign, klinisk validering, semantisk korrekthet, terminologibindningar. Sker i [VGR Datahubb Verkstad](https://github.com/anderscarlius/vgr-datahubb-verkstad).
+
+- **Teknisk CI (Nimloth Core):** ADL-syntax, RM-konformitet, OPT-generering, strukturella invarianter. Automatiserad validering via `.github/workflows/openehr-ci-level1.yml`.
+
+Workflow:
+1. Arketyper designas och valideras i Verkstaden
+2. Färdiga ADL-filer checkas in i `archetypes/`
+3. PR-gate (CI Nivå 1) validerar teknisk korrekthet automatiskt
+4. Efter merge regenereras OPT och deployeras till runtime
+
 ## Roadmap
 
-- **Nivå 1 (NU — P3.0):** Batch compiler, manuell trigger
-- **Nivå 2 (P3.5):** Runtime compiler-tjänst med REST-API
-- **Nivå 3 (P3.6):** Dashboard ADL-editor med live preview
+- **Nivå 1 (NU — P3.0/MF1):** Batch compiler + PR-gate för ADL-validering
+- **Nivå 2 (P3.5/MF2):** Runtime compiler-tjänst med REST-API + EHRbase round-trip
+- **Nivå 3 (P3.6/MF3):** Dashboard ADL-editor med live preview + FHIR SUSHI
 - **Nivå 4 (P3.7+, valfri):** JS-native compiler
 
 Se `compiler/README.md` för byggdetaljer.
