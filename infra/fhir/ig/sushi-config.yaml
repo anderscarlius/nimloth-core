@@ -1,0 +1,16 @@
+# DP-MF3 stub IG — placeholder canonical/packageId until a real SE IG exists.
+# See infra/fhir/README.md for local SUSHI/Publisher commands.
+
+id: se.nimloth.fhir.stub
+canonical: https://fhir.nimloth.local/ig/stub
+name: NimlothStubIG
+title: Nimloth FHIR IG Stub (MF3 CI)
+status: draft
+copyrightYear: 2026
+releaseLabel: ci
+version: 0.1.0
+fshVersion: 3.0.0
+fhirVersion: 4.0.1
+
+parameters:
+  show-inherited-invariants: false

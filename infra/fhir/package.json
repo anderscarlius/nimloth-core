@@ -1,0 +1,12 @@
+{
+  "name": "@nimloth-core/fhir-ig-stub",
+  "private": true,
+  "description": "MF3 SUSHI tooling for infra/fhir/ig stub IG",
+  "scripts": {
+    "verify:green": "bash scripts/verify-sushi-green.sh",
+    "verify:fail-case": "bash scripts/verify-sushi-fail-case.sh"
+  },
+  "devDependencies": {
+    "fsh-sushi": "3.20.1"
+  }
+}
