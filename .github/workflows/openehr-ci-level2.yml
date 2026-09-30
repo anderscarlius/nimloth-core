@@ -1,0 +1,95 @@
+name: openEHR CI Nivå 2 — Modellfabriken (DP-MF2)
+
+# DP-MF2: EHRbase round-trip, AQL-smoke, path-diff mot committad baseline.
+# Processgräns: mänsklig process = Verkstaden; teknisk CI = detta workflow + MF1.
+# Delar EHRbase service-mönster med openehr-compiler.yml men är en separat PR-gate.
+
+on:
+  pull_request:
+    paths:
+      - 'infra/openehr/**'
+      - 'test/openehr-mf2.test.ts'
+      - 'test/openehr.test.ts'
+      - '.github/workflows/openehr-ci-level2.yml'
+      - '.github/workflows/openehr-compiler.yml'
+
+jobs:
+  ehrbase-roundtrip-aql-pathdiff:
+    name: EHRbase round-trip + AQL + path-diff
+    runs-on: ubuntu-latest
+    services:
+      ehrbase-db:
+        image: ehrbase/ehrbase-v2-postgres:16.2@sha256:abe14e8f9ba33cabc9946c6c17c5aa95b64b35387f266cd20a894149203196d7
+        env:
+          POSTGRES_PASSWORD: postgres
+          EHRBASE_USER: ehrbase
+          EHRBASE_PASSWORD: ehrbase
+          EHRBASE_USER_ADMIN: ehrbase_admin
+          EHRBASE_PASSWORD_ADMIN: ehrbase_admin
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 15
+
+      ehrbase:
+        image: ehrbase/ehrbase:2.30.1@sha256:c08be93f41164bb6ba8e957532ce4cccd18e6b9d26e074ef97f3faff9c3cd52f
+        env:
+          DB_URL: jdbc:postgresql://ehrbase-db:5432/ehrbase
+          DB_USER: ehrbase
+          DB_PASS: ehrbase
+          DB_USER_ADMIN: ehrbase_admin
+          DB_PASS_ADMIN: ehrbase_admin
+          SECURITY_AUTHTYPE: NONE
+          JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m"
+        ports:
+          - 18088:8080
+        options: >-
+          --health-cmd "wget -q --spider http://localhost:8080/ehrbase/ || exit 1"
+          --health-interval 15s
+          --health-timeout 5s
+          --health-retries 20
+          --health-start-period 60s
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Set up Java 21 (path-diff CLI)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Install Node dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build openEHR compiler image
+        run: bash infra/openehr/compiler/scripts/build-image.sh
+
+      - name: Compile ADL → OPT (P3.0b output for MF2)
+        run: pnpm openehr:compile
+
+      - name: Wait for EHRbase
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:18088/ehrbase/ > /dev/null; then break; fi
+            echo "Waiting for EHRbase ($i/30)..."
+            sleep 5
+          done
+
+      - name: Run MF2 vitest (round-trip, AQL, path-diff)
+        run: pnpm --filter @nimloth-core/e2e exec vitest run openehr-mf2.test.ts
+        env:
+          EHRBASE_URL: http://localhost:18088

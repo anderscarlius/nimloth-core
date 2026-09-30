@@ -1,0 +1,17 @@
+[at0000]
+[at0000]/category
+[at0000]/category/defining_code
+[at0000]/content
+[at0000]/content/data
+[at0000]/content/data/events
+[at0000]/content/data/events/data
+[at0000]/content/data/events/data/items
+[at0000]/content/data/events/data/items/value
+[at0000]/content/data/events/state
+[at0000]/content/data/events/state/items
+[at0000]/content/data/events/state/items/value
+[at0000]/content/data/events/state/items/value/defining_code
+[at0000]/content/protocol
+[at0000]/content/protocol/items
+[at0000]/content/protocol/items/value
+[at0000]/content/protocol/items/value/defining_code
