@@ -21,6 +21,10 @@
     "./utils": {
       "types": "./dist/utils/index.d.ts",
       "import": "./dist/utils/index.js"
+    },
+    "./openehr/p3-observation-vitals-composition": {
+      "types": "./dist/openehr/p3-observation-vitals-composition.d.ts",
+      "import": "./dist/openehr/p3-observation-vitals-composition.js"
     }
   },
   "scripts": {

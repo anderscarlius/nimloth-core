@@ -9,6 +9,7 @@
     "test:all": "vitest run"
   },
   "devDependencies": {
+    "@nimloth-core/shared": "workspace:*",
     "@types/node": "^20.12.7",
     "kafkajs": "^2.2.4",
     "typescript": "^5.4.5",

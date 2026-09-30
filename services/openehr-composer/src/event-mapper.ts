@@ -2,8 +2,9 @@
 // skrivas mot, samt vilken intern composition-template-typ
 // composition-builder ska producera.
 //
-// Sprint 2 (P3.1) — fixture-baserad mapping:
-//   * vitals (temp, BP, pulse) → time_series.en.v1 (DV_QUANTITY-stöd)
+// Sprint 2 (P3.1) + MF2 (P3.0b compiler OPT):
+//   * body_temperature     → body_temperature.v2.p3_0b (compiler OPT)
+//   * blood_pressure, pulse → time_series.en.v1 (fixture tills egna P3-OPT)
 //   * procedure              → minimal_action.en.v1 (ACTION-shape)
 //   * medication, allergy,
 //     diagnosis              → GAP (loggat för P3.0b)
@@ -22,22 +23,26 @@ export interface TemplateMapping {
   /** Intern shape composition-builder bygger mot. */
   compositionShape:
     | 'observation_time_series'
+    | 'observation_p3_vitals'
     | 'action_minimal'
     | 'evaluation_medication'
     | 'evaluation_diagnosis'
     | 'evaluation_allergy';
   /** True om mapping går via fixture; false när P3.0b producerat egen OPT. */
   viaFixture: boolean;
+  /** Krävs för observation_p3_vitals — CKM element/concept labels. */
+  p3Observation?: { valueElementName: string; conceptName: string };
 }
 
 const EVENT_TO_TEMPLATE: Record<string, TemplateMapping> = {
-  // Vitals — alla går till time_series.en.v1 (OBSERVATION + DV_QUANTITY)
   'core.clinical.observation.vitals.body_temperature': {
-    templateId: 'time_series.en.v1',
-    archetypeNodeId: 'openEHR-EHR-OBSERVATION.time_series.v1',
-    compositionShape: 'observation_time_series',
-    viaFixture: true,
+    templateId: 'body_temperature.v2.p3_0b',
+    archetypeNodeId: 'openEHR-EHR-OBSERVATION.body_temperature.v2',
+    compositionShape: 'observation_p3_vitals',
+    viaFixture: false,
+    p3Observation: { valueElementName: 'Temperature', conceptName: 'Body temperature' },
   },
+  // Vitals — BP/pulse kvar på time_series.en.v1 tills pulse.v2 / blood_pressure.v2 P3-OPT i CI
   'core.clinical.observation.vitals.blood_pressure': {
     templateId: 'time_series.en.v1',
     archetypeNodeId: 'openEHR-EHR-OBSERVATION.time_series.v1',

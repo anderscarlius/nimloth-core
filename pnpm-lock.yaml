@@ -857,6 +857,9 @@ importers:
 
   test:
     devDependencies:
+      '@nimloth-core/shared':
+        specifier: workspace:*
+        version: link:../packages/shared
       '@types/node':
         specifier: ^20.12.7
         version: 20.19.39
