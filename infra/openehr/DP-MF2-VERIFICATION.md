@@ -23,7 +23,7 @@ ADL-only PR:er inte startar EHRbase-containers.
 | `pnpm openehr:compile` | Minst `body_temperature.v2.p3_0b.opt` + `body_weight.v2.p3_0b.opt` genereras |
 | POST template API | HTTP 201 eller idempotent 409 per template |
 | GET template API | XML med openEHR-namespace + korrekt `template_id` |
-| AQL | EHR + composition POST (`minimal_action.en.v1` fixture) → query returnerar ≥1 rad. Compiler-OPT composition mot EHRbase kvarstår som uppföljning (se `openehr-mf2.test.ts`). |
+| AQL | EHR + composition POST mot minst en compiler-OPT (`body_weight.v2.p3_0b`) → query returnerar förväntad rad; `minimal_action.en.v1` fixture kvar som regress. |
 | Path-diff | Alla rader i `path-baselines/*.paths.txt` finns i genererad OPT |
 
 Tester: `test/openehr-mf2.test.ts`
@@ -41,7 +41,7 @@ baseline-rad som inte finns i OPT (regression guard).
 | A1 | PR triggar MF2 vid openEHR/MF2/workflow-ändringar | `openehr-ci-level2.yml` `on.pull_request.paths` |
 | A2 | ≥2 P3-OPT POST till EHRbase | `COMPILER_TEMPLATES` i `openehr-mf2.test.ts` |
 | A3 | Round-trip GET med namespace + template_id | `round-trip` describe-block |
-| A4 | AQL ≥1 rad syntetisk composition | `AQL smoke` describe-block |
+| A4 | AQL ≥1 rad syntetisk composition (compiler-OPT) | `AQL smoke compiler OPT` describe-block |
 | A5 | Path-baseline + fail vid borttagen path | `path-baselines/` + fail-case test |
 | A6 | Docs processgräns MF2 vs Verkstaden | `infra/openehr/README.md` + denna fil |
 

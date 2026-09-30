@@ -7,6 +7,7 @@ import { describe, expect, it, beforeAll } from 'vitest';
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
+import { buildP3ObservationVitalsComposition } from './helpers/mf2-p3-observation-composition.js';
 
 const REPO_ROOT = join(__dirname, '..');
 const TEMPLATES_DIR = join(REPO_ROOT, 'infra/openehr/templates');
@@ -120,9 +121,87 @@ describe('DP-MF2 — EHRbase round-trip (compiler OPT)', () => {
   }
 });
 
-describe('DP-MF2 — AQL smoke (synthetic dataclass 0)', () => {
-  // Reference fixture template (Designer-export, at0000 roots) — same pattern as openehr-composer.
-  // Compiler OPT round-trip is asserted separately; full composition against P3.0b templates is a known gap.
+describe('DP-MF2 — AQL smoke compiler OPT (synthetic dataclass 0)', () => {
+  const P3_TEMPLATE = COMPILER_TEMPLATES.find((t) => t.templateId === 'body_weight.v2.p3_0b')!;
+  const SYNTHETIC_MAGNITUDE = 72.5;
+
+  beforeAll(async () => {
+    await waitForEhrbase();
+    const xml = readFileSync(join(TEMPLATES_DIR, P3_TEMPLATE.optFile), 'utf-8');
+    const post = await postOpt(xml);
+    expect([201, 409]).toContain(post.status);
+  }, 90_000);
+
+  it('POST composition + AQL returns synthetic body weight magnitude', async () => {
+    const subjectId = `mf2-p3-aql-${Date.now()}`;
+    const ehrResp = await fetch(`${EHRBASE_URL}/ehrbase/rest/openehr/v1/ehr`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify({
+        _type: 'EHR_STATUS',
+        archetype_node_id: 'openEHR-EHR-EHR_STATUS.generic.v1',
+        name: { value: 'EHR Status' },
+        subject: {
+          external_ref: {
+            id: { _type: 'GENERIC_ID', value: subjectId, scheme: 'nimloth-mf2-synthetic' },
+            namespace: 'test',
+            type: 'PERSON',
+          },
+        },
+        is_queryable: true,
+        is_modifiable: true,
+      }),
+    });
+    expect(ehrResp.status).toBe(201);
+    const ehr = (await ehrResp.json()) as { ehr_id: { value: string } };
+    const ehrId = ehr.ehr_id.value;
+    const now = new Date().toISOString();
+
+    const composition = buildP3ObservationVitalsComposition({
+      templateId: P3_TEMPLATE.templateId,
+      observationArchetypeId: P3_TEMPLATE.archetypeId,
+      magnitude: SYNTHETIC_MAGNITUDE,
+      units: 'kg',
+      valueElementName: 'Weight',
+      conceptName: 'Body weight',
+      startTime: now,
+    });
+
+    const compResp = await fetch(`${EHRBASE_URL}/ehrbase/rest/openehr/v1/ehr/${ehrId}/composition`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Prefer: 'return=representation',
+        'openEHR-TEMPLATE_ID': P3_TEMPLATE.templateId,
+      },
+      body: JSON.stringify(composition),
+    });
+    if (compResp.status !== 201) {
+      const errBody = await compResp.text();
+      throw new Error(`Composition POST ${compResp.status}: ${errBody.slice(0, 1200)}`);
+    }
+
+    const aql = {
+      q: `SELECT o/data/events/data/items[at0004]/value/magnitude AS weight
+          FROM EHR e[ehr_id/value='${ehrId}']
+          CONTAINS COMPOSITION c
+          CONTAINS OBSERVATION o[${P3_TEMPLATE.archetypeId}]
+          WHERE o/data/events/data/items[at0004]/value/magnitude = ${SYNTHETIC_MAGNITUDE}`,
+    };
+    const aqlResp = await fetch(`${EHRBASE_URL}/ehrbase/rest/openehr/v1/query/aql`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(aql),
+    });
+    expect(aqlResp.status).toBe(200);
+    const result = (await aqlResp.json()) as { rows: unknown[][] };
+    expect(result.rows.length).toBeGreaterThanOrEqual(1);
+    expect(result.rows[0][0]).toBe(SYNTHETIC_MAGNITUDE);
+  }, 60_000);
+});
+
+describe('DP-MF2 — AQL smoke fixture regression (minimal_action.en.v1)', () => {
   const FIXTURES_DIR = join(REPO_ROOT, 'infra/openehr/test-fixtures');
   const TEMPLATE_ID = 'minimal_action.en.v1';
   const SUBJECT_SCHEME = 'nimloth-mf2-synthetic';

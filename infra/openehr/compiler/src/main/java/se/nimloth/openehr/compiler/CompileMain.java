@@ -2,6 +2,7 @@ package se.nimloth.openehr.compiler;
 
 import com.nedap.archie.adl14.ADL14Converter;
 import com.nedap.archie.adl14.ADL14ConversionConfiguration;
+import com.nedap.archie.adl14.ADL14NodeIDConverter;
 import com.nedap.archie.adl14.ADL14Parser;
 import com.nedap.archie.adl14.ADL2ConversionResult;
 import com.nedap.archie.adl14.ADL2ConversionResultList;
@@ -201,9 +202,19 @@ public class CompileMain {
         }
         Archetype archetype = conversionResult.getArchetype();
 
-        String archetypeId = archetype.getArchetypeId() != null
-            ? archetype.getArchetypeId().getFullId()
-            : adlFile.getFileName().toString().replace(".adl", "");
+        ADL14NodeIDConverter nodeIdConverter = new ADL14NodeIDConverter(
+            BuiltinReferenceModels.getMetaModels(),
+            adl14Raw,
+            archetype,
+            conversionConfig,
+            conversionResult.getConversionLog(),
+            conversionResult);
+        nodeIdConverter.convert();
+
+        // Stabil arketyp-id = incheckat ADL-filnamn (t.ex. …body_weight.v2), inte ADL2-semver
+        // (…body_weight.v2.1.12) — EHRbase composition-validering matchar archetype_details mot OPT.
+        String sourceFileStem = adlFile.getFileName().toString().replace(".adl", "");
+        String archetypeId = sourceFileStem;
 
         FlattenerConfiguration config = FlattenerConfiguration.forOperationalTemplate();
         Flattener flattener = new Flattener(new SimpleArchetypeRepository(), BuiltinReferenceModels.getMetaModels(), config);
@@ -223,13 +234,26 @@ public class CompileMain {
         // skriver om versionen till fullt semver (t.ex. "v2.1.9"), vilket
         // gjorde ett tidigare försök att derivera template_id från
         // archetype_id oläsbart (blev bara "v2.1.9.p3_0b").
-        String sourceFileStem = adlFile.getFileName().toString().replace(".adl", "");
         String conceptSegment = sourceFileStem.contains(".")
             ? sourceFileStem.substring(sourceFileStem.indexOf('.') + 1)
             : archetypeId;
         String templateId = conceptSegment + ".p3_0b";
 
         OperationalTemplateXmlBuilder builder = new OperationalTemplateXmlBuilder();
+        builder.setNodeIdResolver(archieNodeId -> {
+            if (archieNodeId == null) {
+                return null;
+            }
+            if (archieNodeId.startsWith("at")) {
+                return archieNodeId;
+            }
+            String adl14Code = nodeIdConverter.getOldCodeForNewCode(archieNodeId);
+            if (adl14Code != null) {
+                return adl14Code;
+            }
+            // Value-slot ids (e.g. id9002) have no ADL 1.4 node — Designer uses empty <node_id/>.
+            return null;
+        });
         String xml = builder.build(flattened, archetypeId, templateId, concept);
         return new CompileResult(archetypeId, templateId, xml, builder.getWarnings());
     }

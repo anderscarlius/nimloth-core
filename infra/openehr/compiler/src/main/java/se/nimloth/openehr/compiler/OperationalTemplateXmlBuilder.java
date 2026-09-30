@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.UnaryOperator;
 
 /**
  * P3.0b — genererisk ADL/AOM &rarr; OPT 1.4 XML-serialiserare.
@@ -105,6 +106,11 @@ public class OperationalTemplateXmlBuilder {
     /** Satt i {@link #build}. Behövs för att slå upp etiketter för KOD-VÄRDEN
      * (t.ex. "at9000"), inte bara för nod-identiteter — se {@link #collectTermForCode}. */
     private OperationalTemplate sourceArchetype;
+    /**
+     * Maps archie-internal node ids (e.g. {@code id3} after ADL14→ADL2) to OPT node ids
+     * EHRbase expects in compositions (typically {@code at####}). Default: identity.
+     */
+    private UnaryOperator<String> nodeIdResolver = UnaryOperator.identity();
 
     public OperationalTemplateXmlBuilder() throws ParserConfigurationException {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -115,6 +121,10 @@ public class OperationalTemplateXmlBuilder {
     /** Diagnostiska meddelanden om constraints som vidgades till obegränsade — inte fel, men värt att logga. */
     public List<String> getWarnings() {
         return warnings;
+    }
+
+    public void setNodeIdResolver(UnaryOperator<String> nodeIdResolver) {
+        this.nodeIdResolver = nodeIdResolver != null ? nodeIdResolver : UnaryOperator.identity();
     }
 
     /**
@@ -252,13 +262,8 @@ public class OperationalTemplateXmlBuilder {
         setXsiType(root, "C_ARCHETYPE_ROOT");
         root.appendChild(simple("rm_type_name", flattenedRoot.getRmTypeName()));
         root.appendChild(intervalElement("occurrences", zeroToUnboundedInterval()));
-        // Archie flattening can yield internal ids (e.g. "id1"); EHRbase composition
-        // validation expects archetype root node_ids (at0000) in uploaded OPT slots.
-        String rawRootNodeId = flattenedRoot.getNodeId();
-        String rootNodeId =
-            rawRootNodeId != null && rawRootNodeId.startsWith("at") ? rawRootNodeId : "at0000";
+        String rootNodeId = resolveOptNodeId(flattenedRoot.getNodeId());
         root.appendChild(nodeIdElement(rootNodeId));
-
         collectTerm(rootNodeId, flattenedRoot);
         for (CAttribute attribute : flattenedRoot.getAttributes()) {
             appendIfPresent(root, buildAttribute(attribute));
@@ -319,7 +324,8 @@ public class OperationalTemplateXmlBuilder {
             // lyckad C_DV_QUANTITY-serialisering och skulle annars hoppa
             // över noden egen term_definitions-post (regressionsfynd
             // 2026-09-10, fångat av everyRealNodeIdHasAMatchingTermDefinition).
-            collectTerm(complex.getNodeId(), complex);
+            String optNodeId = resolveOptNodeId(complex.getNodeId());
+            collectTerm(optNodeId, complex);
             Element dvQuantity = tryBuildDvQuantity(complex);
             if (dvQuantity != null) {
                 return dvQuantity;
@@ -328,7 +334,7 @@ public class OperationalTemplateXmlBuilder {
             setXsiType(el, "C_COMPLEX_OBJECT");
             el.appendChild(simple("rm_type_name", complex.getRmTypeName()));
             el.appendChild(intervalElement("occurrences", complex.getOccurrences()));
-            el.appendChild(nodeIdElement(complex.getNodeId()));
+            el.appendChild(nodeIdElement(optNodeId));
             for (CAttribute attribute : complex.getAttributes()) {
                 appendIfPresent(el, buildAttribute(attribute));
             }
@@ -352,8 +358,9 @@ public class OperationalTemplateXmlBuilder {
         setXsiType(el, xsiType);
         el.appendChild(simple("rm_type_name", rmType));
         el.appendChild(intervalElement("occurrences", child.getOccurrences()));
-        el.appendChild(nodeIdElement(child.getNodeId()));
-        collectTerm(child.getNodeId(), child);
+        String optNodeId = resolveOptNodeId(child.getNodeId());
+        el.appendChild(nodeIdElement(optNodeId));
+        collectTerm(optNodeId, child);
         return el;
     }
 
@@ -433,7 +440,7 @@ public class OperationalTemplateXmlBuilder {
         setXsiType(el, "C_DV_QUANTITY");
         el.appendChild(simple("rm_type_name", "DV_QUANTITY"));
         el.appendChild(intervalElement("occurrences", complex.getOccurrences()));
-        el.appendChild(nodeIdElement(complex.getNodeId()));
+        el.appendChild(nodeIdElement(resolveOptNodeId(complex.getNodeId())));
         for (Element item : listItems) {
             el.appendChild(item);
         }
@@ -547,8 +554,9 @@ public class OperationalTemplateXmlBuilder {
         setXsiType(el, "C_ARCHETYPE_SLOT");
         el.appendChild(simple("rm_type_name", slot.getRmTypeName()));
         el.appendChild(intervalElement("occurrences", slot.getOccurrences()));
-        el.appendChild(nodeIdElement(slot.getNodeId()));
-        collectTerm(slot.getNodeId(), slot);
+        String optNodeId = resolveOptNodeId(slot.getNodeId());
+        el.appendChild(nodeIdElement(optNodeId));
+        collectTerm(optNodeId, slot);
         return el;
     }
 
@@ -587,6 +595,19 @@ public class OperationalTemplateXmlBuilder {
      * malluppladdning. Fallback-text (nodeId självt) är sämre än en riktig
      * etikett men bättre än en trasig mall.
      */
+    /**
+     * ADL14→ADL2 ger archie interna ids ({@code id3}); EHRbase composition-validering
+     * matchar mot OPT med arketyp-node_ids ({@code at0002}). Resolvern (satt från
+     * {@link CompileMain}) återställer ADL 1.4-koder; syntetiska value-noder utan
+     * mapping serialiseras med tom {@code <node_id/>}.
+     */
+    private String resolveOptNodeId(String archieNodeId) {
+        if (archieNodeId == null) {
+            return null;
+        }
+        return nodeIdResolver.apply(archieNodeId);
+    }
+
     private void collectTerm(String nodeId, CObject object) {
         if (nodeId == null) {
             return;
