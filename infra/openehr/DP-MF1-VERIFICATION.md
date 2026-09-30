@@ -77,8 +77,6 @@ Eftersom Docker inte är tillgängligt i Cloud Agent-miljön, verifieras grön/r
 - **A5:** CI triggas på PR vid ändringar i openEHR-filer
 - **A6:** OPT laddas upp som artifacts för inspektion
 
-## Framtida förbättringar (MF2+)
+## MF2 (implementerat)
 
-- EHRbase round-trip: POST OPT → EHRbase, GET tillbaka, diff
-- AQL-validering: generera och kör test-queries
-- Path-diff: jämför genererad OPT med referens-OPT från CKM
+Se `DP-MF2-VERIFICATION.md` och `.github/workflows/openehr-ci-level2.yml`.

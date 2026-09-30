@@ -11,7 +11,9 @@ import java.io.StringReader;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -153,6 +155,63 @@ class CompileMainTest {
         Set<String> missing = new HashSet<>(codeListValues);
         missing.removeAll(termCodes);
         assertTrue(missing.isEmpty(), "code_list-värden utan matchande term_definitions (orsakar EHRbase-NPE i ISM_TRANSITION-hantering): " + missing);
+    }
+
+    private static final Path PATH_BASELINES_DIR = Path.of("..", "path-baselines");
+
+    /**
+     * Kör med {@code GENERATE_PATH_BASELINES=true mvn test -Dtest=CompileMainTest#generatePathBaselines}
+     * för att medvetet uppdatera committade baselines efter godkänd arketypändring.
+     */
+    @Test
+    void generatePathBaselines() throws Exception {
+        if (!"true".equals(System.getenv("GENERATE_PATH_BASELINES"))) {
+            return;
+        }
+        writeBaseline("openEHR-EHR-OBSERVATION.body_temperature.v2.adl", "body_temperature.v2.p3_0b.paths.txt");
+        writeBaseline("openEHR-EHR-OBSERVATION.body_weight.v2.adl", "body_weight.v2.p3_0b.paths.txt");
+    }
+
+    private void writeBaseline(String adlFileName, String baselineFileName) throws Exception {
+        Path adl = ARCHETYPES_DIR.resolve(adlFileName);
+        CompileMain.CompileResult result = CompileMain.compileOne(adl);
+        List<String> paths = OptPathInventory.fromOptXml(result.optXml);
+        Path out = PATH_BASELINES_DIR.resolve(baselineFileName);
+        Files.createDirectories(out.getParent());
+        Files.write(out, paths, StandardCharsets.UTF_8);
+    }
+
+    @Test
+    void pathInventoryMatchesBaselineForBodyTemperature() throws Exception {
+        assertPathInventoryMatchesBaseline(
+            "openEHR-EHR-OBSERVATION.body_temperature.v2.adl",
+            "body_temperature.v2.p3_0b.paths.txt");
+    }
+
+    @Test
+    void pathInventoryMatchesBaselineForBodyWeight() throws Exception {
+        assertPathInventoryMatchesBaseline(
+            "openEHR-EHR-OBSERVATION.body_weight.v2.adl",
+            "body_weight.v2.p3_0b.paths.txt");
+    }
+
+    private void assertPathInventoryMatchesBaseline(String adlFileName, String baselineFileName) throws Exception {
+        Path adl = ARCHETYPES_DIR.resolve(adlFileName);
+        CompileMain.CompileResult result = CompileMain.compileOne(adl);
+        List<String> actual = OptPathInventory.fromOptXml(result.optXml);
+
+        Path baseline = PATH_BASELINES_DIR.resolve(baselineFileName);
+        assertTrue(Files.exists(baseline), "Saknad path-baseline: " + baseline.toAbsolutePath());
+        List<String> expected = Files.readAllLines(baseline, StandardCharsets.UTF_8)
+            .stream()
+            .map(String::trim)
+            .filter(line -> !line.isEmpty() && !line.startsWith("#"))
+            .toList();
+
+        Set<String> missing = new HashSet<>(expected);
+        actual.forEach(missing::remove);
+        assertTrue(missing.isEmpty(),
+            "Path-baseline saknar inte längre i OPT (oväntad borttagning): " + missing);
     }
 
     @Test
