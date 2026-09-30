@@ -156,27 +156,35 @@ describe('DP-MF2 — AQL smoke (synthetic dataclass 0)', () => {
     const ehrId = ehr.ehr_id.value;
     const now = new Date().toISOString();
 
+    const openEhrTerm = (code: string) => ({
+      terminology_id: { value: 'openehr' },
+      code_string: code,
+    });
     const composition = {
       _type: 'COMPOSITION',
-      name: { value: 'MF2 synthetic vitals' },
+      name: { value: 'Body temperature' },
       archetype_node_id: 'openEHR-EHR-COMPOSITION.minimal.v1',
       archetype_details: {
+        _type: 'ARCHETYPED',
         archetype_id: { value: 'openEHR-EHR-COMPOSITION.minimal.v1' },
         template_id: { value: TEMPLATE_ID },
         rm_version: '1.0.4',
       },
-      language: { terminology_id: { value: 'ISO_639-1' }, code_string: 'sv' },
+      language: { terminology_id: { value: 'ISO_639-1' }, code_string: 'en' },
       territory: { terminology_id: { value: 'ISO_3166-1' }, code_string: 'SE' },
       category: {
+        _type: 'DV_CODED_TEXT',
         value: 'event',
-        defining_code: { terminology_id: { value: 'openehr' }, code_string: '433' },
+        defining_code: openEhrTerm('433'),
       },
       composer: { _type: 'PARTY_IDENTIFIED', name: 'MF2 CI synthetic' },
       context: {
+        _type: 'EVENT_CONTEXT',
         start_time: { value: now },
         setting: {
+          _type: 'DV_CODED_TEXT',
           value: 'other care',
-          defining_code: { terminology_id: { value: 'openehr' }, code_string: '238' },
+          defining_code: openEhrTerm('238'),
         },
       },
       content: [
@@ -184,8 +192,17 @@ describe('DP-MF2 — AQL smoke (synthetic dataclass 0)', () => {
           _type: 'OBSERVATION',
           name: { value: 'Body temperature' },
           archetype_node_id: 'openEHR-EHR-OBSERVATION.body_temperature.v2',
-          language: { terminology_id: { value: 'ISO_639-1' }, code_string: 'sv' },
-          encoding: { terminology_id: { value: 'IANA_character-sets' }, code_string: 'UTF-8' },
+          archetype_details: {
+            _type: 'ARCHETYPED',
+            archetype_id: { value: 'openEHR-EHR-OBSERVATION.body_temperature.v2.1.9' },
+            rm_version: '1.0.4',
+          },
+          language: { terminology_id: { value: 'ISO_639-1' }, code_string: 'en' },
+          encoding: {
+            _type: 'CODE_PHRASE',
+            terminology_id: { value: 'IANA_character-sets' },
+            code_string: 'UTF-8',
+          },
           subject: { _type: 'PARTY_SELF' },
           data: {
             _type: 'HISTORY',
@@ -228,10 +245,14 @@ describe('DP-MF2 — AQL smoke (synthetic dataclass 0)', () => {
         'Content-Type': 'application/json',
         Accept: 'application/json',
         Prefer: 'return=representation',
+        'openEHR-TEMPLATE_ID': TEMPLATE_ID,
       },
       body: JSON.stringify(composition),
     });
-    expect(compResp.status).toBe(201);
+    if (compResp.status !== 201) {
+      const errBody = await compResp.text();
+      throw new Error(`Composition POST ${compResp.status}: ${errBody.slice(0, 1200)}`);
+    }
 
     const aql = {
       q: `SELECT o/data[at0002]/events[at0003]/data[at0001]/items[at0004]/value/magnitude AS temp
