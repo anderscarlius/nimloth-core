@@ -252,7 +252,11 @@ public class OperationalTemplateXmlBuilder {
         setXsiType(root, "C_ARCHETYPE_ROOT");
         root.appendChild(simple("rm_type_name", flattenedRoot.getRmTypeName()));
         root.appendChild(intervalElement("occurrences", zeroToUnboundedInterval()));
-        String rootNodeId = flattenedRoot.getNodeId() != null ? flattenedRoot.getNodeId() : "at0000";
+        // Archie flattening can yield internal ids (e.g. "id1"); EHRbase composition
+        // validation expects archetype root node_ids (at0000) in uploaded OPT slots.
+        String rawRootNodeId = flattenedRoot.getNodeId();
+        String rootNodeId =
+            rawRootNodeId != null && rawRootNodeId.startsWith("at") ? rawRootNodeId : "at0000";
         root.appendChild(nodeIdElement(rootNodeId));
 
         collectTerm(rootNodeId, flattenedRoot);

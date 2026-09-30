@@ -23,7 +23,7 @@ ADL-only PR:er inte startar EHRbase-containers.
 | `pnpm openehr:compile` | Minst `body_temperature.v2.p3_0b.opt` + `body_weight.v2.p3_0b.opt` genereras |
 | POST template API | HTTP 201 eller idempotent 409 per template |
 | GET template API | XML med openEHR-namespace + korrekt `template_id` |
-| AQL | EHR + composition POST (`procedure.v1.p3_0b`, syntetisk ACTION) → query returnerar ≥1 rad |
+| AQL | EHR + composition POST (`body_temperature.v2.p3_0b` compiler-OPT) → query returnerar ≥1 rad |
 | Path-diff | Alla rader i `path-baselines/*.paths.txt` finns i genererad OPT |
 
 Tester: `test/openehr-mf2.test.ts`
