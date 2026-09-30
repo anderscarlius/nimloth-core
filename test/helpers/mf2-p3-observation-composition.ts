@@ -73,7 +73,8 @@ export function buildP3ObservationVitalsComposition(spec: P3ObservationVitalsSpe
           origin: { value: time },
           events: [
             {
-              _type: 'EVENT',
+              // RM abstract EVENT — EHRbase canonical JSON requires a concrete subtype.
+              _type: 'POINT_EVENT',
               name: { value: 'Any event' },
               archetype_node_id: 'at0003',
               time: { value: time },
