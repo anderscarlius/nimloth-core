@@ -195,6 +195,20 @@ class CompileMainTest {
             "body_weight.v2.p3_0b.paths.txt");
     }
 
+    /**
+     * EHRbase composition-validering matchar composition node_ids mot OPT — ADL14→ADL2
+     * ger archie interna ids (id3) om de inte återställs till ADL 1.4 at-koder (at0002).
+     */
+    @Test
+    void bodyWeightOptUsesAdl14ArchetypeNodeIdsNotArchieInternalIds() throws Exception {
+        Path adl = ARCHETYPES_DIR.resolve("openEHR-EHR-OBSERVATION.body_weight.v2.adl");
+        CompileMain.CompileResult result = CompileMain.compileOne(adl);
+        assertTrue(result.optXml.contains("<node_id>at0002</node_id>"),
+            "HISTORY ska ha at0002 i OPT, inte archie-internt id");
+        assertFalse(result.optXml.contains("<node_id>id3</node_id>"),
+            "Interna archie-id får inte läcka till OPT");
+    }
+
     private void assertPathInventoryMatchesBaseline(String adlFileName, String baselineFileName) throws Exception {
         Path adl = ARCHETYPES_DIR.resolve(adlFileName);
         CompileMain.CompileResult result = CompileMain.compileOne(adl);

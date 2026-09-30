@@ -2,6 +2,7 @@ package se.nimloth.openehr.compiler;
 
 import com.nedap.archie.adl14.ADL14Converter;
 import com.nedap.archie.adl14.ADL14ConversionConfiguration;
+import com.nedap.archie.adl14.ADL14NodeIDConverter;
 import com.nedap.archie.adl14.ADL14Parser;
 import com.nedap.archie.adl14.ADL2ConversionResult;
 import com.nedap.archie.adl14.ADL2ConversionResultList;
@@ -201,6 +202,15 @@ public class CompileMain {
         }
         Archetype archetype = conversionResult.getArchetype();
 
+        ADL14NodeIDConverter nodeIdConverter = new ADL14NodeIDConverter(
+            BuiltinReferenceModels.getMetaModels(),
+            adl14Raw,
+            archetype,
+            conversionConfig,
+            conversionResult.getConversionLog(),
+            conversionResult);
+        nodeIdConverter.convert();
+
         String archetypeId = archetype.getArchetypeId() != null
             ? archetype.getArchetypeId().getFullId()
             : adlFile.getFileName().toString().replace(".adl", "");
@@ -230,6 +240,20 @@ public class CompileMain {
         String templateId = conceptSegment + ".p3_0b";
 
         OperationalTemplateXmlBuilder builder = new OperationalTemplateXmlBuilder();
+        builder.setNodeIdResolver(archieNodeId -> {
+            if (archieNodeId == null) {
+                return null;
+            }
+            if (archieNodeId.startsWith("at")) {
+                return archieNodeId;
+            }
+            String adl14Code = nodeIdConverter.getOldCodeForNewCode(archieNodeId);
+            if (adl14Code != null) {
+                return adl14Code;
+            }
+            // Value-slot ids (e.g. id9002) have no ADL 1.4 node — Designer uses empty <node_id/>.
+            return null;
+        });
         String xml = builder.build(flattened, archetypeId, templateId, concept);
         return new CompileResult(archetypeId, templateId, xml, builder.getWarnings());
     }
