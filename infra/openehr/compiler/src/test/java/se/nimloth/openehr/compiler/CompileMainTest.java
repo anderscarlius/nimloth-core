@@ -170,6 +170,8 @@ class CompileMainTest {
         }
         writeBaseline("openEHR-EHR-OBSERVATION.body_temperature.v2.adl", "body_temperature.v2.p3_0b.paths.txt");
         writeBaseline("openEHR-EHR-OBSERVATION.body_weight.v2.adl", "body_weight.v2.p3_0b.paths.txt");
+        writeBaseline("openEHR-EHR-OBSERVATION.pulse.v2.adl", "pulse.v2.p3_0b.paths.txt");
+        writeBaseline("openEHR-EHR-OBSERVATION.blood_pressure.v2.adl", "blood_pressure.v2.p3_0b.paths.txt");
     }
 
     private void writeBaseline(String adlFileName, String baselineFileName) throws Exception {
@@ -193,6 +195,28 @@ class CompileMainTest {
         assertPathInventoryMatchesBaseline(
             "openEHR-EHR-OBSERVATION.body_weight.v2.adl",
             "body_weight.v2.p3_0b.paths.txt");
+    }
+
+    @Test
+    void pathInventoryMatchesBaselineForPulse() throws Exception {
+        assertPathInventoryMatchesBaseline(
+            "openEHR-EHR-OBSERVATION.pulse.v2.adl",
+            "pulse.v2.p3_0b.paths.txt");
+    }
+
+    @Test
+    void pathInventoryMatchesBaselineForBloodPressure() throws Exception {
+        assertPathInventoryMatchesBaseline(
+            "openEHR-EHR-OBSERVATION.blood_pressure.v2.adl",
+            "blood_pressure.v2.p3_0b.paths.txt");
+    }
+
+    @Test
+    void compilesBloodPressureToValidOpt() throws Exception {
+        Path adl = ARCHETYPES_DIR.resolve("openEHR-EHR-OBSERVATION.blood_pressure.v2.adl");
+        CompileMain.CompileResult result = CompileMain.compileOne(adl);
+        assertEquals("blood_pressure.v2.p3_0b", result.templateId);
+        assertTrue(result.optXml.contains("Blood pressure") || result.optXml.contains("blood pressure"));
     }
 
     /**

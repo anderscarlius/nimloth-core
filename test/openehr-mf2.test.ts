@@ -29,6 +29,31 @@ const COMPILER_TEMPLATES = [
     templateId: 'body_weight.v2.p3_0b',
     archetypeId: 'openEHR-EHR-OBSERVATION.body_weight.v2',
     baseline: 'body_weight.v2.p3_0b.paths.txt',
+    valueElementName: 'Weight',
+    conceptName: 'Body weight',
+    units: 'kg',
+    aqlMagnitude: 72.5,
+  },
+  {
+    optFile: 'pulse.v2.p3_0b.opt',
+    templateId: 'pulse.v2.p3_0b',
+    archetypeId: 'openEHR-EHR-OBSERVATION.pulse.v2',
+    baseline: 'pulse.v2.p3_0b.paths.txt',
+    valueElementName: 'Rate',
+    conceptName: 'Pulse',
+    units: '/min',
+    aqlMagnitude: 88,
+  },
+  {
+    optFile: 'blood_pressure.v2.p3_0b.opt',
+    templateId: 'blood_pressure.v2.p3_0b',
+    archetypeId: 'openEHR-EHR-OBSERVATION.blood_pressure.v2',
+    baseline: 'blood_pressure.v2.p3_0b.paths.txt',
+    valueElementName: 'Systolic',
+    conceptName: 'Blood pressure',
+    units: 'mm[Hg]',
+    aqlMagnitude: 125,
+    nodeIds: { history: 'at0001', event: 'at0006', itemTree: 'at0003', valueElement: 'at0004' },
   },
 ] as const;
 
@@ -121,18 +146,37 @@ describe('DP-MF2 — EHRbase round-trip (compiler OPT)', () => {
   }
 });
 
-describe('DP-MF2 — AQL smoke compiler OPT (synthetic dataclass 0)', () => {
-  const P3_TEMPLATE = COMPILER_TEMPLATES.find((t) => t.templateId === 'body_weight.v2.p3_0b')!;
-  const SYNTHETIC_MAGNITUDE = 72.5;
+type AqlSmokeTemplate = (typeof COMPILER_TEMPLATES)[number] & {
+  aqlMagnitude: number;
+  valueElementName: string;
+  conceptName: string;
+  units: string;
+  nodeIds?: {
+    history: string;
+    event: string;
+    itemTree: string;
+    valueElement: string;
+  };
+};
 
+const AQL_SMOKE_TEMPLATES = COMPILER_TEMPLATES.filter(
+  (t): t is AqlSmokeTemplate => 'aqlMagnitude' in t && t.aqlMagnitude != null,
+);
+
+describe('DP-MF2 — AQL smoke compiler OPT (synthetic dataclass 0)', () => {
   beforeAll(async () => {
     await waitForEhrbase();
-    const xml = readFileSync(join(TEMPLATES_DIR, P3_TEMPLATE.optFile), 'utf-8');
-    const post = await postOpt(xml);
-    expect([201, 409]).toContain(post.status);
-  }, 90_000);
+    for (const tpl of AQL_SMOKE_TEMPLATES) {
+      const xml = readFileSync(join(TEMPLATES_DIR, tpl.optFile), 'utf-8');
+      const post = await postOpt(xml);
+      expect([201, 409]).toContain(post.status);
+    }
+  }, 120_000);
 
-  it('POST composition + AQL returns synthetic body weight magnitude', async () => {
+  for (const P3_TEMPLATE of AQL_SMOKE_TEMPLATES) {
+  it(`POST composition + AQL returns magnitude for ${P3_TEMPLATE.templateId}`, async () => {
+    const SYNTHETIC_MAGNITUDE = P3_TEMPLATE.aqlMagnitude;
+    const valueNode = P3_TEMPLATE.nodeIds?.valueElement ?? 'at0004';
     const subjectId = `mf2-p3-aql-${Date.now()}`;
     const ehrResp = await fetch(`${EHRBASE_URL}/ehrbase/rest/openehr/v1/ehr`, {
       method: 'POST',
@@ -161,9 +205,10 @@ describe('DP-MF2 — AQL smoke compiler OPT (synthetic dataclass 0)', () => {
       templateId: P3_TEMPLATE.templateId,
       observationArchetypeId: P3_TEMPLATE.archetypeId,
       magnitude: SYNTHETIC_MAGNITUDE,
-      units: 'kg',
-      valueElementName: 'Weight',
-      conceptName: 'Body weight',
+      units: P3_TEMPLATE.units,
+      valueElementName: P3_TEMPLATE.valueElementName,
+      conceptName: P3_TEMPLATE.conceptName,
+      nodeIds: P3_TEMPLATE.nodeIds,
       startTime: now,
     });
 
@@ -183,11 +228,11 @@ describe('DP-MF2 — AQL smoke compiler OPT (synthetic dataclass 0)', () => {
     }
 
     const aql = {
-      q: `SELECT o/data/events/data/items[at0004]/value/magnitude AS weight
+      q: `SELECT o/data/events/data/items[${valueNode}]/value/magnitude AS magnitude
           FROM EHR e[ehr_id/value='${ehrId}']
           CONTAINS COMPOSITION c
           CONTAINS OBSERVATION o[${P3_TEMPLATE.archetypeId}]
-          WHERE o/data/events/data/items[at0004]/value/magnitude = ${SYNTHETIC_MAGNITUDE}`,
+          WHERE o/data/events/data/items[${valueNode}]/value/magnitude = ${SYNTHETIC_MAGNITUDE}`,
     };
     const aqlResp = await fetch(`${EHRBASE_URL}/ehrbase/rest/openehr/v1/query/aql`, {
       method: 'POST',
@@ -199,6 +244,7 @@ describe('DP-MF2 — AQL smoke compiler OPT (synthetic dataclass 0)', () => {
     expect(result.rows.length).toBeGreaterThanOrEqual(1);
     expect(result.rows[0][0]).toBe(SYNTHETIC_MAGNITUDE);
   }, 60_000);
+  }
 });
 
 describe('DP-MF2 — AQL smoke fixture regression (minimal_action.en.v1)', () => {

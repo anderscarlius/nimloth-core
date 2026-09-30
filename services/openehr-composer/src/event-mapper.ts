@@ -3,8 +3,7 @@
 // composition-builder ska producera.
 //
 // Sprint 2 (P3.1) + MF2 (P3.0b compiler OPT):
-//   * body_temperature     → body_temperature.v2.p3_0b (compiler OPT)
-//   * blood_pressure, pulse → time_series.en.v1 (fixture tills egna P3-OPT)
+//   * body_temperature, blood_pressure, pulse → compiler OPT (*.v2.p3_0b)
 //   * procedure              → minimal_action.en.v1 (ACTION-shape)
 //   * medication, allergy,
 //     diagnosis              → GAP (loggat för P3.0b)
@@ -30,8 +29,12 @@ export interface TemplateMapping {
     | 'evaluation_allergy';
   /** True om mapping går via fixture; false när P3.0b producerat egen OPT. */
   viaFixture: boolean;
-  /** Krävs för observation_p3_vitals — CKM element/concept labels. */
-  p3Observation?: { valueElementName: string; conceptName: string };
+  /** Krävs för observation_p3_vitals — CKM element/concept labels + optional node paths. */
+  p3Observation?: {
+    valueElementName: string;
+    conceptName: string;
+    nodeIds?: { history: string; event: string; itemTree: string; valueElement: string };
+  };
 }
 
 const EVENT_TO_TEMPLATE: Record<string, TemplateMapping> = {
@@ -42,18 +45,24 @@ const EVENT_TO_TEMPLATE: Record<string, TemplateMapping> = {
     viaFixture: false,
     p3Observation: { valueElementName: 'Temperature', conceptName: 'Body temperature' },
   },
-  // Vitals — BP/pulse kvar på time_series.en.v1 tills pulse.v2 / blood_pressure.v2 P3-OPT i CI
   'core.clinical.observation.vitals.blood_pressure': {
-    templateId: 'time_series.en.v1',
-    archetypeNodeId: 'openEHR-EHR-OBSERVATION.time_series.v1',
-    compositionShape: 'observation_time_series',
-    viaFixture: true,
+    templateId: 'blood_pressure.v2.p3_0b',
+    archetypeNodeId: 'openEHR-EHR-OBSERVATION.blood_pressure.v2',
+    compositionShape: 'observation_p3_vitals',
+    viaFixture: false,
+    p3Observation: {
+      valueElementName: 'Systolic',
+      conceptName: 'Blood pressure',
+      // Förenklad vitals-payload: ett värde → systolic ELEMENT[at0004] (inte diastolic).
+      nodeIds: { history: 'at0001', event: 'at0006', itemTree: 'at0003', valueElement: 'at0004' },
+    },
   },
   'core.clinical.observation.vitals.pulse': {
-    templateId: 'time_series.en.v1',
-    archetypeNodeId: 'openEHR-EHR-OBSERVATION.time_series.v1',
-    compositionShape: 'observation_time_series',
-    viaFixture: true,
+    templateId: 'pulse.v2.p3_0b',
+    archetypeNodeId: 'openEHR-EHR-OBSERVATION.pulse.v2',
+    compositionShape: 'observation_p3_vitals',
+    viaFixture: false,
+    p3Observation: { valueElementName: 'Rate', conceptName: 'Pulse' },
   },
   // Procedure — går till minimal_action.en.v1 (ACTION-shape)
   'core.clinical.procedure.completed': {

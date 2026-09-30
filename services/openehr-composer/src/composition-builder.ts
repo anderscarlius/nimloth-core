@@ -106,6 +106,8 @@ function archetypeIdForTemplate(templateId: string): string {
       return 'openEHR-EHR-COMPOSITION.minimal.v1';
     case 'body_temperature.v2.p3_0b':
     case 'body_weight.v2.p3_0b':
+    case 'blood_pressure.v2.p3_0b':
+    case 'pulse.v2.p3_0b':
       return 'openEHR-EHR-COMPOSITION.minimal.v1';
     default:
       return `openEHR-EHR-COMPOSITION.${templateId}`;
@@ -143,6 +145,7 @@ function buildObservationP3Vitals(
     units,
     valueElementName: meta?.valueElementName ?? 'value',
     conceptName: meta?.conceptName ?? 'Observation',
+    nodeIds: meta?.nodeIds,
     composerName: opts.composerName,
     startTime: time,
   });

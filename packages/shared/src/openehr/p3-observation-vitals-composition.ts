@@ -7,21 +7,39 @@ const EN_LANGUAGE = { terminology_id: { value: 'ISO_639-1' }, code_string: 'en' 
 const SE_TERRITORY = { terminology_id: { value: 'ISO_3166-1' }, code_string: 'SE' } as const;
 const openEhrTerm = (code: string) => ({ terminology_id: { value: 'openehr' }, code_string: code });
 
+/** Default CKM paths for body_temperature / body_weight / pulse.v2. */
+export interface P3ObservationVitalsNodeIds {
+  history: string;
+  event: string;
+  itemTree: string;
+  valueElement: string;
+}
+
+const DEFAULT_P3_VITALS_NODE_IDS: P3ObservationVitalsNodeIds = {
+  history: 'at0002',
+  event: 'at0003',
+  itemTree: 'at0001',
+  valueElement: 'at0004',
+};
+
 export interface P3ObservationVitalsSpec {
   templateId: string;
   observationArchetypeId: string;
   /** DV_QUANTITY magnitude (synthetic, dataclass 0). */
   magnitude: number;
   units: string;
-  /** ELEMENT[at0004] label in archetype (Weight / Temperature). */
+  /** ELEMENT value label in archetype (Weight / Temperature / Rate / Systolic). */
   valueElementName: string;
   conceptName: string;
   composerName?: string;
   startTime: string;
+  /** Override when archetype HISTORY/EVENT paths differ (e.g. blood_pressure.v2). */
+  nodeIds?: P3ObservationVitalsNodeIds;
 }
 
 export function buildP3ObservationVitalsComposition(spec: P3ObservationVitalsSpec): Record<string, unknown> {
   const time = spec.startTime;
+  const nodes = spec.nodeIds ?? DEFAULT_P3_VITALS_NODE_IDS;
   return {
     _type: 'COMPOSITION',
     name: { value: spec.conceptName },
@@ -69,23 +87,23 @@ export function buildP3ObservationVitalsComposition(spec: P3ObservationVitalsSpe
         data: {
           _type: 'HISTORY',
           name: { value: 'history' },
-          archetype_node_id: 'at0002',
+          archetype_node_id: nodes.history,
           origin: { value: time },
           events: [
             {
               _type: 'POINT_EVENT',
               name: { value: 'Any event' },
-              archetype_node_id: 'at0003',
+              archetype_node_id: nodes.event,
               time: { value: time },
               data: {
                 _type: 'ITEM_TREE',
                 name: { value: 'Simple' },
-                archetype_node_id: 'at0001',
+                archetype_node_id: nodes.itemTree,
                 items: [
                   {
                     _type: 'ELEMENT',
                     name: { value: spec.valueElementName },
-                    archetype_node_id: 'at0004',
+                    archetype_node_id: nodes.valueElement,
                     value: {
                       _type: 'DV_QUANTITY',
                       magnitude: spec.magnitude,

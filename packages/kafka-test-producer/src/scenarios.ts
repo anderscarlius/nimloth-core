@@ -40,7 +40,7 @@ export function bodyTemperatureEvent(value: number, units = '°C', offsetMin = 0
 }
 
 export function bloodPressureEvent(systolic: number, _diastolic: number, offsetMin = 0): ClinicalEvent {
-  // Fixture time_series.en.v1 har bara ett DV_QUANTITY-fält; vi skickar systolic
+  // Förenklad systolic-värde (composer mappar till blood_pressure.v2.p3_0b / ELEMENT[at0004]).
   // som primärt värde och loggar att diastolic-paret är fixture-limitation.
   return {
     event_id: randomUUID(),

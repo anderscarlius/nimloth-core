@@ -30,12 +30,23 @@ describe('vitals → compiler OPT mapping', () => {
     expect(mapping!.archetypeNodeId).toBe('openEHR-EHR-OBSERVATION.body_temperature.v2');
   });
 
-  it('blood_pressure still uses time_series.en.v1 fixture', () => {
+  it('blood_pressure maps to blood_pressure.v2.p3_0b with BP-specific node ids', () => {
     const mapping = mapEventToTemplate(
       vitalsEvent('core.clinical.observation.vitals.blood_pressure', { value: 120, units: 'mm[Hg]' }),
     );
-    expect(mapping!.templateId).toBe('time_series.en.v1');
-    expect(mapping!.viaFixture).toBe(true);
+    expect(mapping!.templateId).toBe('blood_pressure.v2.p3_0b');
+    expect(mapping!.viaFixture).toBe(false);
+    expect(mapping!.compositionShape).toBe('observation_p3_vitals');
+    expect(mapping!.p3Observation?.nodeIds?.event).toBe('at0006');
+  });
+
+  it('pulse maps to pulse.v2.p3_0b (not time_series fixture)', () => {
+    const mapping = mapEventToTemplate(
+      vitalsEvent('core.clinical.observation.vitals.pulse', { value: 72, units: '/min' }),
+    );
+    expect(mapping!.templateId).toBe('pulse.v2.p3_0b');
+    expect(mapping!.viaFixture).toBe(false);
+    expect(mapping!.archetypeNodeId).toBe('openEHR-EHR-OBSERVATION.pulse.v2');
   });
 
   it('buildComposition for body_temperature uses P3 node ids and real units', () => {
@@ -65,5 +76,26 @@ describe('vitals → compiler OPT mapping', () => {
 
     const fixtureGaps = gaps.getGaps().filter((g) => g.kind === 'fixture_limitation');
     expect(fixtureGaps.length).toBe(0);
+  });
+
+  it('buildComposition for blood_pressure uses systolic path and mm[Hg]', () => {
+    const event = vitalsEvent('core.clinical.observation.vitals.blood_pressure', {
+      value: 118,
+      units: 'mm[Hg]',
+    });
+    const mapping = mapEventToTemplate(event)!;
+    const gaps = new GapTracker();
+    const composition = buildComposition(event, mapping, gaps);
+
+    const content = composition.content as Array<Record<string, unknown>>;
+    const history = (content[0].data as { events: Array<Record<string, unknown>> }).events[0];
+    expect(history.archetype_node_id).toBe('at0006');
+
+    const items = (
+      (history.data as { items: Array<{ value: { magnitude: number; units: string } }> }).items
+    );
+    expect(items[0].value.magnitude).toBe(118);
+    expect(items[0].value.units).toBe('mm[Hg]');
+    expect(gaps.getGaps().filter((g) => g.kind === 'fixture_limitation').length).toBe(0);
   });
 });
