@@ -191,7 +191,7 @@ describe('DP-MF2 — AQL smoke (synthetic dataclass 0)', () => {
         {
           _type: 'OBSERVATION',
           name: { value: 'Body temperature' },
-          archetype_node_id: 'at0000',
+          archetype_node_id: 'openEHR-EHR-OBSERVATION.body_temperature.v2',
           archetype_details: {
             _type: 'ARCHETYPED',
             archetype_id: { value: 'openEHR-EHR-OBSERVATION.body_temperature.v2.1.9' },
