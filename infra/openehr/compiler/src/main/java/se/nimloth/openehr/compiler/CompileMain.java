@@ -211,9 +211,10 @@ public class CompileMain {
             conversionResult);
         nodeIdConverter.convert();
 
-        String archetypeId = archetype.getArchetypeId() != null
-            ? archetype.getArchetypeId().getFullId()
-            : adlFile.getFileName().toString().replace(".adl", "");
+        // Stabil arketyp-id = incheckat ADL-filnamn (t.ex. …body_weight.v2), inte ADL2-semver
+        // (…body_weight.v2.1.12) — EHRbase composition-validering matchar archetype_details mot OPT.
+        String sourceFileStem = adlFile.getFileName().toString().replace(".adl", "");
+        String archetypeId = sourceFileStem;
 
         FlattenerConfiguration config = FlattenerConfiguration.forOperationalTemplate();
         Flattener flattener = new Flattener(new SimpleArchetypeRepository(), BuiltinReferenceModels.getMetaModels(), config);
@@ -233,7 +234,6 @@ public class CompileMain {
         // skriver om versionen till fullt semver (t.ex. "v2.1.9"), vilket
         // gjorde ett tidigare försök att derivera template_id från
         // archetype_id oläsbart (blev bara "v2.1.9.p3_0b").
-        String sourceFileStem = adlFile.getFileName().toString().replace(".adl", "");
         String conceptSegment = sourceFileStem.contains(".")
             ? sourceFileStem.substring(sourceFileStem.indexOf('.') + 1)
             : archetypeId;

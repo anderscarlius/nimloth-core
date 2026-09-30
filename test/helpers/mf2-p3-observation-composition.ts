@@ -53,8 +53,7 @@ export function buildP3ObservationVitalsComposition(spec: P3ObservationVitalsSpe
       {
         _type: 'OBSERVATION',
         name: { value: spec.conceptName },
-        // P3.0b OPT slots use at0000 on C_ARCHETYPE_ROOT; EHRbase matches content by slot node_id.
-        archetype_node_id: 'at0000',
+        archetype_node_id: spec.observationArchetypeId,
         archetype_details: {
           _type: 'ARCHETYPED',
           archetype_id: { value: spec.observationArchetypeId },
