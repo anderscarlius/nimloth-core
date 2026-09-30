@@ -121,12 +121,16 @@ describe('DP-MF2 — EHRbase round-trip (compiler OPT)', () => {
 });
 
 describe('DP-MF2 — AQL smoke (synthetic dataclass 0)', () => {
-  const TEMPLATE_ID = 'body_temperature.v2.p3_0b';
+  // Reference fixture template (Designer-export, at0000 roots) — same pattern as openehr-composer.
+  // Compiler OPT round-trip is asserted separately; full composition against P3.0b templates is a known gap.
+  const FIXTURES_DIR = join(REPO_ROOT, 'infra/openehr/test-fixtures');
+  const TEMPLATE_ID = 'minimal_action.en.v1';
   const SUBJECT_SCHEME = 'nimloth-mf2-synthetic';
+  const SYNTHETIC_TEXT = 'MF2 CI synthetic — not clinical data.';
 
   beforeAll(async () => {
     await waitForEhrbase();
-    const xml = readFileSync(join(TEMPLATES_DIR, `${TEMPLATE_ID}.opt`), 'utf-8');
+    const xml = readFileSync(join(FIXTURES_DIR, 'ehrbase-test-minimal-action.opt'), 'utf-8');
     const post = await postOpt(xml);
     expect([201, 409]).toContain(post.status);
   }, 90_000);
@@ -162,7 +166,7 @@ describe('DP-MF2 — AQL smoke (synthetic dataclass 0)', () => {
     });
     const composition = {
       _type: 'COMPOSITION',
-      name: { value: 'Body temperature' },
+      name: { value: 'Minimal action' },
       archetype_node_id: 'openEHR-EHR-COMPOSITION.minimal.v1',
       archetype_details: {
         _type: 'ARCHETYPED',
@@ -189,12 +193,12 @@ describe('DP-MF2 — AQL smoke (synthetic dataclass 0)', () => {
       },
       content: [
         {
-          _type: 'OBSERVATION',
-          name: { value: 'Body temperature' },
-          archetype_node_id: 'openEHR-EHR-OBSERVATION.body_temperature.v2',
+          _type: 'ACTION',
+          name: { value: 'Minimal' },
+          archetype_node_id: 'openEHR-EHR-ACTION.minimal.v1',
           archetype_details: {
             _type: 'ARCHETYPED',
-            archetype_id: { value: 'openEHR-EHR-OBSERVATION.body_temperature.v2.1.9' },
+            archetype_id: { value: 'openEHR-EHR-ACTION.minimal.v1' },
             rm_version: '1.0.4',
           },
           language: { terminology_id: { value: 'ISO_639-1' }, code_string: 'en' },
@@ -204,34 +208,25 @@ describe('DP-MF2 — AQL smoke (synthetic dataclass 0)', () => {
             code_string: 'UTF-8',
           },
           subject: { _type: 'PARTY_SELF' },
-          data: {
-            _type: 'HISTORY',
-            archetype_node_id: 'at0002',
-            name: { value: 'History' },
-            origin: { value: now },
-            events: [
+          time: { value: now },
+          ism_transition: {
+            _type: 'ISM_TRANSITION',
+            current_state: {
+              _type: 'DV_CODED_TEXT',
+              value: 'completed',
+              defining_code: openEhrTerm('532'),
+            },
+          },
+          description: {
+            _type: 'ITEM_TREE',
+            name: { value: 'Tree' },
+            archetype_node_id: 'at0001',
+            items: [
               {
-                _type: 'POINT_EVENT',
-                archetype_node_id: 'at0003',
-                name: { value: 'Any event' },
-                time: { value: now },
-                data: {
-                  _type: 'ITEM_TREE',
-                  archetype_node_id: 'at0001',
-                  name: { value: 'Tree' },
-                  items: [
-                    {
-                      _type: 'ELEMENT',
-                      archetype_node_id: 'at0004',
-                      name: { value: 'Temperature' },
-                      value: {
-                        _type: 'DV_QUANTITY',
-                        magnitude: 37.2,
-                        units: 'Cel',
-                      },
-                    },
-                  ],
-                },
+                _type: 'ELEMENT',
+                name: { value: 'description' },
+                archetype_node_id: 'at0002',
+                value: { _type: 'DV_TEXT', value: SYNTHETIC_TEXT },
               },
             ],
           },
@@ -255,11 +250,11 @@ describe('DP-MF2 — AQL smoke (synthetic dataclass 0)', () => {
     }
 
     const aql = {
-      q: `SELECT o/data[at0002]/events[at0003]/data[at0001]/items[at0004]/value/magnitude AS temp
+      q: `SELECT a/description/items[at0002]/value/value AS note
           FROM EHR e[ehr_id/value='${ehrId}']
           CONTAINS COMPOSITION c
-          CONTAINS OBSERVATION o[openEHR-EHR-OBSERVATION.body_temperature.v2]
-          WHERE o/data[at0002]/events[at0003]/data[at0001]/items[at0004]/value/magnitude = 37.2`,
+          CONTAINS ACTION a[openEHR-EHR-ACTION.minimal.v1]
+          WHERE a/description/items[at0002]/value/value = '${SYNTHETIC_TEXT}'`,
     };
     const aqlResp = await fetch(`${EHRBASE_URL}/ehrbase/rest/openehr/v1/query/aql`, {
       method: 'POST',
@@ -269,6 +264,6 @@ describe('DP-MF2 — AQL smoke (synthetic dataclass 0)', () => {
     expect(aqlResp.status).toBe(200);
     const result = (await aqlResp.json()) as { rows: unknown[][] };
     expect(result.rows.length).toBeGreaterThanOrEqual(1);
-    expect(Number(result.rows[0][0])).toBe(37.2);
+    expect(result.rows[0][0]).toBe(SYNTHETIC_TEXT);
   }, 60_000);
 });
