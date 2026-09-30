@@ -195,7 +195,7 @@ async function countUnsupportedSources(
 
 function reasonFor(tpl: string): string {
   if (tpl.startsWith('time_series')) {
-    return 'vital_signs ligger fortfarande i time_series.en.v1 (fixture). blood_pressure.v2 kräver SDG-10 Fas 2.';
+    return 'openehr-composer skriver BP/puls/temp mot compiler-OPT; OMOP measurement-mappning för blood_pressure.v2 är fortfarande ofullständig (SDG-10 Fas 2).';
   }
   if (tpl.startsWith('problem_diagnosis')) return 'condition_occurrence är skelett i Del 1 — fylls i Del 2.';
   if (tpl.startsWith('adverse_reaction')) return 'omop.observation eller specifik tabell krävs — ej i Del 1.';
