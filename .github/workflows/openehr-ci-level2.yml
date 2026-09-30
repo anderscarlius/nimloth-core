@@ -81,6 +81,9 @@ jobs:
       - name: Compile ADL → OPT (P3.0b output for MF2)
         run: pnpm openehr:compile
 
+      - name: Build shared package (MF2 p3-observation-vitals export)
+        run: pnpm --filter @nimloth-core/shared build
+
       - name: Wait for EHRbase
         run: |
           for i in {1..30}; do
