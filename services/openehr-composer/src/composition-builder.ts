@@ -128,15 +128,39 @@ function buildObservationP3Vitals(
     gaps.log('unsupported_payload', event.event_type, 'missing p3Observation metadata on mapping', []);
   }
 
-  const magnitude = readNumber(event.payload, 'value');
+  const isBloodPressure = event.event_type.endsWith('blood_pressure');
+  const magnitude = isBloodPressure
+    ? (readNumber(event.payload, 'systolic') ?? readNumber(event.payload, 'value'))
+    : readNumber(event.payload, 'value');
+  const diastolicMagnitude = isBloodPressure ? readNumber(event.payload, 'diastolic') : null;
   const units = readString(event.payload, 'units') ?? unitsForEventType(event.event_type) ?? '1';
   const time = readString(event.payload, 'time') ?? opts.startTime ?? event.timestamp;
 
   if (magnitude == null) {
-    gaps.log('unsupported_payload', event.event_type, 'missing payload.value (number)', ['DV_QUANTITY.magnitude']);
+    gaps.log(
+      'unsupported_payload',
+      event.event_type,
+      isBloodPressure ? 'missing payload.systolic or payload.value (number)' : 'missing payload.value (number)',
+      ['DV_QUANTITY.magnitude'],
+    );
   }
 
   gaps.countConstraint('DV_QUANTITY');
+  if (diastolicMagnitude != null) {
+    gaps.countConstraint('DV_QUANTITY');
+  }
+
+  const extraQuantities =
+    diastolicMagnitude != null && meta?.diastolicElement
+      ? [
+          {
+            magnitude: diastolicMagnitude,
+            units,
+            valueElementName: meta.diastolicElement.valueElementName,
+            archetypeNodeId: meta.diastolicElement.archetypeNodeId,
+          },
+        ]
+      : undefined;
 
   return buildP3ObservationVitalsComposition({
     templateId: mapping.templateId,
@@ -146,6 +170,7 @@ function buildObservationP3Vitals(
     valueElementName: meta?.valueElementName ?? 'value',
     conceptName: meta?.conceptName ?? 'Observation',
     nodeIds: meta?.nodeIds,
+    extraQuantities,
     composerName: opts.composerName,
     startTime: time,
   });

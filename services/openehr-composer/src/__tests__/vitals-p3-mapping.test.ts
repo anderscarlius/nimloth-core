@@ -78,9 +78,10 @@ describe('vitals → compiler OPT mapping', () => {
     expect(fixtureGaps.length).toBe(0);
   });
 
-  it('buildComposition for blood_pressure uses systolic path and mm[Hg]', () => {
+  it('buildComposition for blood_pressure writes systolic and diastolic in same observation', () => {
     const event = vitalsEvent('core.clinical.observation.vitals.blood_pressure', {
       value: 118,
+      diastolic: 76,
       units: 'mm[Hg]',
     });
     const mapping = mapEventToTemplate(event)!;
@@ -92,10 +93,32 @@ describe('vitals → compiler OPT mapping', () => {
     expect(history.archetype_node_id).toBe('at0006');
 
     const items = (
-      (history.data as { items: Array<{ value: { magnitude: number; units: string } }> }).items
-    );
+      history.data as {
+        items: Array<{ archetype_node_id: string; value: { magnitude: number; units: string } }>;
+      }
+    ).items;
+    expect(items).toHaveLength(2);
+    expect(items[0].archetype_node_id).toBe('at0004');
     expect(items[0].value.magnitude).toBe(118);
+    expect(items[1].archetype_node_id).toBe('at0005');
+    expect(items[1].value.magnitude).toBe(76);
     expect(items[0].value.units).toBe('mm[Hg]');
+    expect(items[1].value.units).toBe('mm[Hg]');
     expect(gaps.getGaps().filter((g) => g.kind === 'fixture_limitation').length).toBe(0);
+  });
+
+  it('buildComposition for blood_pressure keeps systolic-only payload backward compatible', () => {
+    const event = vitalsEvent('core.clinical.observation.vitals.blood_pressure', {
+      value: 130,
+      units: 'mm[Hg]',
+    });
+    const mapping = mapEventToTemplate(event)!;
+    const composition = buildComposition(event, mapping, new GapTracker());
+    const items = (
+      (composition.content as Array<Record<string, unknown>>)[0].data as {
+        events: Array<{ data: { items: unknown[] } }>;
+      }
+    ).events[0].data.items;
+    expect(items).toHaveLength(1);
   });
 });

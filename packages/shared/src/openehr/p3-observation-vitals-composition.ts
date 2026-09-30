@@ -22,6 +22,13 @@ const DEFAULT_P3_VITALS_NODE_IDS: P3ObservationVitalsNodeIds = {
   valueElement: 'at0004',
 };
 
+export interface P3ObservationVitalsExtraQuantity {
+  magnitude: number;
+  units: string;
+  valueElementName: string;
+  archetypeNodeId: string;
+}
+
 export interface P3ObservationVitalsSpec {
   templateId: string;
   observationArchetypeId: string;
@@ -35,6 +42,26 @@ export interface P3ObservationVitalsSpec {
   startTime: string;
   /** Override when archetype HISTORY/EVENT paths differ (e.g. blood_pressure.v2). */
   nodeIds?: P3ObservationVitalsNodeIds;
+  /** Additional DV_QUANTITY elements in the same ITEM_TREE (e.g. diastolic BP). */
+  extraQuantities?: P3ObservationVitalsExtraQuantity[];
+}
+
+function buildQuantityElement(
+  valueElementName: string,
+  archetypeNodeId: string,
+  magnitude: number,
+  units: string,
+): Record<string, unknown> {
+  return {
+    _type: 'ELEMENT',
+    name: { value: valueElementName },
+    archetype_node_id: archetypeNodeId,
+    value: {
+      _type: 'DV_QUANTITY',
+      magnitude,
+      units,
+    },
+  };
 }
 
 export function buildP3ObservationVitalsComposition(spec: P3ObservationVitalsSpec): Record<string, unknown> {
@@ -100,16 +127,15 @@ export function buildP3ObservationVitalsComposition(spec: P3ObservationVitalsSpe
                 name: { value: 'Simple' },
                 archetype_node_id: nodes.itemTree,
                 items: [
-                  {
-                    _type: 'ELEMENT',
-                    name: { value: spec.valueElementName },
-                    archetype_node_id: nodes.valueElement,
-                    value: {
-                      _type: 'DV_QUANTITY',
-                      magnitude: spec.magnitude,
-                      units: spec.units,
-                    },
-                  },
+                  buildQuantityElement(
+                    spec.valueElementName,
+                    nodes.valueElement,
+                    spec.magnitude,
+                    spec.units,
+                  ),
+                  ...(spec.extraQuantities ?? []).map((q) =>
+                    buildQuantityElement(q.valueElementName, q.archetypeNodeId, q.magnitude, q.units),
+                  ),
                 ],
               },
             },
