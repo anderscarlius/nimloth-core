@@ -53,6 +53,8 @@ const COMPILER_TEMPLATES = [
     conceptName: 'Blood pressure',
     units: 'mm[Hg]',
     aqlMagnitude: 125,
+    aqlDiastolicMagnitude: 82,
+    diastolicNodeId: 'at0005',
     nodeIds: { history: 'at0001', event: 'at0006', itemTree: 'at0003', valueElement: 'at0004' },
   },
 ] as const;
@@ -151,6 +153,8 @@ type AqlSmokeTemplate = (typeof COMPILER_TEMPLATES)[number] & {
   valueElementName: string;
   conceptName: string;
   units: string;
+  aqlDiastolicMagnitude?: number;
+  diastolicNodeId?: string;
   nodeIds?: {
     history: string;
     event: string;
@@ -209,6 +213,17 @@ describe('DP-MF2 — AQL smoke compiler OPT (synthetic dataclass 0)', () => {
       valueElementName: P3_TEMPLATE.valueElementName,
       conceptName: P3_TEMPLATE.conceptName,
       nodeIds: P3_TEMPLATE.nodeIds,
+      extraQuantities:
+        P3_TEMPLATE.aqlDiastolicMagnitude != null && P3_TEMPLATE.diastolicNodeId
+          ? [
+              {
+                magnitude: P3_TEMPLATE.aqlDiastolicMagnitude,
+                units: P3_TEMPLATE.units,
+                valueElementName: 'Diastolic',
+                archetypeNodeId: P3_TEMPLATE.diastolicNodeId,
+              },
+            ]
+          : undefined,
       startTime: now,
     });
 
@@ -243,6 +258,25 @@ describe('DP-MF2 — AQL smoke compiler OPT (synthetic dataclass 0)', () => {
     const result = (await aqlResp.json()) as { rows: unknown[][] };
     expect(result.rows.length).toBeGreaterThanOrEqual(1);
     expect(result.rows[0][0]).toBe(SYNTHETIC_MAGNITUDE);
+
+    if (P3_TEMPLATE.aqlDiastolicMagnitude != null && P3_TEMPLATE.diastolicNodeId) {
+      const diastolicAql = {
+        q: `SELECT o/data/events/data/items[${P3_TEMPLATE.diastolicNodeId}]/value/magnitude AS magnitude
+            FROM EHR e[ehr_id/value='${ehrId}']
+            CONTAINS COMPOSITION c
+            CONTAINS OBSERVATION o[${P3_TEMPLATE.archetypeId}]
+            WHERE o/data/events/data/items[${P3_TEMPLATE.diastolicNodeId}]/value/magnitude = ${P3_TEMPLATE.aqlDiastolicMagnitude}`,
+      };
+      const diastolicResp = await fetch(`${EHRBASE_URL}/ehrbase/rest/openehr/v1/query/aql`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(diastolicAql),
+      });
+      expect(diastolicResp.status).toBe(200);
+      const diastolicResult = (await diastolicResp.json()) as { rows: unknown[][] };
+      expect(diastolicResult.rows.length).toBeGreaterThanOrEqual(1);
+      expect(diastolicResult.rows[0][0]).toBe(P3_TEMPLATE.aqlDiastolicMagnitude);
+    }
   }, 60_000);
   }
 });

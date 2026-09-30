@@ -64,8 +64,7 @@ public final class OptPathInventory {
                 if (attrName != null && !attrName.isBlank()) {
                     String nextPrefix = path.isEmpty() ? "/" + attrName : path + "/" + attrName;
                     out.add(nextPrefix);
-                    Element childObject = firstChildElement(el, "children");
-                    if (childObject != null) {
+                    for (Element childObject : directChildElements(el, "children")) {
                         walk(childObject, nextPrefix, out);
                     }
                 }
@@ -77,18 +76,25 @@ public final class OptPathInventory {
     }
 
     private static Element firstChildElement(Element parent, String localName) {
+        List<Element> matches = directChildElements(parent, localName);
+        return matches.isEmpty() ? null : matches.get(0);
+    }
+
+    private static List<Element> directChildElements(Element parent, String localName) {
+        List<Element> out = new ArrayList<>();
         NodeList nodes = parent.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
             Node n = nodes.item(i);
-            if (n.getNodeType() == Node.ELEMENT_NODE) {
-                Element el = (Element) n;
-                String local = el.getLocalName() != null ? el.getLocalName() : el.getTagName();
-                if (localName.equals(local)) {
-                    return el;
-                }
+            if (n.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+            Element el = (Element) n;
+            String local = el.getLocalName() != null ? el.getLocalName() : el.getTagName();
+            if (localName.equals(local)) {
+                out.add(el);
             }
         }
-        return null;
+        return out;
     }
 
     private static String textOfDirectChild(Element parent, String localName) {

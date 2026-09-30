@@ -39,16 +39,19 @@ export function bodyTemperatureEvent(value: number, units = '°C', offsetMin = 0
   };
 }
 
-export function bloodPressureEvent(systolic: number, _diastolic: number, offsetMin = 0): ClinicalEvent {
-  // Förenklad systolic-värde (composer mappar till blood_pressure.v2.p3_0b / ELEMENT[at0004]).
-  // som primärt värde och loggar att diastolic-paret är fixture-limitation.
+export function bloodPressureEvent(systolic: number, diastolic: number, offsetMin = 0): ClinicalEvent {
   return {
     event_id: randomUUID(),
     event_type: 'core.clinical.observation.vitals.blood_pressure',
     patient_id: FRU_ANDERSSON_PNR,
     source_system: 'kafka-test-producer',
     timestamp: now(offsetMin),
-    payload: { value: systolic, units: 'mm[Hg]', position: 'sitting' },
+    payload: {
+      value: systolic,
+      diastolic,
+      units: 'mm[Hg]',
+      position: 'sitting',
+    },
   };
 }
 

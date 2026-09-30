@@ -34,6 +34,7 @@ export interface TemplateMapping {
     valueElementName: string;
     conceptName: string;
     nodeIds?: { history: string; event: string; itemTree: string; valueElement: string };
+    diastolicElement?: { valueElementName: string; archetypeNodeId: string };
   };
 }
 
@@ -53,8 +54,8 @@ const EVENT_TO_TEMPLATE: Record<string, TemplateMapping> = {
     p3Observation: {
       valueElementName: 'Systolic',
       conceptName: 'Blood pressure',
-      // Förenklad vitals-payload: ett värde → systolic ELEMENT[at0004] (inte diastolic).
       nodeIds: { history: 'at0001', event: 'at0006', itemTree: 'at0003', valueElement: 'at0004' },
+      diastolicElement: { valueElementName: 'Diastolic', archetypeNodeId: 'at0005' },
     },
   },
   'core.clinical.observation.vitals.pulse': {
