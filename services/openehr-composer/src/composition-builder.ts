@@ -13,6 +13,7 @@
 // (DV_QUANTITY, DV_CODED_TEXT etc) hos GapTracker så P3.1-rapporten
 // kan svara på fråga 1 från sektion 8.3.
 
+import { buildP3ObservationVitalsComposition } from '@nimloth-core/shared/openehr/p3-observation-vitals-composition';
 import type { ClinicalEvent } from './types.js';
 import type { TemplateMapping } from './event-mapper.js';
 import type { GapTracker } from './gap-tracker.js';
@@ -36,6 +37,8 @@ export function buildComposition(
   switch (mapping.compositionShape) {
     case 'observation_time_series':
       return buildObservationTimeSeries(event, mapping, gaps, opts);
+    case 'observation_p3_vitals':
+      return buildObservationP3Vitals(event, mapping, gaps, opts);
     case 'action_minimal':
       return buildActionMinimal(event, mapping, gaps, opts);
     case 'evaluation_medication':
@@ -44,6 +47,10 @@ export function buildComposition(
       return buildEvaluationDiagnosis(event, mapping, gaps, opts);
     case 'evaluation_allergy':
       return buildEvaluationAllergy(event, mapping, gaps, opts);
+    default: {
+      const _exhaustive: never = mapping.compositionShape;
+      throw new Error(`Unsupported composition shape: ${_exhaustive}`);
+    }
   }
 }
 
@@ -97,9 +104,48 @@ function archetypeIdForTemplate(templateId: string): string {
       return 'openEHR-EHR-COMPOSITION.minimal.v1';
     case 'adverse_reaction_risk.v2':
       return 'openEHR-EHR-COMPOSITION.minimal.v1';
+    case 'body_temperature.v2.p3_0b':
+    case 'body_weight.v2.p3_0b':
+      return 'openEHR-EHR-COMPOSITION.minimal.v1';
     default:
       return `openEHR-EHR-COMPOSITION.${templateId}`;
   }
+}
+
+// ============================================================
+// Shape 1b: observation_p3_vitals (compiler OPT — MF2-shared builder)
+// ============================================================
+function buildObservationP3Vitals(
+  event: ClinicalEvent,
+  mapping: TemplateMapping,
+  gaps: GapTracker,
+  opts: BuildOptions,
+): Record<string, unknown> {
+  const meta = mapping.p3Observation;
+  if (!meta) {
+    gaps.log('unsupported_payload', event.event_type, 'missing p3Observation metadata on mapping', []);
+  }
+
+  const magnitude = readNumber(event.payload, 'value');
+  const units = readString(event.payload, 'units') ?? unitsForEventType(event.event_type) ?? '1';
+  const time = readString(event.payload, 'time') ?? opts.startTime ?? event.timestamp;
+
+  if (magnitude == null) {
+    gaps.log('unsupported_payload', event.event_type, 'missing payload.value (number)', ['DV_QUANTITY.magnitude']);
+  }
+
+  gaps.countConstraint('DV_QUANTITY');
+
+  return buildP3ObservationVitalsComposition({
+    templateId: mapping.templateId,
+    observationArchetypeId: mapping.archetypeNodeId,
+    magnitude: magnitude ?? 0,
+    units,
+    valueElementName: meta?.valueElementName ?? 'value',
+    conceptName: meta?.conceptName ?? 'Observation',
+    composerName: opts.composerName,
+    startTime: time,
+  });
 }
 
 // ============================================================
