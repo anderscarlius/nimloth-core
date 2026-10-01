@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://core.nimloth.io/schemas/composition-committed.schema.json",
+  "title": "CompositionCommitted",
+  "description": "Domänhändelse när en openEHR-composition har committats i CDR (EHRbase). WP-EVT1 v1.",
+  "allOf": [{ "$ref": "base-event.schema.json" }],
+  "required": ["payload"],
+  "properties": {
+    "event_type": {
+      "const": "core.domain.composition.committed"
+    },
+    "event_version": {
+      "const": "1.0.0"
+    },
+    "source_system": {
+      "enum": ["core"]
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "composition_uid",
+        "ehr_id",
+        "template_id",
+        "committed_at",
+        "trigger_event_id",
+        "trigger_event_type"
+      ],
+      "properties": {
+        "composition_uid": {
+          "type": "string",
+          "minLength": 1,
+          "description": "openEHR composition UID (EHRbase)"
+        },
+        "ehr_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "template_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "committed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "trigger_event_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Id för inkommande kliniskt event som ledde till composition"
+        },
+        "trigger_event_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "canonical_store": {
+          "type": "string",
+          "enum": ["openehr"]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

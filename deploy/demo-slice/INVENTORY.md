@@ -14,6 +14,10 @@ Datum: **2026-10-01** (WP-DEMO1). Syfte: välja **återanvändning** framför ny
 **Event-path:** Melior/Asynja Postgres → Debezium → Kafka → transform →
 `core.clinical.*` → fhir-facade materializer + openehr-composer.
 
+**Utgående CDR-domän (WP-EVT1):** efter composition-commit →
+`core.domain.composition.committed` (CompositionCommitted v1) →
+`domain-event-audit-sink` + `domain-event-lakehouse-stub` (profil `domain-events`).
+
 ## 2. Moria — fru-andersson-slice (skiss, GHCR)
 
 | Artefakt | Innehåll |

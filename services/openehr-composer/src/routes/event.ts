@@ -19,6 +19,7 @@ import type { OutboxWriter } from '../outbox/writer.js';
 import type { Pool } from '../db.js';
 import { mapEventToTemplate, isKnownGap } from '../event-mapper.js';
 import { buildComposition } from '../composition-builder.js';
+import type { CompositionCommittedPublisher } from '../domain-events/publisher.js';
 
 export interface EventDeps {
   pool: Pool;
@@ -33,6 +34,7 @@ export interface EventDeps {
     events_gap: number;
     events_failed: number;
   };
+  domainPublisher?: CompositionCommittedPublisher;
 }
 
 export function createEventRouter(deps: EventDeps): Router {
@@ -148,6 +150,9 @@ export function createEventRouter(deps: EventDeps): Router {
       const uid = await deps.ehrbase.postComposition(ehrId, mapping.templateId, composition);
       deps.stats.compositions_written += 1;
       await markOutboxCompleted(deps, outboxRow.id, uid, ehrId);
+      if (uid) {
+        await deps.domainPublisher?.publishAfterCommit(e, uid, ehrId, mapping.templateId);
+      }
       const result: EventResult = {
         status: 'composed',
         event_id: e.event_id,

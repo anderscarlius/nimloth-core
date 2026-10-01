@@ -48,3 +48,9 @@ jobs:
             echo "=== @nimloth-core/$pkg ==="
             pnpm --filter "@nimloth-core/$pkg" test
           done
+
+      - name: WP-EVT1 — domain event contract tests
+        run: |
+          pnpm --filter @nimloth-core/openehr-composer test
+          pnpm --filter @nimloth-core/domain-event-audit-sink test
+          pnpm --filter @nimloth-core/domain-event-lakehouse-stub test
