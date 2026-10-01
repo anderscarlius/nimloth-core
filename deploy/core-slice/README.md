@@ -105,3 +105,9 @@ docker compose -f docker-compose.ehrbase-only.yml -f docker-compose.eldar.yml co
 Full stack-demo (Kafka + FHIR + AQL-bevis) dokumenteras i
 [deploy/demo-slice/README.md](../demo-slice/README.md). Eldar **18124** är
 openEHR-ingång; unified på Eldar är operatörssteg efter separat godkännande.
+
+## WP-B72 (B7 nivå 2 minimal, från noll)
+
+Avtalad tjänstelista, lokal `from-scratch-local.sh`, CI-facit och Eldar-runbook:
+[deploy/b72-slice/README.md](../b72-slice/README.md). Live deploy på Eldar
+**kräver Anders-ja** — ingen SSH från cloud agent.

@@ -60,3 +60,12 @@ Används som **CI-bevis** att EHRbase + event-logik kan resas från noll.
 **Unified demo-path (B):** dokumenterad kedja = `./scripts/start.sh` (lokal) med
 bevis i `deploy/demo-slice/run-*.sh`. **Eldar** får portnot (**18124**) och pekar
 på framtida overlay — full unified på Eldar är **inte** scope i denna PR.
+
+## 6. WP-B72 (C3 — B7 nivå 2 minimal)
+
+| Artefakt | Innehåll |
+|----------|----------|
+| `deploy/b72-slice/SERVICE_LIST.md` | Tier A spine (16 tjänster) vs full 26-stack OUT |
+| `deploy/b72-slice/from-scratch-local.sh` | Noll → healthy (återanvänder `start.sh` + health) |
+| `scripts/wp-b72-ci-facit.sh` | compose config + bash -n utan secrets |
+| `spec/wp-b72-hel-stack-fran-noll.md` | Acceptansmappning Plan Bygg § C3 |
