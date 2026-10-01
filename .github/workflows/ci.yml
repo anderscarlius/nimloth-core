@@ -54,3 +54,8 @@ jobs:
           pnpm --filter @nimloth-core/openehr-composer test
           pnpm --filter @nimloth-core/domain-event-audit-sink test
           pnpm --filter @nimloth-core/domain-event-lakehouse-stub test
+
+      - name: WP-LH1 — bronze→silver lakehouse smoke
+        run: |
+          bash -n scripts/wp-lh1-bronze-silver-smoke.sh
+          ./scripts/wp-lh1-bronze-silver-smoke.sh

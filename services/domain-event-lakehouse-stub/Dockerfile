@@ -6,10 +6,12 @@ RUN corepack enable
 COPY package.json pnpm-workspace.yaml tsconfig.base.json ./
 COPY pnpm-lock.yaml* ./
 COPY packages/shared ./packages/shared
+COPY packages/lakehouse-pipeline ./packages/lakehouse-pipeline
 COPY services/domain-event-lakehouse-stub ./services/domain-event-lakehouse-stub
 
 RUN pnpm install --filter @nimloth-core/domain-event-lakehouse-stub... --frozen-lockfile=false
 RUN pnpm --filter @nimloth-core/shared build
+RUN pnpm --filter @nimloth-core/lakehouse-pipeline build
 RUN pnpm --filter @nimloth-core/domain-event-lakehouse-stub build
 
 FROM node:20-alpine AS runtime

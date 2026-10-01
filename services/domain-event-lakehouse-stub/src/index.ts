@@ -13,7 +13,12 @@ async function main(): Promise<void> {
     res.json({ status: 'ok', service: 'domain-event-lakehouse-stub' });
   });
   app.get('/stats', (_req, res) => {
-    res.json({ ...consumer.metrics, bronzePath: cfg.bronzePath });
+    res.json({
+      ...consumer.metrics,
+      bronzePath: cfg.bronzePath,
+      silverPath: cfg.silverPath,
+      clinicalVitalsTopic: cfg.clinicalVitalsTopic,
+    });
   });
 
   const server = app.listen(cfg.port, '0.0.0.0', () => {

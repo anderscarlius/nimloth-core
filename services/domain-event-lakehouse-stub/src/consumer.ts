@@ -2,21 +2,36 @@ import { appendFile } from 'node:fs/promises';
 import { Kafka, type Consumer } from 'kafkajs';
 import type { Logger } from 'pino';
 import { validateEvent, type CompositionCommittedEvent } from '@nimloth-core/shared';
+import {
+  buildBronzeCompositionRecord,
+  buildSilverBodyTemperatureRow,
+  canBuildSilverBodyTemperature,
+  ClinicalVitalsCache,
+  serializeBronzeLine,
+  serializeSilverLine,
+} from '@nimloth-core/lakehouse-pipeline';
 import type { StubConfig } from './config.js';
 
 export interface LakehouseStubMetrics {
+  clinicalCached: number;
   received: number;
-  appended: number;
+  bronzeAppended: number;
+  silverAppended: number;
   rejected: number;
+  silverSkippedNoJoin: number;
 }
 
 export class DomainEventLakehouseStubConsumer {
   private readonly kafka: Kafka;
   private readonly consumer: Consumer;
+  private readonly vitalsCache = new ClinicalVitalsCache();
   public readonly metrics: LakehouseStubMetrics = {
+    clinicalCached: 0,
     received: 0,
-    appended: 0,
+    bronzeAppended: 0,
+    silverAppended: 0,
     rejected: 0,
+    silverSkippedNoJoin: 0,
   };
 
   constructor(
@@ -36,19 +51,34 @@ export class DomainEventLakehouseStubConsumer {
 
   async start(): Promise<void> {
     await this.consumer.connect();
-    await this.consumer.subscribe({ topics: [this.config.topic], fromBeginning: false });
+    await this.consumer.subscribe({
+      topics: [this.config.domainTopic, this.config.clinicalVitalsTopic],
+      fromBeginning: false,
+    });
     await this.consumer.run({
-      eachMessage: async ({ message }) => {
+      eachMessage: async ({ topic, message }) => {
         if (!message.value) return;
-        this.metrics.received += 1;
         let parsed: unknown;
         try {
           parsed = JSON.parse(message.value.toString());
         } catch {
           this.metrics.rejected += 1;
-          this.logger.warn('lakehouse-stub: invalid JSON');
+          this.logger.warn({ topic }, 'lakehouse-stub: invalid JSON');
           return;
         }
+
+        if (topic === this.config.clinicalVitalsTopic) {
+          if (this.vitalsCache.rememberFromKafkaMessage(parsed)) {
+            this.metrics.clinicalCached += 1;
+          }
+          return;
+        }
+
+        if (topic !== this.config.domainTopic) {
+          return;
+        }
+
+        this.metrics.received += 1;
         const { ok, errors } = validateEvent('compositionCommitted', parsed);
         if (!ok) {
           this.metrics.rejected += 1;
@@ -56,22 +86,34 @@ export class DomainEventLakehouseStubConsumer {
           return;
         }
         const event = parsed as CompositionCommittedEvent;
-        const bronzeRow = {
-          ingested_at: new Date().toISOString(),
-          event_id: event.event_id,
-          composition_uid: event.payload.composition_uid,
-          ehr_id: event.payload.ehr_id,
-          template_id: event.payload.template_id,
-          patient_id: event.patient_id,
-          trigger_event_id: event.payload.trigger_event_id,
-        };
-        await appendFile(this.config.bronzePath, `${JSON.stringify(bronzeRow)}\n`, 'utf8');
-        this.metrics.appended += 1;
+        const bronze = buildBronzeCompositionRecord(event);
+        await appendFile(this.config.bronzePath, serializeBronzeLine(bronze), 'utf8');
+        this.metrics.bronzeAppended += 1;
+
+        if (!canBuildSilverBodyTemperature(bronze)) {
+          return;
+        }
+        const vital = this.vitalsCache.lookupForCompositionTrigger(
+          event.payload.trigger_event_id,
+          event.payload.trigger_event_type,
+        );
+        if (!vital) {
+          this.metrics.silverSkippedNoJoin += 1;
+          return;
+        }
+        const silver = buildSilverBodyTemperatureRow(bronze, vital);
+        await appendFile(this.config.silverPath, serializeSilverLine(silver), 'utf8');
+        this.metrics.silverAppended += 1;
       },
     });
     this.logger.info(
-      { topic: this.config.topic, bronzePath: this.config.bronzePath },
-      'lakehouse-stub consumer running',
+      {
+        domainTopic: this.config.domainTopic,
+        clinicalVitalsTopic: this.config.clinicalVitalsTopic,
+        bronzePath: this.config.bronzePath,
+        silverPath: this.config.silverPath,
+      },
+      'lakehouse-stub consumer running (bronze + silver smoke)',
     );
   }
 

@@ -649,6 +649,8 @@ services:
       KAFKA_GROUP_ID: domain-event-lakehouse-stub
       DOMAIN_COMPOSITION_TOPIC: core.domain.composition.committed
       LAKEHOUSE_BRONZE_PATH: /data/bronze-composition-committed.ndjson
+      LAKEHOUSE_SILVER_PATH: /data/silver-body-temperature.ndjson
+      LAKEHOUSE_CLINICAL_VITALS_TOPIC: core.clinical.observation.vitals
       LOG_LEVEL: info
     volumes:
       - domain-event-lakehouse-data:/data
