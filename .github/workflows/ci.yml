@@ -39,6 +39,11 @@ jobs:
           bash -n deploy/demo-slice/run-stack-health-check.sh
           bash -n deploy/demo-slice/run-aql-fhir-vitals-proof.sh
 
+      - name: WP-B72 — hel stack från noll (CI facit, inga hemligheter)
+        run: |
+          bash -n scripts/wp-b72-ci-facit.sh
+          ./scripts/wp-b72-ci-facit.sh
+
       - name: Build all workspaces
         run: pnpm -r build
 
