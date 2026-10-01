@@ -16,6 +16,7 @@ import encounterSchema from './encounter.schema.json' with { type: 'json' };
 import noteSchema from './note.schema.json' with { type: 'json' };
 import referralSchema from './referral.schema.json' with { type: 'json' };
 import auditSchema from './audit.schema.json' with { type: 'json' };
+import compositionCommittedSchema from './composition-committed.schema.json' with { type: 'json' };
 
 export const SCHEMA_VERSION = '1.0.0';
 
@@ -55,6 +56,7 @@ export const validators = {
   note: ajv.compile(noteSchema),
   referral: ajv.compile(referralSchema),
   audit: ajv.compile(auditSchema),
+  compositionCommitted: ajv.compile(compositionCommittedSchema),
 };
 
 export type ValidatorName = keyof typeof validators;
@@ -83,6 +85,7 @@ export {
   noteSchema,
   referralSchema,
   auditSchema,
+  compositionCommittedSchema,
 };
 
 export * from './topics.js';

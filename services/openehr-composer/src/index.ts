@@ -18,6 +18,10 @@ import { createTemplatesRouter } from './routes/templates.js';
 import { createEhrRouter } from './routes/ehr.js';
 import { createStatsRouter } from './routes/stats.js';
 import { createOutboxRouter } from './routes/outbox.js';
+import {
+  createCompositionCommittedPublisher,
+  defaultDomainPublisherConfig,
+} from './domain-events/publisher.js';
 
 async function main(): Promise<void> {
   const cfg = loadConfig();
@@ -32,6 +36,10 @@ async function main(): Promise<void> {
   const cache = new EhrCache(pool, ehrbase, logger);
   const gaps = new GapTracker();
   const outboxWriter = new OutboxWriter(pool);
+  const domainPublisher = createCompositionCommittedPublisher(
+    defaultDomainPublisherConfig(cfg.kafka.brokers, cfg.kafka.enabled),
+    logger.child({ component: 'domain-events' }),
+  );
   const stats = { events_received: 0, compositions_written: 0, events_gap: 0, events_failed: 0 };
   const startedAt = new Date().toISOString();
 
@@ -47,6 +55,7 @@ async function main(): Promise<void> {
       maxAttempts: cfg.outbox.maxAttempts,
     },
     logger.child({ component: 'outbox-processor' }),
+    domainPublisher,
   );
 
   // Crash-recovery: hängande 'processing'-rader från tidigare instans
@@ -98,7 +107,16 @@ async function main(): Promise<void> {
   app.use('/composer/health', createHealthRouter());
   app.use(
     '/composer/event',
-    createEventRouter({ pool, cache, ehrbase, gaps, outbox: outboxWriter, logger, stats }),
+    createEventRouter({
+      pool,
+      cache,
+      ehrbase,
+      gaps,
+      outbox: outboxWriter,
+      logger,
+      stats,
+      domainPublisher,
+    }),
   );
   app.use('/composer/templates', createTemplatesRouter(ehrbase));
   app.use('/composer/ehr', createEhrRouter(cache));
@@ -116,6 +134,7 @@ async function main(): Promise<void> {
     logger.info({ signal }, 'shutting down');
     server.close();
     await kafkaConsumer?.stop();
+    await domainPublisher.stop();
     await processor.stop();
     await pool.end();
     process.exit(0);

@@ -16,6 +16,7 @@ import type { EhrCache } from '../ehr-cache.js';
 import type { GapTracker } from '../gap-tracker.js';
 import { mapEventToTemplate, isKnownGap } from '../event-mapper.js';
 import { buildComposition } from '../composition-builder.js';
+import type { CompositionCommittedPublisher } from '../domain-events/publisher.js';
 
 export interface ProcessorConfig {
   pollIntervalMs: number;
@@ -49,6 +50,7 @@ export class OutboxProcessor {
     private readonly gaps: GapTracker,
     private readonly cfg: ProcessorConfig,
     private readonly logger: Logger,
+    private readonly domainPublisher?: CompositionCommittedPublisher,
   ) {}
 
   /** Plocka tillbaka 'processing'-rader från crashad instans. */
@@ -153,6 +155,9 @@ export class OutboxProcessor {
     const uid = await this.ehrbase.postComposition(ehrId, mapping.templateId, composition);
 
     await this.markCompleted(record, uid, ehrId);
+    if (uid) {
+      await this.domainPublisher?.publishAfterCommit(event, uid, ehrId, mapping.templateId);
+    }
     return 'completed';
   }
 

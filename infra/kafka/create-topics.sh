@@ -89,6 +89,10 @@ create_topic "core.clinical.referral.sent"         3 "${RET_30D}"
 create_topic "core.clinical.condition.diagnosed"   3 "${RET_30D}"
 create_topic "core.clinical.allergy.reported"      3 "${RET_30D}"
 
+echo ""
+echo "== CDR domain (utgående, WP-EVT1) =="
+create_topic "core.domain.composition.committed"   6 "${RET_30D}"
+
 # ============================================================
 # Admin Topics (retention 30 dagar)
 # ============================================================

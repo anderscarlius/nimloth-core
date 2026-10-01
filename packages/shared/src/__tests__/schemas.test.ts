@@ -2,7 +2,13 @@
 // Testar både positiva (giltiga events) och negativa fall (saknade fält).
 
 import { describe, expect, it } from 'vitest';
-import { validateEvent, validators, TOPICS, allTopicNames } from '../schemas/index.js';
+import {
+  validateEvent,
+  validators,
+  TOPICS,
+  allTopicNames,
+} from '../schemas/index.js';
+import { buildCompositionCommittedEvent } from '../domain-events/composition-committed.js';
 
 function baseFields(type: string): Record<string, unknown> {
   return {
@@ -237,8 +243,39 @@ describe('Audit-schema', () => {
   });
 });
 
+describe('CompositionCommitted-schema (WP-EVT1)', () => {
+  it('accepterar giltigt v1-event', () => {
+    const event = buildCompositionCommittedEvent({
+      patient_id: '19500315-2384',
+      composition_uid: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee::local.ehrbase.org::1',
+      ehr_id: '11111111-1111-1111-1111-111111111111',
+      template_id: 'body_temperature.v2.p3_0b',
+      trigger_event_id: '22222222-2222-2222-2222-222222222222',
+      trigger_event_type: 'core.clinical.observation.vitals.body_temperature',
+    });
+    const { ok, errors } = validateEvent('compositionCommitted', event);
+    expect(errors, errors.join(', ')).toEqual([]);
+    expect(ok).toBe(true);
+    expect(event.event_type).toBe(TOPICS.domain.compositionCommitted);
+  });
+
+  it('avvisar fel event_version (kontraktsbrott)', () => {
+    const event = buildCompositionCommittedEvent({
+      patient_id: '19500315-2384',
+      composition_uid: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee::local.ehrbase.org::1',
+      ehr_id: '11111111-1111-1111-1111-111111111111',
+      template_id: 'body_temperature.v2.p3_0b',
+      trigger_event_id: '22222222-2222-2222-2222-222222222222',
+      trigger_event_type: 'core.clinical.observation.vitals.body_temperature',
+    });
+    const broken = { ...event, event_version: '2.0.0' };
+    const { ok } = validateEvent('compositionCommitted', broken);
+    expect(ok).toBe(false);
+  });
+});
+
 describe('Validator-fabriker finns för alla event-typer', () => {
-  it('har 10 validators', () => {
-    expect(Object.keys(validators)).toHaveLength(10);
+  it('har 11 validators', () => {
+    expect(Object.keys(validators)).toHaveLength(11);
   });
 });

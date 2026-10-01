@@ -614,6 +614,53 @@ services:
     networks:
       - core
 
+  # WP-EVT1 — oberoende konsumenter på core.domain.composition.committed
+  # Aktiveras med: docker compose --profile domain-events up -d
+  domain-event-audit-sink:
+    build:
+      context: .
+      dockerfile: services/domain-event-audit-sink/Dockerfile
+    container_name: domain-event-audit-sink
+    environment:
+      NODE_ENV: production
+      DOMAIN_AUDIT_SINK_PORT: "3020"
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_GROUP_ID: domain-event-audit-sink
+      DOMAIN_COMPOSITION_TOPIC: core.domain.composition.committed
+      LOG_LEVEL: info
+    ports:
+      - "3020:3020"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - core
+    profiles: ["domain-events"]
+
+  domain-event-lakehouse-stub:
+    build:
+      context: .
+      dockerfile: services/domain-event-lakehouse-stub/Dockerfile
+    container_name: domain-event-lakehouse-stub
+    environment:
+      NODE_ENV: production
+      LAKEHOUSE_STUB_PORT: "3021"
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_GROUP_ID: domain-event-lakehouse-stub
+      DOMAIN_COMPOSITION_TOPIC: core.domain.composition.committed
+      LAKEHOUSE_BRONZE_PATH: /data/bronze-composition-committed.ndjson
+      LOG_LEVEL: info
+    volumes:
+      - domain-event-lakehouse-data:/data
+    ports:
+      - "3021:3021"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - core
+    profiles: ["domain-events"]
+
   ehrbase:
     image: ehrbase/ehrbase:2.30.1@sha256:c08be93f41164bb6ba8e957532ce4cccd18e6b9d26e074ef97f3faff9c3cd52f
     container_name: ehrbase
@@ -710,6 +757,7 @@ volumes:
   kafka-data:
   mapping-assistant-data:
   ehrbase-data:
+  domain-event-lakehouse-data:
 
 networks:
   core:

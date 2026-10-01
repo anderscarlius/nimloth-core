@@ -28,6 +28,10 @@ export const TOPICS = {
   audit: {
     access: 'core.audit.access',
   },
+  /** Utgående CDR-domänhändelser (WP-EVT1) — oberoende konsumenter, ej inkommande CDC. */
+  domain: {
+    compositionCommitted: 'core.domain.composition.committed',
+  },
   system: {
     qualityMetrics: 'core.system.quality.metrics',
     errors: 'core.system.errors',
