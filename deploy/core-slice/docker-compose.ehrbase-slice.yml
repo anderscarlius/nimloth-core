@@ -13,6 +13,10 @@
 #
 #   docker compose -f docker-compose.moria.yml -f docker-compose.ehrbase-slice.yml ...
 #
+# Eldar (primärt deploymål 2026-10-01): använd INTE detta fragment — se
+# docker-compose.ehrbase-only.yml + docker-compose.eldar.yml och README.md
+# (host :18124, fristående utan fru-andersson-slice).
+#
 # Anledningen till ett separat fragment i stället för att redigera
 # docker-compose.moria.yml direkt: fru-andersson-slice (Block 8 steg 1-5)
 # är LIVE på Moria och ska förbli orörd (S6 i den styrande sessionen som

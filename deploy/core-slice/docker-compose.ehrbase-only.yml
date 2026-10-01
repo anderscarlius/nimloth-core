@@ -1,0 +1,61 @@
+# ============================================================================
+# Fristående EHRbase + Postgres — endast openEHR-lager, ingen fru-andersson-
+# slice och ingen openehr-composer (E9). Avsett för Eldar och liknande hosts
+# där Nimloth deployas som isolerade slices utan Moria-legacy-stacken.
+#
+# Kör med host-specifik port-overlay, t.ex. Eldar:
+#
+#   docker compose \
+#     -f docker-compose.ehrbase-only.yml \
+#     -f docker-compose.eldar.yml \
+#     up -d --wait
+#
+# Moria ehrbase-slice (11124) fortsätter via docker-compose.moria.yml +
+# docker-compose.ehrbase-slice.yml — rör inte den vägen här.
+#
+# Images: samma pinnade digest som docker-compose.yml / Moria ehrbase-slice
+# (EHRbase 2.30.1, ehrbase-v2-postgres 16.2).
+# ============================================================================
+
+services:
+  ehrbase-db:
+    image: ehrbase/ehrbase-v2-postgres:16.2@sha256:abe14e8f9ba33cabc9946c6c17c5aa95b64b35387f266cd20a894149203196d7
+    container_name: ehrbase-db-eldar
+    environment:
+      EHRBASE_USER: ehrbase
+      EHRBASE_PASSWORD: ehrbase
+      EHRBASE_USER_ADMIN: ehrbase_admin
+      EHRBASE_PASSWORD_ADMIN: ehrbase_admin
+    volumes:
+      - ehrbase-eldar-data:/var/lib/postgresql/data
+    networks: [ehrbase-eldar]
+
+  ehrbase:
+    image: ehrbase/ehrbase:2.30.1@sha256:c08be93f41164bb6ba8e957532ce4cccd18e6b9d26e074ef97f3faff9c3cd52f
+    container_name: ehrbase-eldar
+    environment:
+      DB_URL: jdbc:postgresql://ehrbase-db:5432/ehrbase
+      DB_USER: ehrbase
+      DB_PASS: ehrbase
+      DB_USER_ADMIN: ehrbase_admin
+      DB_PASS_ADMIN: ehrbase_admin
+      SECURITY_AUTHTYPE: NONE
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m"
+    depends_on:
+      ehrbase-db:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/ehrbase/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    networks: [ehrbase-eldar]
+    # Host-port sätts i docker-compose.eldar.yml (18124) eller annan overlay.
+
+volumes:
+  ehrbase-eldar-data:
+
+networks:
+  ehrbase-eldar:
+    driver: bridge
