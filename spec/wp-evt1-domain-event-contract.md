@@ -48,7 +48,7 @@ Publiceringsfel loggas; de **fäller inte** CDR-skrivningen (samma princip som b
 | Tjänst | Consumer group | Roll |
 |--------|----------------|------|
 | `domain-event-audit-sink` | `domain-event-audit-sink` | Validerar schema, strukturerad audit-logg |
-| `domain-event-lakehouse-stub` | `domain-event-lakehouse-stub` | Validerar schema, skriver NDJSON bronze-stub |
+| `domain-event-lakehouse-stub` | `domain-event-lakehouse-stub` | Validerar schema, skriver bronze NDJSON + silver flatten (WP-LH1 smoke) |
 
 Start lokalt (efter Kafka + topics):
 
