@@ -15,8 +15,18 @@ import type {
 } from '@nimloth-core/shared/types';
 import type { AqlResult } from './ehrbase-aql-client.js';
 import type { CoverageTracker } from './coverage-tracker.js';
+import { withStubPatientProfile } from '../../profiles/se-stub.js';
 
 const PATIENT_IDENTIFIER_SYSTEM = 'urn:oid:1.2.752.129.2.1.3.1';
+const VITAL_SIGNS_CATEGORY = {
+  coding: [
+    {
+      system: 'http://terminology.hl7.org/CodeSystem/observation-category',
+      code: 'vital-signs',
+      display: 'Vital Signs',
+    },
+  ],
+};
 
 interface DvQuantity {
   _type?: 'DV_QUANTITY';
@@ -44,7 +54,7 @@ export class AqlToFhir {
     this.coverage.logMissingField('Patient', 'birthDate', `ehr:${ehrId}`);
     this.coverage.logMissingField('Patient', 'gender', `ehr:${ehrId}`);
 
-    return {
+    return withStubPatientProfile({
       resourceType: 'Patient',
       id: pnr,
       meta: {
@@ -54,7 +64,7 @@ export class AqlToFhir {
       },
       identifier: [{ system: PATIENT_IDENTIFIER_SYSTEM, value: pnr }],
       active: true,
-    };
+    });
   }
 
   toObservations(result: AqlResult, patientPnr: string): FhirObservation[] {
@@ -75,6 +85,9 @@ export class AqlToFhir {
       return null;
     }
 
+    const isVitalArchetype =
+      archetypeNodeId?.startsWith('openEHR-EHR-OBSERVATION.') ?? false;
+
     const obs: FhirObservation = {
       resourceType: 'Observation',
       id: compositionUid.split('::')[0],
@@ -84,6 +97,7 @@ export class AqlToFhir {
         versionId: '1',
         source: templateId ? `openehr-template:${templateId}` : `openehr-ehr`,
       },
+      category: isVitalArchetype ? [VITAL_SIGNS_CATEGORY] : undefined,
       code: archetypeNodeId
         ? {
             coding: [

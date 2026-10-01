@@ -1,6 +1,6 @@
 # FHIR i Nimloth Core (DP-MF3)
 
-Tekniskt spår för **Implementation Guide (IG)**-artefakter via [FSH](https://build.fhir.org/ig/HL7/fhir-shorthand/) och [SUSHI](https://github.com/FHIR/sushi). v1 är en minimal stub-IG med SUSHI-only CI — ingen koppling till MF2/OPT eller till runtime-tjänsten `fhir-facade`.
+Tekniskt spår för **Implementation Guide (IG)**-artefakter via [FSH](https://build.fhir.org/ig/HL7/fhir-shorthand/) och [SUSHI](https://github.com/FHIR/sushi). v1 är en minimal stub-IG med SUSHI-only CI — ingen koppling till MF2/OPT. **Runtime:** `fhir-facade` sätter `Patient.meta.profile` till stub-canonical (WP-FHIR1, se `services/fhir-facade/docs/WP-FHIR1-FHIR-SE-SMART.md`).
 
 ## Mappstruktur
 

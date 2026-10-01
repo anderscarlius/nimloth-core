@@ -26,6 +26,8 @@ import type { ParityRunner } from './parity/runner.js';
 import { selectLatest, selectHistory } from './parity/queries.js';
 import { renderSnapshots } from './parity/markdown.js';
 import type { ParityTrigger } from './parity/types.js';
+import { loadSmartConfig } from './smart/config.js';
+import { createSmartRouter } from './smart/router.js';
 
 export interface MaterializerMetricsView {
   processed: number;
@@ -54,6 +56,8 @@ export interface ServerDeps {
   authMiddlewareDeps?: Partial<AuthMiddlewareDeps>;
   /** Callback som returnerar en ren snapshot av materializer-stats. */
   getMaterializerMetrics: () => MaterializerMetricsView;
+  /** Test/dev: override publik bas-URL för SMART well-known (annars env). */
+  smartPublicBaseUrl?: string;
 }
 
 export function createServer(deps: ServerDeps): Express {
@@ -111,6 +115,10 @@ export function createServer(deps: ServerDeps): Express {
   // finish-tid, så datat finns där oavsett middleware-ordning.
   const fhir = express.Router();
   const authConfig = deps.authConfig ?? loadAuthConfig();
+  const smartConfig = loadSmartConfig(authConfig.mode);
+  if (deps.smartPublicBaseUrl) {
+    smartConfig.publicBaseUrl = deps.smartPublicBaseUrl.replace(/\/$/, '');
+  }
   const authDeps: AuthMiddlewareDeps = {
     config: authConfig,
     ...deps.authMiddlewareDeps,
@@ -147,6 +155,20 @@ export function createServer(deps: ServerDeps): Express {
 
   // Metadata (CapabilityStatement — minimal)
   fhir.get('/metadata', (_req, res) => {
+    const smartSecurity =
+      smartConfig.enabled
+        ? {
+            extension: [
+              {
+                url: 'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris',
+                extension: [
+                  { url: 'authorize', valueUri: `${smartConfig.publicBaseUrl}/smart/authorize` },
+                  { url: 'token', valueUri: `${smartConfig.publicBaseUrl}/smart/token` },
+                ],
+              },
+            ],
+          }
+        : undefined;
     res.type('application/fhir+json').json({
       resourceType: 'CapabilityStatement',
       status: 'active',
@@ -158,6 +180,7 @@ export function createServer(deps: ServerDeps): Express {
       rest: [
         {
           mode: 'server',
+          security: smartSecurity,
           resource: [
             'Patient',
             'Observation',
@@ -175,6 +198,10 @@ export function createServer(deps: ServerDeps): Express {
   });
 
   app.use('/fhir/r4', fhir);
+
+  if (smartConfig.enabled) {
+    app.use(createSmartRouter(smartConfig));
+  }
 
   // Sprint 2 P3.3: openEHR-coverage rapport. Listar fält som ofta returnerade
   // null/undefined från AQL-mappningen — diagnostisk för P3.0b XML-OPT-arbetet.

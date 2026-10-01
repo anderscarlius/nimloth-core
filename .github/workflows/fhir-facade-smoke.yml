@@ -1,0 +1,27 @@
+name: FHIR-facade — WP-FHIR1 smoke
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "services/fhir-facade/**"
+      - "packages/shared/**"
+      - "packages/kafka-utils/**"
+      - "scripts/fhir-wp-fhir1-smoke.sh"
+      - ".github/workflows/fhir-facade-smoke.yml"
+
+jobs:
+  smoke:
+    name: Build + Vitest (SMART + CDR read path)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+      - run: bash scripts/fhir-wp-fhir1-smoke.sh
