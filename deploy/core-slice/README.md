@@ -99,3 +99,9 @@ cd deploy/core-slice
 docker compose -f docker-compose.ehrbase-only.yml -f docker-compose.eldar.yml config
 ./deploy-ehrbase-eldar.sh bootstrap
 ```
+
+## WP-DEMO1 (unified demo, repo-only)
+
+Full stack-demo (Kafka + FHIR + AQL-bevis) dokumenteras i
+[deploy/demo-slice/README.md](../demo-slice/README.md). Eldar **18124** är
+openEHR-ingång; unified på Eldar är operatörssteg efter separat godkännande.
