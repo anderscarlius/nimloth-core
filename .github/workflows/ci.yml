@@ -26,6 +26,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile=false
 
+      - name: Validate Eldar ehrbase compose (config only)
+        run: |
+          docker compose \
+            -f deploy/core-slice/docker-compose.ehrbase-only.yml \
+            -f deploy/core-slice/docker-compose.eldar.yml \
+            config --quiet
+
       - name: Build all workspaces
         run: pnpm -r build
 

@@ -1,0 +1,11 @@
+# ============================================================================
+# Eldar (192.168.1.230) — port-overlay för docker-compose.ehrbase-only.yml.
+#
+# Publicerad EHRbase: 18124 → container 8080. Undviker 18081 (verkstad-webb)
+# och Moria core-slice 11124 (legacy, orörd på 192.168.1.220).
+# ============================================================================
+
+services:
+  ehrbase:
+    ports:
+      - "18124:8080"
