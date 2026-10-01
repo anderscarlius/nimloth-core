@@ -82,6 +82,11 @@ export class OpenehrStore implements FhirStore {
       // Klient-sida-filtrering eftersom AQL har begränsad WHERE-syntax.
       if (params.from) observations = observations.filter((o) => (o.effectiveDateTime ?? '') >= params.from!);
       if (params.to) observations = observations.filter((o) => (o.effectiveDateTime ?? '') <= params.to!);
+      if (params.category) {
+        observations = observations.filter((o) =>
+          (o.category ?? []).some((c) => c.coding?.some((coding) => coding.code === params.category)),
+        );
+      }
       if (params.limit) observations = observations.slice(0, params.limit);
       return observations;
     } catch (err) {

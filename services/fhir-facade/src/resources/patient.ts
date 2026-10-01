@@ -5,6 +5,7 @@ import { Router } from 'express';
 import type { FhirPatient, FhirBundle } from '@nimloth-core/shared/types';
 import type { StoreRouter } from '../stores/index.js';
 import { storeContextFromRequest } from '../stores/store-context.js';
+import { withStubPatientProfile } from '../profiles/se-stub.js';
 
 export const PATIENT_IDENTIFIER_SYSTEM = 'urn:oid:1.2.752.129.2.1.3.1';
 
@@ -27,7 +28,7 @@ export function renderPatient(row: PatientRow): FhirPatient {
     row.fodelsedatum instanceof Date
       ? row.fodelsedatum.toISOString().slice(0, 10)
       : (row.fodelsedatum ?? undefined) || undefined;
-  return {
+  const patient: FhirPatient = {
     resourceType: 'Patient',
     id: row.personnummer,
     meta: {
@@ -58,6 +59,7 @@ export function renderPatient(row: PatientRow): FhirPatient {
       : undefined,
     telecom: row.telefon ? [{ system: 'phone', value: row.telefon }] : undefined,
   };
+  return withStubPatientProfile(patient);
 }
 
 export async function findPatientById(pool: pg.Pool, id: string): Promise<PatientRow | null> {
