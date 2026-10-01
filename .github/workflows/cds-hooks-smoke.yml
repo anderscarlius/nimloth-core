@@ -1,0 +1,26 @@
+name: CDS Hooks — WP-CDS1 smoke
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "services/cds-hooks/**"
+      - "packages/shared/**"
+      - "scripts/wp-cds1-smoke.sh"
+      - ".github/workflows/cds-hooks-smoke.yml"
+
+jobs:
+  smoke:
+    name: Build + Vitest (discovery + synthetic patient-view)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+      - run: bash scripts/wp-cds1-smoke.sh
