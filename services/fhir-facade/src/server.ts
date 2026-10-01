@@ -16,7 +16,8 @@ import { diagnosticReportRouter } from './resources/diagnostic-report.js';
 import { carePlanRouter } from './resources/care-plan.js';
 import { patientEverything } from './operations/everything.js';
 import { notFound } from './resources/patient.js';
-import { authMiddleware } from './middleware/auth.js';
+import { createAuthMiddleware, type AuthMiddlewareDeps } from './middleware/auth.js';
+import { loadAuthConfig, type AuthConfig } from './auth/config.js';
 import { pdlMiddleware } from './middleware/pdl.js';
 import { auditMiddleware } from './middleware/audit.js';
 import { createSyncRouter } from './sync.js';
@@ -47,6 +48,10 @@ export interface ServerDeps {
   /** PDL-enforce-flag — default false (loggar bara), true returnerar 403 vid
    *  saknad vårdrelation eller spärr. Används av PDL-bevarande-tester. */
   pdlEnforce?: boolean;
+  /** AUTH_MODE + Keycloak/HSA — default från env via loadAuthConfig(). */
+  authConfig?: AuthConfig;
+  /** Test-injektion för JWT/HSA (auth-matris i CI). */
+  authMiddlewareDeps?: Partial<AuthMiddlewareDeps>;
   /** Callback som returnerar en ren snapshot av materializer-stats. */
   getMaterializerMetrics: () => MaterializerMetricsView;
 }
@@ -105,7 +110,12 @@ export function createServer(deps: ServerDeps): Express {
   // inte bara lyckade läsningar. Audit läser req.pdl + req.user vid
   // finish-tid, så datat finns där oavsett middleware-ordning.
   const fhir = express.Router();
-  fhir.use(authMiddleware({ required: false }));
+  const authConfig = deps.authConfig ?? loadAuthConfig();
+  const authDeps: AuthMiddlewareDeps = {
+    config: authConfig,
+    ...deps.authMiddlewareDeps,
+  };
+  fhir.use(createAuthMiddleware(authDeps, { required: false }));
   fhir.use(auditMiddleware({ producer: deps.auditProducer, logger: deps.logger }));
   fhir.use(pdlMiddleware(deps.pool, { enforce: deps.pdlEnforce ?? false }));
 

@@ -220,6 +220,20 @@ services:
     networks:
       - core
 
+  # Synthetic HSA catalog (DP-IN2) — dataklass 0, not Inera production.
+  hsa:
+    build:
+      context: .
+      dockerfile: services/hsa/Dockerfile
+    container_name: hsa
+    environment:
+      NODE_ENV: production
+      HSA_PORT: "11105"
+    ports:
+      - "11105:11105"
+    networks:
+      - core
+
   # --- Applikationstjänster ---
   ingest:
     build:
@@ -305,6 +319,10 @@ services:
       # behöver paritetsmätning.
       CANONICAL_STORE: ${CANONICAL_STORE:-both}
       EHRBASE_URL: ${EHRBASE_URL:-http://ehrbase:8080}
+      AUTH_MODE: ${AUTH_MODE:-dev}
+      KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER:-http://keycloak:8080/realms/nimloth-core}
+      HSA_SERVICE_URL: ${HSA_SERVICE_URL:-http://hsa:11105}
+      PDL_ENFORCE: ${PDL_ENFORCE:-false}
     ports:
       - "3003:3003"
     depends_on:
