@@ -33,6 +33,12 @@ jobs:
             -f deploy/core-slice/docker-compose.eldar.yml \
             config --quiet
 
+      - name: WP-DEMO1 — validate demo-slice shell scripts
+        run: |
+          bash -n deploy/demo-slice/up-local-unified.sh
+          bash -n deploy/demo-slice/run-stack-health-check.sh
+          bash -n deploy/demo-slice/run-aql-fhir-vitals-proof.sh
+
       - name: Build all workspaces
         run: pnpm -r build
 
