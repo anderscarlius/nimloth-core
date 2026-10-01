@@ -7,6 +7,7 @@ import { loadConfig } from './config.js';
 import { createLogger } from './logger.js';
 import { createPool, migrate } from './db.js';
 import { Materializer } from './materializer.js';
+import { loadAuthConfig } from './auth/config.js';
 import { createServer } from './server.js';
 import { createStoreRouter } from './stores/index.js';
 import { ParityRunner } from './parity/runner.js';
@@ -88,6 +89,10 @@ async function main(): Promise<void> {
     );
   }
 
+  const authConfig = loadAuthConfig();
+  const pdlEnforce = process.env.PDL_ENFORCE === 'true';
+  logger.info({ auth_mode: authConfig.mode, pdl_enforce: pdlEnforce }, 'Auth/PDL policy');
+
   const app = createServer({
     pool,
     auditProducer,
@@ -96,6 +101,8 @@ async function main(): Promise<void> {
     mode: config.mode,
     storeRouter,
     parityRunner,
+    authConfig,
+    pdlEnforce,
     getMaterializerMetrics: () => ({
       processed: materializer.processed,
       errors: materializer.errors,

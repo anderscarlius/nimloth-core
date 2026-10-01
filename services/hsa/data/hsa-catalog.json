@@ -1,0 +1,48 @@
+{
+  "persons": [
+    {
+      "hsaId": "SE123456789",
+      "name": "Erik Lindqvist",
+      "role": "PHYSICIAN",
+      "careUnitHsaId": "SE-UNIT-ORTOP-SU"
+    },
+    {
+      "hsaId": "SE987654321",
+      "name": "Ortopedläkare Mottagning",
+      "role": "PHYSICIAN",
+      "careUnitHsaId": "SE-UNIT-ORTOP-SU"
+    },
+    {
+      "hsaId": "SE555444333",
+      "name": "Dr Holm",
+      "role": "PHYSICIAN",
+      "careUnitHsaId": "SE-UNIT-GP-VISPH"
+    },
+    {
+      "hsaId": "SE111222333",
+      "name": "Fysioterapeut Test",
+      "role": "PHYSIOTHERAPIST",
+      "careUnitHsaId": "SE-UNIT-ORTOP-SU"
+    },
+    {
+      "hsaId": "SE-TEST-001",
+      "name": "Synthetic Test User",
+      "role": "PHYSICIAN",
+      "careUnitHsaId": "SE-UNIT-TEST"
+    }
+  ],
+  "units": [
+    {
+      "hsaId": "SE-UNIT-ORTOP-SU",
+      "name": "Ortopedmottagning SU (synthetic)"
+    },
+    {
+      "hsaId": "SE-UNIT-GP-VISPH",
+      "name": "Primärvård Visph (synthetic)"
+    },
+    {
+      "hsaId": "SE-UNIT-TEST",
+      "name": "Testenhet (synthetic)"
+    }
+  ]
+}
