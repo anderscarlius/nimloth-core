@@ -9,6 +9,7 @@ import { createPool, migrate } from './db.js';
 import { Materializer } from './materializer.js';
 import { loadAuthConfig } from './auth/config.js';
 import { createServer } from './server.js';
+import { fetchResearchConsent } from './pdl/consent-client.js';
 import { createStoreRouter } from './stores/index.js';
 import { ParityRunner } from './parity/runner.js';
 import { startParityScheduler, type ParitySchedulerHandle } from './parity/scheduler.js';
@@ -91,7 +92,19 @@ async function main(): Promise<void> {
 
   const authConfig = loadAuthConfig();
   const pdlEnforce = process.env.PDL_ENFORCE === 'true';
-  logger.info({ auth_mode: authConfig.mode, pdl_enforce: pdlEnforce }, 'Auth/PDL policy');
+  const consentServiceUrl = process.env.CONSENT_SERVICE_URL?.replace(/\/$/, '');
+  const opaPatientRead =
+    process.env.PDL_OPA_PATIENT_READ === 'true' ||
+    (process.env.PDL_OPA_PATIENT_READ !== 'false' && pdlEnforce);
+  logger.info(
+    {
+      auth_mode: authConfig.mode,
+      pdl_enforce: pdlEnforce,
+      opa_patient_read: opaPatientRead,
+      consent_service: consentServiceUrl ?? null,
+    },
+    'Auth/PDL policy',
+  );
 
   const app = createServer({
     pool,
@@ -103,6 +116,12 @@ async function main(): Promise<void> {
     parityRunner,
     authConfig,
     pdlEnforce,
+    pdlMiddlewareOptions: {
+      opaPatientRead,
+      fetchResearchConsent: consentServiceUrl
+        ? (pnr) => fetchResearchConsent(consentServiceUrl, pnr)
+        : undefined,
+    },
     getMaterializerMetrics: () => ({
       processed: materializer.processed,
       errors: materializer.errors,

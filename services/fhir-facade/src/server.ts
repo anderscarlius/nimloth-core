@@ -18,7 +18,7 @@ import { patientEverything } from './operations/everything.js';
 import { notFound } from './resources/patient.js';
 import { createAuthMiddleware, type AuthMiddlewareDeps } from './middleware/auth.js';
 import { loadAuthConfig, type AuthConfig } from './auth/config.js';
-import { pdlMiddleware } from './middleware/pdl.js';
+import { pdlMiddleware, type PdlMiddlewareOptions } from './middleware/pdl.js';
 import { auditMiddleware } from './middleware/audit.js';
 import { createSyncRouter } from './sync.js';
 import type { StoreRouter } from './stores/index.js';
@@ -50,6 +50,8 @@ export interface ServerDeps {
   /** PDL-enforce-flag — default false (loggar bara), true returnerar 403 vid
    *  saknad vårdrelation eller spärr. Används av PDL-bevarande-tester. */
   pdlEnforce?: boolean;
+  /** WP-IN3: OPA på Patient-read + valfri samtyckes-lookup. */
+  pdlMiddlewareOptions?: Partial<PdlMiddlewareOptions>;
   /** AUTH_MODE + Keycloak/HSA — default från env via loadAuthConfig(). */
   authConfig?: AuthConfig;
   /** Test-injektion för JWT/HSA (auth-matris i CI). */
@@ -125,7 +127,12 @@ export function createServer(deps: ServerDeps): Express {
   };
   fhir.use(createAuthMiddleware(authDeps, { required: false }));
   fhir.use(auditMiddleware({ producer: deps.auditProducer, logger: deps.logger }));
-  fhir.use(pdlMiddleware(deps.pool, { enforce: deps.pdlEnforce ?? false }));
+  fhir.use(
+    pdlMiddleware(deps.pool, {
+      enforce: deps.pdlEnforce ?? false,
+      ...deps.pdlMiddlewareOptions,
+    }),
+  );
 
   // Patient + $everything — registreras som direkt GET-route före /Patient-routern
   // (Express `use` med '$' i path matchar inte pålitligt; direkt .get fungerar).

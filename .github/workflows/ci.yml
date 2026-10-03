@@ -64,3 +64,8 @@ jobs:
         run: |
           bash -n scripts/wp-lh1-bronze-silver-smoke.sh
           ./scripts/wp-lh1-bronze-silver-smoke.sh
+
+      - name: WP-IN3 — samtycke/spärr + OPA smoke
+        run: |
+          bash -n scripts/wp-in3-consent-opa-smoke.sh
+          ./scripts/wp-in3-consent-opa-smoke.sh

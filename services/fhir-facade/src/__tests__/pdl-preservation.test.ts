@@ -295,6 +295,7 @@ describe('PDL preservation across canonical-store modes', () => {
     const res = await fetch(`${app.base}/fhir/r4/Observation?patient=${blocked}`, {
       headers: {
         'x-pdl-emergency-access': 'true',
+        'x-pdl-emergency-justification': 'Akut klinisk bedömning vid akutmottagning',
         'x-pdl-care-unit': 'ER',
         'x-user-hsa': 'SE-EMERG-001',
       },
