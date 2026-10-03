@@ -1,31 +1,25 @@
 {
-  "name": "@nimloth-core/fhir-facade",
+  "name": "@nimloth-core/consent",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json && pnpm copy-assets",
-    "copy-assets": "mkdir -p dist/stores/openehr/templates && cp src/stores/openehr/templates/*.aql dist/stores/openehr/templates/",
+    "build": "tsc -p tsconfig.json && pnpm copy-data",
+    "copy-data": "mkdir -p dist/data && cp -r data/* dist/data/",
     "clean": "rm -rf dist",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "test": "vitest run"
   },
   "dependencies": {
-    "@nimloth-core/kafka-utils": "workspace:^",
     "@nimloth-core/pdl-policy": "workspace:*",
-    "@nimloth-core/shared": "workspace:*",
     "express": "^4.19.2",
-    "kafkajs": "^2.2.4",
-    "pg": "^8.11.5",
-    "jose": "^5.9.6",
     "pino": "^9.0.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^20.12.7",
-    "@types/pg": "^8.11.6",
     "tsx": "^4.9.0",
     "typescript": "^5.4.5",
     "vitest": "^1.5.0"

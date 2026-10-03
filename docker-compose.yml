@@ -234,6 +234,20 @@ services:
     networks:
       - core
 
+  # Samtycke/spärr-stub (WP-IN3) — dataklass 0, syntetisk registerdata.
+  consent:
+    build:
+      context: .
+      dockerfile: services/consent/Dockerfile
+    container_name: consent
+    environment:
+      NODE_ENV: production
+      CONSENT_PORT: "11106"
+    ports:
+      - "11106:11106"
+    networks:
+      - core
+
   # --- Applikationstjänster ---
   ingest:
     build:
@@ -322,7 +336,9 @@ services:
       AUTH_MODE: ${AUTH_MODE:-dev}
       KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER:-http://keycloak:8080/realms/nimloth-core}
       HSA_SERVICE_URL: ${HSA_SERVICE_URL:-http://hsa:11105}
+      CONSENT_SERVICE_URL: ${CONSENT_SERVICE_URL:-http://consent:11106}
       PDL_ENFORCE: ${PDL_ENFORCE:-false}
+      PDL_OPA_PATIENT_READ: ${PDL_OPA_PATIENT_READ:-false}
     ports:
       - "3003:3003"
     depends_on:

@@ -80,7 +80,10 @@ export class AuditStore {
         e.source_ip ?? null,
         e.user_agent ?? null,
         e.request_id ?? null,
-        { duration_ms: e.duration_ms ?? null },
+        {
+          duration_ms: e.duration_ms ?? null,
+          ...(e.details ?? {}),
+        },
       );
       i += 17;
     }

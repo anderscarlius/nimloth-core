@@ -1,0 +1,25 @@
+{
+  "data_class": 0,
+  "synthetic": true,
+  "blocks": [
+    {
+      "personnummer": "19770918-1111",
+      "blocked_for": [],
+      "reason": "Demo spärr (Sofia Engström) — kräver nödöppning eller undantag"
+    }
+  ],
+  "consents": [
+    {
+      "personnummer": "19500315-2384",
+      "purpose": "RESEARCH",
+      "granted": true,
+      "note": "Fru Andersson — syntetiskt forskningssamtycke för demo"
+    },
+    {
+      "personnummer": "19770918-1111",
+      "purpose": "RESEARCH",
+      "granted": false,
+      "note": "Spärr-patient — inget forskningssamtycke"
+    }
+  ]
+}

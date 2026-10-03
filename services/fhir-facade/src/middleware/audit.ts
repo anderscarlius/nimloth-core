@@ -38,13 +38,14 @@ export function auditMiddleware(deps: AuditDeps) {
     const start = Date.now();
     res.on('finish', () => {
       const outcome =
-        res.statusCode === 403
+        req.pdl?.audit_outcome_override ??
+        (res.statusCode === 403
           ? 'DENIED_NO_CARE_RELATION'
           : res.statusCode >= 400
             ? 'ERROR'
             : req.pdl?.emergency_access
               ? 'EMERGENCY_ACCESS'
-              : 'SUCCESS';
+              : 'SUCCESS');
 
       const event = {
         event_id: randomUUID(),
@@ -77,6 +78,12 @@ export function auditMiddleware(deps: AuditDeps) {
         user_agent: req.header('user-agent'),
         request_id: req.header('x-request-id') ?? randomUUID(),
         duration_ms: Date.now() - start,
+        details: {
+          emergency_justification: req.pdl?.emergency_justification,
+          policy_decision: req.pdl?.policy_decision,
+          policy_reason: req.pdl?.policy_reason,
+          patient_blocked: req.pdl?.patient_blocked,
+        },
       };
 
       deps.producer

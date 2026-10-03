@@ -13,4 +13,5 @@ export interface AuditEventMessage {
   user_agent?: string;
   request_id?: string;
   duration_ms?: number;
+  details?: Record<string, unknown>;
 }
